@@ -116,3 +116,18 @@ Context:
 3. Nondeterminism: (a) All map-like containers are `BTreeMap` — deterministic iteration. Audit: `rg 'HashMap' crates/panopticon-core/src/reducer.rs` returns zero hits in non-test code. (b) No floats in `State` — `queue_pressure` is quantized to `u64` millionths before storing. (c) No RNG, no wall clock, no thread-local state. (d) `reduce()` is a pure function: clones state, applies event, returns new state. (e) Determinism verified: 10-run test with 100 diverse events + 10-run test with 5500 events crossing checkpoint boundary. All hashes identical.
 4. Security: No secrets, tokens, or PII in reducer logic. State accumulates event metadata (agent names, tool names, error messages) which may contain sensitive data from source events — but that is M8's responsibility (secret scanner before export). No file IO in the reducer itself. Checkpoint serialization/deserialization is done by callers.
 5. Performance: (a) `reduce()` clones the entire `State` on every event — O(N*S) total cost for N events where S is state size. Acceptable for v0.1 (target <100K events). For larger replays, switching to `&mut State` would eliminate cloning. (b) `Vec` fields (policy_decisions, error_log, clock_skew_events, redaction_log) grow without bound. For v0.1 this is acceptable — these are typically small relative to event count. (c) Checkpoint at 5000-event intervals bounds the replay-from-scratch cost. (d) 33 reducer tests add ~1.8s to the test suite (dominated by the 6000-event and 10000-event checkpoint tests).
+
+---
+
+## M5.1 · ProjectionInvariants and LadderLevel · 2026-02-17
+
+Context:
+- Bead owner: Claude Opus 4.5 (claude-code)
+- Invariants referenced: I2 (deterministic projection — invariants parameterize projection)
+- Constitution touched: none (references BACKPRESSURE_POLICY ladder levels and projection invariants version)
+
+1. Coupling: `LadderLevel` enum and `ProjectionInvariants` struct are now the input types for M5.3 (projection function). M6 (TUI) will depend on `LadderLevel` for rendering degradation state. M7 (Tour) will embed `projection_invariants_version` in artifacts. `PROJECTION_INVARIANTS_VERSION` constant is the single source of truth for version string — changing it will affect all downstream hash computations. The `#[serde(rename_all = "UPPERCASE")]` attribute on `LadderLevel` means JSON output is `"L0"` not `"l0"` — this is intentional to match BACKPRESSURE_POLICY identifiers but means deserializing lowercase input like `"l0"` requires the explicit `FromStr` with `.to_uppercase()` handling.
+2. Untested claims: (a) `PartialOrd`/`Ord` derive on `LadderLevel` relies on variant declaration order — if variants are reordered, comparison semantics change silently. Documented in code comments to prevent this. (b) `#[default]` attribute on `L0` variant assumes that derive(Default) respects the attribute — this is stable Rust since 1.62, but if compiling on older Rust, compilation would fail (not silently misbehave).
+3. Nondeterminism: None introduced. `LadderLevel` is a simple enum with no containers. `ProjectionInvariants` contains only a `String` and a `LadderLevel`. No `HashMap`, no floats, no RNG, no wall clock. Serialization is deterministic — verified by byte-stability tests.
+4. Security: No secrets, tokens, or PII. `ProjectionInvariants` contains only configuration metadata (version string, degradation level). No user data flows through these types.
+5. Performance: No performance cliffs. `LadderLevel` is `Copy` (8 bytes). `ProjectionInvariants` is small (String + enum). 20 tests add <0.01s to the test suite.
