@@ -131,3 +131,18 @@ Context:
 3. Nondeterminism: None introduced. `LadderLevel` is a simple enum with no containers. `ProjectionInvariants` contains only a `String` and a `LadderLevel`. No `HashMap`, no floats, no RNG, no wall clock. Serialization is deterministic — verified by byte-stability tests.
 4. Security: No secrets, tokens, or PII. `ProjectionInvariants` contains only configuration metadata (version string, degradation level). No user data flows through these types.
 5. Performance: No performance cliffs. `LadderLevel` is `Copy` (8 bytes). `ProjectionInvariants` is small (String + enum). 20 tests add <0.01s to the test suite.
+
+---
+
+## M5.2 · ViewModel struct with all confession fields · 2026-02-17
+
+Context:
+- Bead owner: Claude Opus 4.5 (claude-code)
+- Invariants referenced: I2 (deterministic projection), I4 (testable determinism via viewmodel.hash)
+- Constitution touched: none (links to PLANS.md § Truth HUD)
+
+1. Coupling: `ViewModel` is now the output type of the projection function (M5.3) and input to the TUI (M6). Adding/removing fields from `ViewModel` will require updates to both projection and rendering code. The `queue_pressure_fixed` field (i64) couples ViewModel to the `QUEUE_PRESSURE_PRECISION` constant — changing precision would invalidate existing hashes. `ExportSafetyState` enum is standalone but M8 will need to update it when export scanning is implemented.
+2. Untested claims: (a) `BTreeMap` ordering is tested for string keys but edge cases (empty strings, unicode) are not exhaustively tested. (b) `queue_pressure_fixed` truncation (not rounding) means 0.999999999 becomes 999999, not 1000000 — this is intentional for consistency but not documented in tests. (c) The "excluded fields" test only checks JSON output doesn't contain those strings, not that the struct truly lacks those fields at compile time.
+3. Nondeterminism: None introduced. (a) `BTreeMap<String, u64>` for `tier_a_summaries` — deterministic ordering verified by `test_viewmodel_btreemap_ordering`. (b) `queue_pressure` is stored as `i64` after quantization — no floats in serialized output. (c) No `HashMap`, no RNG, no wall clock. (d) Byte-stability verified by `test_viewmodel_byte_stable_serialization`.
+4. Security: No secrets, tokens, or PII in ViewModel itself. `tier_a_summaries` contains only event type names (e.g., "RunStart") and counts, not payload content. Sensitive data in event payloads does not flow into ViewModel.
+5. Performance: No performance cliffs. `ViewModel` contains small fields (BTreeMap with typically <10 entries, strings, integers). Serialization is O(n) in field count. 20 M5.2 tests add <0.01s to the test suite. No unbounded allocations in ViewModel itself — `tier_a_summaries` grows with distinct event type count, which is bounded by schema.
