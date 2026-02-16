@@ -1,0 +1,7 @@
+[package]
+name = "panopticon-tui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+panopticon-core = { path = "../panopticon-core" }

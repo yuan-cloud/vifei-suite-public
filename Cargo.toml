@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/panopticon-core",
+    "crates/panopticon-import",
+    "crates/panopticon-export",
+    "crates/panopticon-tui",
+    "crates/panopticon-tour",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
