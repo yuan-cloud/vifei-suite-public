@@ -496,7 +496,11 @@ dependencies = [
 name = "panopticon-export"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "panopticon-core",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -523,6 +527,7 @@ dependencies = [
  "clap",
  "crossterm",
  "panopticon-core",
+ "panopticon-export",
  "ratatui",
 ]
 
