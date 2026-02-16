@@ -161,3 +161,16 @@ Context:
 3. Nondeterminism: None introduced. (a) `project()` is pure — no IO, no RNG, no wall clock. (b) BTreeMap iteration is deterministic. (c) queue_pressure lookup is deterministic (last element of Vec). (d) Determinism verified by `test_project_determinism` (10 runs with same inputs → same output). (e) Byte-stability verified by `test_project_byte_stable_serialization`.
 4. Security: No secrets, tokens, or PII flow through `project()`. The function only extracts counts and metadata from State, not event payloads. Sensitive data in payloads stays in the EventLog and State; projection summarizes without exposing content.
 5. Performance: No performance cliffs. `project()` is O(n) where n is the number of event types (bounded by schema, ~10). The tier_a_types loop is fixed-size (8 iterations). No unbounded allocations. 8 M5.3 tests add <0.01s to the test suite.
+
+## bd-fdf · Bugfix: EventLog empty-file resume and cassette payload fidelity · 2026-02-17
+
+Context:
+- Bead owner: SilverHarbor (codex-cli)
+- Invariants referenced: I1, I4, I5
+- Constitution touched: none
+
+1. Coupling: EventLog open/resume semantics now depend on `scan_highest_index` returning `Option<u64>` (`None` for empty/invalid files). This is a narrow internal coupling inside `eventlog.rs` and improves correctness at the writer boundary.
+2. Untested claims: We still do not validate all malformed-existing-EventLog cases (for example, partially-corrupt files with mixed valid/invalid lines) beyond current best-effort scanning behavior; this bugfix only addresses the empty-file resume edge case.
+3. Nondeterminism: No new nondeterminism introduced. The importer payload string conversion path is deterministic (`as_str` for string values, `to_string` for non-null non-string JSON), and commit index assignment remains single-writer deterministic.
+4. Security: No new direct security or privacy surface added. Importer now preserves more payload content fidelity for tool results (including object/scalar values), which can expose more raw content downstream; this is expected and still gated by export-time secret scanning in M8.
+5. Performance: Negligible impact. `scan_highest_index` already scanned the file; changing return type to `Option` does not add cost. Importer now calls one helper for args/result value conversion; allocation behavior is effectively unchanged.

@@ -174,7 +174,7 @@ fn map_payload(
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            let args = record.get("args").map(|v| v.to_string());
+            let args = record.get("args").and_then(json_value_to_string);
             (EventPayload::ToolCall { tool, args }, Tier::A)
         }
 
@@ -184,10 +184,7 @@ fn map_payload(
                 .and_then(|v| v.as_str())
                 .unwrap_or("unknown")
                 .to_string();
-            let result = record
-                .get("result")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
+            let result = record.get("result").and_then(json_value_to_string);
             let status = record
                 .get("status")
                 .and_then(|v| v.as_str())
@@ -241,6 +238,21 @@ fn map_payload(
                 Tier::B,
             )
         }
+    }
+}
+
+/// Convert JSON value to event payload text while preserving source fidelity.
+///
+/// - JSON string => raw string contents (no extra JSON quotes)
+/// - JSON null => None
+/// - Other JSON values => canonical JSON text
+fn json_value_to_string(value: &serde_json::Value) -> Option<String> {
+    if value.is_null() {
+        return None;
+    }
+    match value.as_str() {
+        Some(s) => Some(s.to_string()),
+        None => Some(value.to_string()),
     }
 }
 
@@ -484,6 +496,19 @@ mod tests {
     }
 
     #[test]
+    fn map_tool_use_string_args_not_double_quoted() {
+        let input = r#"{"type":"tool_use","session_id":"s1","timestamp":"2026-02-16T10:00:01Z","tool":"Read","args":"cat /foo.rs"}"#;
+        let events = parse_cassette(Cursor::new(input));
+        assert_eq!(events.len(), 1);
+        match &events[0].payload {
+            EventPayload::ToolCall { args, .. } => {
+                assert_eq!(args.as_deref(), Some("cat /foo.rs"));
+            }
+            _ => panic!("expected ToolCall"),
+        }
+    }
+
+    #[test]
     fn map_tool_result() {
         let input = r#"{"type":"tool_result","session_id":"s1","timestamp":"2026-02-16T10:00:02Z","tool":"Read","id":"tr_001","status":"success","result":"file contents"}"#;
         let events = parse_cassette(Cursor::new(input));
@@ -498,6 +523,22 @@ mod tests {
                 assert_eq!(tool, "Read");
                 assert_eq!(result.as_deref(), Some("file contents"));
                 assert_eq!(status.as_deref(), Some("success"));
+            }
+            _ => panic!("expected ToolResult"),
+        }
+    }
+
+    #[test]
+    fn map_tool_result_object_payload_preserved() {
+        let input = r#"{"type":"tool_result","session_id":"s1","timestamp":"2026-02-16T10:00:02Z","tool":"Read","status":"success","result":{"ok":true,"bytes":42}}"#;
+        let events = parse_cassette(Cursor::new(input));
+        assert_eq!(events.len(), 1);
+        match &events[0].payload {
+            EventPayload::ToolResult { result, .. } => {
+                let result = result.as_deref().expect("result should be present");
+                assert!(result.starts_with('{'));
+                assert!(result.contains("\"ok\":true"));
+                assert!(result.contains("\"bytes\":42"));
             }
             _ => panic!("expected ToolResult"),
         }

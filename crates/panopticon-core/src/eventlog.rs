@@ -91,7 +91,10 @@ impl EventLogWriter {
     pub fn open(path: impl Into<PathBuf>) -> io::Result<Self> {
         let path = path.into();
         let next_index = if path.exists() {
-            Self::scan_highest_index(&path)? + 1
+            match Self::scan_highest_index(&path)? {
+                Some(highest) => highest + 1,
+                None => 0,
+            }
         } else {
             0
         };
@@ -219,9 +222,8 @@ impl EventLogWriter {
 
     /// Scan an existing EventLog file to find the highest `commit_index`.
     ///
-    /// Returns 0 if the file is empty (so `next_index` will be 0 + 1 = 1
-    /// for resume, but we handle empty specially in `open`).
-    fn scan_highest_index(path: &Path) -> io::Result<u64> {
+    /// Returns `None` if the file is empty or has no valid events.
+    fn scan_highest_index(path: &Path) -> io::Result<Option<u64>> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
         let mut highest: Option<u64> = None;
@@ -241,8 +243,7 @@ impl EventLogWriter {
             }
         }
 
-        // If file exists but is empty or has no valid events, start at 0.
-        Ok(highest.unwrap_or(0))
+        Ok(highest)
     }
 }
 
@@ -370,6 +371,19 @@ mod tests {
     fn new_eventlog_starts_at_zero() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("eventlog.jsonl");
+        let mut writer = EventLogWriter::open(&path).unwrap();
+        assert_eq!(writer.next_index(), 0);
+
+        let result = writer.append(make_event("test", 1_000_000_000)).unwrap();
+        assert_eq!(result.committed.commit_index, 0);
+    }
+
+    #[test]
+    fn existing_empty_eventlog_starts_at_zero() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("eventlog.jsonl");
+        std::fs::File::create(&path).unwrap();
+
         let mut writer = EventLogWriter::open(&path).unwrap();
         assert_eq!(writer.next_index(), 0);
 
