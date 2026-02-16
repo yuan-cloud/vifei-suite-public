@@ -146,3 +146,18 @@ Context:
 3. Nondeterminism: None introduced. (a) `BTreeMap<String, u64>` for `tier_a_summaries` — deterministic ordering verified by `test_viewmodel_btreemap_ordering`. (b) `queue_pressure` is stored as `i64` after quantization — no floats in serialized output. (c) No `HashMap`, no RNG, no wall clock. (d) Byte-stability verified by `test_viewmodel_byte_stable_serialization`.
 4. Security: No secrets, tokens, or PII in ViewModel itself. `tier_a_summaries` contains only event type names (e.g., "RunStart") and counts, not payload content. Sensitive data in event payloads does not flow into ViewModel.
 5. Performance: No performance cliffs. `ViewModel` contains small fields (BTreeMap with typically <10 entries, strings, integers). Serialization is O(n) in field count. 20 M5.2 tests add <0.01s to the test suite. No unbounded allocations in ViewModel itself — `tier_a_summaries` grows with distinct event type count, which is bounded by schema.
+
+---
+
+## M5.3 · Deterministic project() function · 2026-02-17
+
+Context:
+- Bead owner: Claude Opus 4.5 (claude-code)
+- Invariants referenced: I2 (deterministic projection), I4 (testable determinism)
+- Constitution touched: none (references BACKPRESSURE_POLICY ladder levels for aggregation modes)
+
+1. Coupling: `project()` function now couples State (from M4) to ViewModel (from M5.2). The function depends on the Tier A type names being hardcoded as a constant array — adding new Tier A types requires updating this list. `project_with_pressure()` provides runtime queue pressure override, used by M6/M7 when live backpressure data is available. The `policy_decisions.last().queue_pressure_micro` lookup couples projection to the reducer's PolicyTransition struct.
+2. Untested claims: (a) Tier A type names list is exhaustive — verified against PLANS.md D2 but not programmatically linked. (b) Aggregation mode strings ("1:1", "10:1", "collapsed", "frozen") are not validated against any schema — TUI (M6) must handle them by string match. (c) `project()` returns `ExportSafetyState::Unknown` unconditionally until M8 — no test verifies this changes when M8 is implemented.
+3. Nondeterminism: None introduced. (a) `project()` is pure — no IO, no RNG, no wall clock. (b) BTreeMap iteration is deterministic. (c) queue_pressure lookup is deterministic (last element of Vec). (d) Determinism verified by `test_project_determinism` (10 runs with same inputs → same output). (e) Byte-stability verified by `test_project_byte_stable_serialization`.
+4. Security: No secrets, tokens, or PII flow through `project()`. The function only extracts counts and metadata from State, not event payloads. Sensitive data in payloads stays in the EventLog and State; projection summarizes without exposing content.
+5. Performance: No performance cliffs. `project()` is O(n) where n is the number of event types (bounded by schema, ~10). The tier_a_types loop is fixed-size (8 iterations). No unbounded allocations. 8 M5.3 tests add <0.01s to the test suite.

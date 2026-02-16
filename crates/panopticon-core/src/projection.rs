@@ -51,7 +51,6 @@
 //! - "Projection invariants v0.1" — honesty mechanics rules.
 //! - "Degradation ladder" — L0 through L5 definitions.
 
-use crate::event::Tier;
 use crate::reducer::State;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -514,7 +513,166 @@ impl Default for ViewModel {
 }
 
 // ---------------------------------------------------------------------------
-// Tests (M5.1, M5.2)
+// project() function (M5.3)
+// ---------------------------------------------------------------------------
+
+/// Deterministic projection function: State + ProjectionInvariants → ViewModel.
+///
+/// This is a pure function with no IO, no randomness, and no wall clock reads.
+/// Same inputs will always produce the same output.
+///
+/// # Purity contract
+///
+/// - No IO.
+/// - No randomness.
+/// - No wall clock reads.
+/// - No terminal size or focus state.
+/// - All iteration is by `commit_index`, never by timestamp.
+///
+/// # Projection invariants (from BACKPRESSURE_POLICY)
+///
+/// - NEVER fabricate events.
+/// - NEVER reorder truth.
+/// - May summarize Tier B/C per ladder level, but MUST confess in Truth HUD.
+///
+/// # Ladder level behavior
+///
+/// - L0 (Normal): Full detail, 1:1 events.
+/// - L1 (Aggregate): Aggregation mode "10:1" with bin size.
+/// - L2 (Collapse): Aggregation mode "collapsed", counts only.
+/// - L3 (Reduce Fidelity): Same as L2 for data, UI may simplify rendering.
+/// - L4 (Freeze UI): Same as L3, UI frozen except Truth HUD.
+/// - L5 (Safe Failure): Minimal data, failure state indication.
+pub fn project(state: &State, invariants: &ProjectionInvariants) -> ViewModel {
+    // Build tier_a_summaries from event_counts_by_type, filtering for Tier A types.
+    // Tier A event types from PLANS.md D2: RunStart, RunEnd, ToolCall, ToolResult,
+    // PolicyDecision, RedactionApplied, Error, ClockSkewDetected.
+    let tier_a_types = [
+        "RunStart",
+        "RunEnd",
+        "ToolCall",
+        "ToolResult",
+        "PolicyDecision",
+        "RedactionApplied",
+        "Error",
+        "ClockSkewDetected",
+    ];
+
+    let mut tier_a_summaries = BTreeMap::new();
+    for type_name in &tier_a_types {
+        if let Some(&count) = state.event_counts_by_type.get(*type_name) {
+            if count > 0 {
+                tier_a_summaries.insert(type_name.to_string(), count);
+            }
+        }
+    }
+
+    // Determine aggregation mode based on degradation level.
+    let (aggregation_mode, aggregation_bin_size) = match invariants.degradation_level {
+        LadderLevel::L0 => ("1:1".to_string(), None),
+        LadderLevel::L1 => ("10:1".to_string(), Some(10)),
+        LadderLevel::L2 | LadderLevel::L3 | LadderLevel::L4 => ("collapsed".to_string(), None),
+        LadderLevel::L5 => ("frozen".to_string(), None),
+    };
+
+    // Get queue pressure from the last policy decision, if any.
+    // queue_pressure_micro is stored as millionths (0..=1_000_000).
+    let queue_pressure_fixed = state
+        .policy_decisions
+        .last()
+        .map(|pd| pd.queue_pressure_micro as i64)
+        .unwrap_or(0);
+
+    ViewModel {
+        tier_a_summaries,
+        aggregation_mode,
+        aggregation_bin_size,
+        degradation_level: invariants.degradation_level,
+        queue_pressure_fixed,
+        tier_a_drops: state.tier_a_drops,
+        export_safety_state: ExportSafetyState::Unknown, // Until M8 export scan
+        projection_invariants_version: invariants.version.clone(),
+    }
+}
+
+/// Project with additional context for queue pressure.
+///
+/// Use this when you have a live queue pressure value from the backpressure
+/// controller, rather than relying on the last recorded PolicyDecision event.
+pub fn project_with_pressure(
+    state: &State,
+    invariants: &ProjectionInvariants,
+    queue_pressure: f64,
+) -> ViewModel {
+    let mut vm = project(state, invariants);
+    vm.set_queue_pressure(queue_pressure);
+    vm
+}
+
+// ---------------------------------------------------------------------------
+// viewmodel.hash computation (M5.4)
+// ---------------------------------------------------------------------------
+
+/// Compute `viewmodel.hash` — the BLAKE3 hash of a ViewModel.
+///
+/// # Formula
+///
+/// `viewmodel.hash = BLAKE3(canonical_serialize(ViewModel))`
+///
+/// # Include list (all fields affect the hash)
+///
+/// - `tier_a_summaries`: BTreeMap<String, u64>
+/// - `aggregation_mode`: String
+/// - `aggregation_bin_size`: Option<u64>
+/// - `degradation_level`: LadderLevel
+/// - `queue_pressure_fixed`: i64 (quantized from f64, avoids float nondeterminism)
+/// - `tier_a_drops`: u64
+/// - `export_safety_state`: ExportSafetyState
+/// - `projection_invariants_version`: String
+///
+/// # Exclude list
+///
+/// Nothing is excluded in v0.1. All ViewModel fields are meaningful for
+/// determinism verification.
+///
+/// # Float handling
+///
+/// `queue_pressure` is stored as `queue_pressure_fixed` (i64), which is
+/// `queue_pressure * 1,000,000` truncated. This avoids platform-dependent
+/// float formatting in the serialized output.
+///
+/// # Determinism
+///
+/// - ViewModel uses BTreeMap (not HashMap) for `tier_a_summaries`.
+/// - Serialization uses `serde_json::to_vec` which produces deterministic
+///   output for structs with stable field order.
+/// - `projection_invariants_version` is embedded in the ViewModel, so
+///   changes to projection rules produce different hashes.
+///
+/// # Output format
+///
+/// Returns a 64-character lowercase hex string (BLAKE3 produces 256-bit hash).
+/// For file output, the caller should append a newline.
+pub fn viewmodel_hash(vm: &ViewModel) -> String {
+    // Serialize ViewModel to canonical JSON bytes
+    let bytes = serde_json::to_vec(vm).expect("ViewModel serialization should never fail");
+
+    // Compute BLAKE3 hash
+    let hash = blake3::hash(&bytes);
+
+    // Return lowercase hex string
+    hash.to_hex().to_string()
+}
+
+/// Compute viewmodel.hash and return as a newline-terminated string for file output.
+///
+/// This is the format expected for Tour proof artifacts (`viewmodel.hash` file).
+pub fn viewmodel_hash_for_file(vm: &ViewModel) -> String {
+    format!("{}\n", viewmodel_hash(vm))
+}
+
+// ---------------------------------------------------------------------------
+// Tests (M5.1, M5.2, M5.3, M5.4)
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]
@@ -997,5 +1155,219 @@ mod tests {
     #[test]
     fn test_queue_pressure_precision_constant() {
         assert_eq!(QUEUE_PRESSURE_PRECISION, 1_000_000);
+    }
+
+    // -----------------------------------------------------------------------
+    // project() function tests (M5.3)
+    // -----------------------------------------------------------------------
+
+    use crate::reducer::{PolicyTransition, State};
+
+    #[test]
+    fn test_project_empty_state() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        assert!(vm.tier_a_summaries.is_empty());
+        assert_eq!(vm.aggregation_mode, "1:1");
+        assert_eq!(vm.aggregation_bin_size, None);
+        assert_eq!(vm.degradation_level, LadderLevel::L0);
+        assert_eq!(vm.queue_pressure_fixed, 0);
+        assert_eq!(vm.tier_a_drops, 0);
+        assert_eq!(vm.export_safety_state, ExportSafetyState::Unknown);
+        assert_eq!(
+            vm.projection_invariants_version,
+            PROJECTION_INVARIANTS_VERSION
+        );
+    }
+
+    #[test]
+    fn test_project_with_events() {
+        let mut state = State::new();
+        state.event_counts_by_type.insert("RunStart".to_string(), 1);
+        state.event_counts_by_type.insert("ToolCall".to_string(), 5);
+        state.event_counts_by_type.insert("Error".to_string(), 2);
+        state.event_counts_by_type.insert("Generic".to_string(), 10); // Not Tier A
+        state.tier_a_drops = 0;
+
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        // Only Tier A types should be in summaries
+        assert_eq!(vm.tier_a_summaries.get("RunStart"), Some(&1));
+        assert_eq!(vm.tier_a_summaries.get("ToolCall"), Some(&5));
+        assert_eq!(vm.tier_a_summaries.get("Error"), Some(&2));
+        assert_eq!(vm.tier_a_summaries.get("Generic"), None); // Not Tier A
+    }
+
+    #[test]
+    fn test_project_ladder_level_l0() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::with_level(LadderLevel::L0);
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.aggregation_mode, "1:1");
+        assert_eq!(vm.aggregation_bin_size, None);
+        assert_eq!(vm.degradation_level, LadderLevel::L0);
+    }
+
+    #[test]
+    fn test_project_ladder_level_l1() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::with_level(LadderLevel::L1);
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.aggregation_mode, "10:1");
+        assert_eq!(vm.aggregation_bin_size, Some(10));
+        assert_eq!(vm.degradation_level, LadderLevel::L1);
+    }
+
+    #[test]
+    fn test_project_ladder_level_l2() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::with_level(LadderLevel::L2);
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.aggregation_mode, "collapsed");
+        assert_eq!(vm.aggregation_bin_size, None);
+        assert_eq!(vm.degradation_level, LadderLevel::L2);
+    }
+
+    #[test]
+    fn test_project_ladder_level_l5() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::with_level(LadderLevel::L5);
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.aggregation_mode, "frozen");
+        assert_eq!(vm.aggregation_bin_size, None);
+        assert_eq!(vm.degradation_level, LadderLevel::L5);
+    }
+
+    #[test]
+    fn test_project_with_policy_decision() {
+        let mut state = State::new();
+        state.policy_decisions.push(PolicyTransition {
+            commit_index: 100,
+            from_level: "L0".to_string(),
+            to_level: "L1".to_string(),
+            trigger: "queue_pressure".to_string(),
+            queue_pressure_micro: 800_000, // 0.8
+        });
+
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.queue_pressure_fixed, 800_000);
+        assert!((vm.queue_pressure() - 0.8).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_project_with_tier_a_drops() {
+        let mut state = State::new();
+        state.tier_a_drops = 5;
+
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.tier_a_drops, 5);
+        assert!(vm.has_tier_a_drops());
+        assert!(!vm.is_healthy());
+    }
+
+    #[test]
+    fn test_project_with_pressure() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::new();
+        let vm = project_with_pressure(&state, &invariants, 0.65);
+
+        assert!((vm.queue_pressure() - 0.65).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_project_determinism() {
+        // Same inputs should always produce the same output
+        let mut state = State::new();
+        state.event_counts_by_type.insert("RunStart".to_string(), 1);
+        state.event_counts_by_type.insert("ToolCall".to_string(), 3);
+        state.policy_decisions.push(PolicyTransition {
+            commit_index: 50,
+            from_level: "L0".to_string(),
+            to_level: "L1".to_string(),
+            trigger: "test".to_string(),
+            queue_pressure_micro: 500_000,
+        });
+
+        let invariants = ProjectionInvariants::with_level(LadderLevel::L1);
+
+        // Run projection 10 times
+        let first = project(&state, &invariants);
+        for _ in 0..10 {
+            let vm = project(&state, &invariants);
+            assert_eq!(vm, first, "Projection must be deterministic");
+        }
+    }
+
+    #[test]
+    fn test_project_byte_stable_serialization() {
+        let mut state = State::new();
+        state.event_counts_by_type.insert("RunStart".to_string(), 2);
+        state.event_counts_by_type.insert("Error".to_string(), 1);
+
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        let bytes1 = serde_json::to_vec(&vm).unwrap();
+        let bytes2 = serde_json::to_vec(&vm).unwrap();
+        assert_eq!(bytes1, bytes2, "Serialization must be byte-stable");
+    }
+
+    #[test]
+    fn test_project_invariants_version_embedded() {
+        let state = State::new();
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.projection_invariants_version, invariants.version);
+        assert_eq!(
+            vm.projection_invariants_version,
+            PROJECTION_INVARIANTS_VERSION
+        );
+    }
+
+    #[test]
+    fn test_project_all_tier_a_types() {
+        let mut state = State::new();
+        // Add all Tier A types
+        state.event_counts_by_type.insert("RunStart".to_string(), 1);
+        state.event_counts_by_type.insert("RunEnd".to_string(), 1);
+        state.event_counts_by_type.insert("ToolCall".to_string(), 5);
+        state
+            .event_counts_by_type
+            .insert("ToolResult".to_string(), 5);
+        state
+            .event_counts_by_type
+            .insert("PolicyDecision".to_string(), 2);
+        state
+            .event_counts_by_type
+            .insert("RedactionApplied".to_string(), 1);
+        state.event_counts_by_type.insert("Error".to_string(), 3);
+        state
+            .event_counts_by_type
+            .insert("ClockSkewDetected".to_string(), 1);
+
+        let invariants = ProjectionInvariants::new();
+        let vm = project(&state, &invariants);
+
+        assert_eq!(vm.tier_a_summaries.len(), 8);
+        assert_eq!(vm.tier_a_summaries.get("RunStart"), Some(&1));
+        assert_eq!(vm.tier_a_summaries.get("RunEnd"), Some(&1));
+        assert_eq!(vm.tier_a_summaries.get("ToolCall"), Some(&5));
+        assert_eq!(vm.tier_a_summaries.get("ToolResult"), Some(&5));
+        assert_eq!(vm.tier_a_summaries.get("PolicyDecision"), Some(&2));
+        assert_eq!(vm.tier_a_summaries.get("RedactionApplied"), Some(&1));
+        assert_eq!(vm.tier_a_summaries.get("Error"), Some(&3));
+        assert_eq!(vm.tier_a_summaries.get("ClockSkewDetected"), Some(&1));
     }
 }
