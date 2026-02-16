@@ -83,6 +83,12 @@ pub struct AppendResult {
     pub detection_events: Vec<CommittedEvent>,
 }
 
+#[derive(Default)]
+struct ScanMetadata {
+    highest_commit_index: Option<u64>,
+    source_timestamps: HashMap<String, u64>,
+}
+
 impl EventLogWriter {
     /// Open or create an EventLog at the given path.
     ///
@@ -90,14 +96,14 @@ impl EventLogWriter {
     /// resumes from there. If new, starts at `commit_index = 0`.
     pub fn open(path: impl Into<PathBuf>) -> io::Result<Self> {
         let path = path.into();
-        let next_index = if path.exists() {
-            match Self::scan_highest_index(&path)? {
-                Some(highest) => highest + 1,
-                None => 0,
-            }
+        let metadata = if path.exists() {
+            Self::scan_metadata(&path)?
         } else {
-            0
+            ScanMetadata::default()
         };
+        let next_index = metadata
+            .highest_commit_index
+            .map_or(0, |highest| highest + 1);
 
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
 
@@ -105,7 +111,7 @@ impl EventLogWriter {
             file,
             path,
             next_index,
-            source_timestamps: HashMap::new(),
+            source_timestamps: metadata.source_timestamps,
         })
     }
 
@@ -220,13 +226,15 @@ impl EventLogWriter {
         None
     }
 
-    /// Scan an existing EventLog file to find the highest `commit_index`.
+    /// Scan existing EventLog data needed to resume writer state.
     ///
-    /// Returns `None` if the file is empty or has no valid events.
-    fn scan_highest_index(path: &Path) -> io::Result<Option<u64>> {
+    /// Includes:
+    /// - highest committed index for monotonic continuation
+    /// - latest timestamp per source for skew detection across restarts
+    fn scan_metadata(path: &Path) -> io::Result<ScanMetadata> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        let mut highest: Option<u64> = None;
+        let mut metadata = ScanMetadata::default();
 
         for line in reader.lines() {
             let line = line?;
@@ -234,16 +242,21 @@ impl EventLogWriter {
             if trimmed.is_empty() {
                 continue;
             }
-            // Parse just the commit_index field for speed.
+            // Parse committed events from JSONL.
             if let Ok(event) = serde_json::from_str::<CommittedEvent>(trimmed) {
-                highest = Some(match highest {
+                metadata.highest_commit_index = Some(match metadata.highest_commit_index {
                     Some(h) => h.max(event.commit_index),
                     None => event.commit_index,
                 });
+                metadata
+                    .source_timestamps
+                    .entry(event.source_id)
+                    .and_modify(|existing| *existing = (*existing).max(event.timestamp_ns))
+                    .or_insert(event.timestamp_ns);
             }
         }
 
-        Ok(highest)
+        Ok(metadata)
     }
 }
 
@@ -663,6 +676,39 @@ mod tests {
         for (i, event) in events.iter().enumerate() {
             assert_eq!(event.commit_index, i as u64);
             assert_eq!(event.source_id, "test");
+        }
+    }
+
+    #[test]
+    fn clock_skew_detected_after_reopen() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("eventlog.jsonl");
+
+        {
+            let mut writer = EventLogWriter::open(&path).unwrap();
+            writer.append(make_event("src-1", 2_000_000_000)).unwrap();
+        }
+
+        // Reopen writer and ensure historical source timestamp is restored.
+        let mut writer = EventLogWriter::open(&path).unwrap();
+        let result = writer.append(make_event("src-1", 1_000_000_000)).unwrap();
+
+        assert_eq!(
+            result.detection_events.len(),
+            1,
+            "clock skew should still be detected after writer reopen"
+        );
+        match &result.detection_events[0].payload {
+            EventPayload::ClockSkewDetected {
+                expected_ns,
+                actual_ns,
+                delta_ns,
+            } => {
+                assert_eq!(*expected_ns, 2_000_000_000);
+                assert_eq!(*actual_ns, 1_000_000_000);
+                assert_eq!(*delta_ns, 1_000_000_000);
+            }
+            _ => panic!("expected ClockSkewDetected payload"),
         }
     }
 }

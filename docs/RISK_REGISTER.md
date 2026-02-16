@@ -204,3 +204,16 @@ Context:
 3. Nondeterminism: This test specifically catches nondeterminism. If the test passes, the pipeline is deterministic for the tested inputs. The test also runs across all 6 ladder levels in a variant test.
 4. Security: No secrets, tokens, or PII. Test uses synthetic data.
 5. Performance: No performance cliffs. 10 iterations × 4 events × (reduce + project + hash) is fast (<1ms). The all-ladder-levels variant adds 6 × 5 = 30 more iterations but still completes in <1ms.
+
+## bd-7ww · Bugfix: payload_ref validation + clock-skew resume hydration · 2026-02-17
+
+Context:
+- Bead owner: SilverHarbor (codex-cli)
+- Invariants referenced: I1, I4, I5
+- Constitution touched: none
+
+1. Coupling: `EventLogWriter::open` now depends on scan metadata (highest commit index plus per-source latest timestamps), increasing coupling between resume logic and clock-skew detection correctness. This coupling is intentional and local to `eventlog.rs`.
+2. Untested claims: We still do not fail hard on partially-corrupt EventLog lines during metadata scan; invalid lines are skipped. The fix only ensures valid historical lines seed skew detection state.
+3. Nondeterminism: No new nondeterminism introduced. Metadata scan uses deterministic max operations; blob ref validation is pure and deterministic.
+4. Security: This fix removes a concrete traversal class by rejecting malformed `payload_ref` values in blob read/existence paths. Remaining security risk is that inline payload content can still contain secrets until M8 export scanner enforcement.
+5. Performance: EventLog open now stores per-source timestamp maxima while scanning, adding small map-update overhead proportional to existing line count. This is acceptable for v0.1 scale and buys correctness across process restarts.

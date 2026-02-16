@@ -96,6 +96,12 @@ impl BlobStore {
     ///
     /// Returns `None` if the blob does not exist.
     pub fn read_blob(&self, payload_ref: &str) -> io::Result<Option<Vec<u8>>> {
+        if !Self::is_valid_payload_ref(payload_ref) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("invalid payload_ref: {payload_ref:?}"),
+            ));
+        }
         let blob_path = self.blob_path(payload_ref);
         if !blob_path.exists() {
             return Ok(None);
@@ -106,6 +112,9 @@ impl BlobStore {
 
     /// Check if a blob exists.
     pub fn has_blob(&self, payload_ref: &str) -> bool {
+        if !Self::is_valid_payload_ref(payload_ref) {
+            return false;
+        }
         self.blob_path(payload_ref).exists()
     }
 
@@ -118,6 +127,14 @@ impl BlobStore {
     /// Compute the BLAKE3 hex digest for the given bytes without storing.
     pub fn compute_ref(data: &[u8]) -> String {
         blake3::hash(data).to_hex().to_string()
+    }
+
+    /// Validate payload_ref format: 64 lowercase hex characters.
+    fn is_valid_payload_ref(payload_ref: &str) -> bool {
+        payload_ref.len() == 64
+            && payload_ref
+                .chars()
+                .all(|c| matches!(c, '0'..='9' | 'a'..='f'))
     }
 
     /// Filesystem path for a blob given its `payload_ref`.
@@ -228,5 +245,29 @@ mod tests {
         let blob_path = store.blob_path(&payload_ref);
         assert!(blob_path.to_str().unwrap().contains(prefix));
         assert!(blob_path.exists());
+    }
+
+    #[test]
+    fn invalid_payload_ref_rejected() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = BlobStore::open(dir.path().join("blobs")).unwrap();
+
+        let err = store.read_blob("../etc/passwd").unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+        assert!(!store.has_blob("../etc/passwd"));
+    }
+
+    #[test]
+    fn uppercase_payload_ref_rejected() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = BlobStore::open(dir.path().join("blobs")).unwrap();
+
+        let data = b"case-check";
+        let payload_ref = store.write_blob(data).unwrap();
+        let uppercase = payload_ref.to_uppercase();
+
+        let err = store.read_blob(&uppercase).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+        assert!(!store.has_blob(&uppercase));
     }
 }
