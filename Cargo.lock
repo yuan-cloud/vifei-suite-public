@@ -221,6 +221,9 @@ name = "panopticon-import"
 version = "0.1.0"
 dependencies = [
  "panopticon-core",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
