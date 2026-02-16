@@ -1370,4 +1370,327 @@ mod tests {
         assert_eq!(vm.tier_a_summaries.get("Error"), Some(&3));
         assert_eq!(vm.tier_a_summaries.get("ClockSkewDetected"), Some(&1));
     }
+
+    // -----------------------------------------------------------------------
+    // viewmodel_hash tests (M5.4)
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_viewmodel_hash_format() {
+        let vm = ViewModel::new();
+        let hash = viewmodel_hash(&vm);
+
+        // BLAKE3 produces 256-bit (32-byte) hash, which is 64 hex characters
+        assert_eq!(hash.len(), 64);
+
+        // Should be lowercase hex
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(hash, hash.to_lowercase());
+    }
+
+    #[test]
+    fn test_viewmodel_hash_for_file_format() {
+        let vm = ViewModel::new();
+        let file_content = viewmodel_hash_for_file(&vm);
+
+        // Should end with newline
+        assert!(file_content.ends_with('\n'));
+
+        // Should be 65 characters (64 hex + 1 newline)
+        assert_eq!(file_content.len(), 65);
+
+        // Trimmed should be the hash
+        let hash = viewmodel_hash(&vm);
+        assert_eq!(file_content.trim(), hash);
+    }
+
+    #[test]
+    fn test_viewmodel_hash_determinism() {
+        let mut vm = ViewModel::new();
+        vm.tier_a_summaries.insert("RunStart".to_string(), 3);
+        vm.tier_a_summaries.insert("ToolCall".to_string(), 10);
+        vm.set_queue_pressure(0.75);
+        vm.degradation_level = LadderLevel::L2;
+
+        // Same ViewModel should produce identical hash across runs
+        let hash1 = viewmodel_hash(&vm);
+        let hash2 = viewmodel_hash(&vm);
+        assert_eq!(hash1, hash2);
+
+        // Run 10 times to verify stability
+        for _ in 0..10 {
+            assert_eq!(viewmodel_hash(&vm), hash1);
+        }
+    }
+
+    #[test]
+    fn test_viewmodel_hash_changes_with_content() {
+        let vm1 = ViewModel::new();
+
+        let mut vm2 = ViewModel::new();
+        vm2.tier_a_summaries.insert("Error".to_string(), 1);
+
+        // Different ViewModels should produce different hashes
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_changes_with_degradation_level() {
+        let mut vm1 = ViewModel::new();
+        vm1.degradation_level = LadderLevel::L0;
+
+        let mut vm2 = ViewModel::new();
+        vm2.degradation_level = LadderLevel::L1;
+
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_changes_with_queue_pressure() {
+        let mut vm1 = ViewModel::new();
+        vm1.set_queue_pressure(0.5);
+
+        let mut vm2 = ViewModel::new();
+        vm2.set_queue_pressure(0.6);
+
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_changes_with_tier_a_drops() {
+        let vm1 = ViewModel::new(); // tier_a_drops = 0
+
+        let mut vm2 = ViewModel::new();
+        vm2.tier_a_drops = 1;
+
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_changes_with_export_safety_state() {
+        let mut vm1 = ViewModel::new();
+        vm1.export_safety_state = ExportSafetyState::Unknown;
+
+        let mut vm2 = ViewModel::new();
+        vm2.export_safety_state = ExportSafetyState::Clean;
+
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_includes_version() {
+        let mut vm1 = ViewModel::new();
+        vm1.projection_invariants_version = "projection-invariants-v0.1".to_string();
+
+        let mut vm2 = ViewModel::new();
+        vm2.projection_invariants_version = "projection-invariants-v0.2".to_string();
+
+        // Different versions should produce different hashes
+        assert_ne!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_btreemap_order_independence() {
+        // Insert keys in different orders, but BTreeMap should sort them
+        let mut vm1 = ViewModel::new();
+        vm1.tier_a_summaries.insert("Zebra".to_string(), 1);
+        vm1.tier_a_summaries.insert("Apple".to_string(), 2);
+        vm1.tier_a_summaries.insert("Mango".to_string(), 3);
+
+        let mut vm2 = ViewModel::new();
+        vm2.tier_a_summaries.insert("Apple".to_string(), 2);
+        vm2.tier_a_summaries.insert("Mango".to_string(), 3);
+        vm2.tier_a_summaries.insert("Zebra".to_string(), 1);
+
+        // Same data should produce same hash regardless of insertion order
+        assert_eq!(viewmodel_hash(&vm1), viewmodel_hash(&vm2));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_empty_vs_nonempty() {
+        let empty = ViewModel::new();
+
+        let mut nonempty = ViewModel::new();
+        nonempty.tier_a_summaries.insert("RunStart".to_string(), 1);
+
+        assert_ne!(viewmodel_hash(&empty), viewmodel_hash(&nonempty));
+    }
+
+    #[test]
+    fn test_viewmodel_hash_quantized_pressure_stability() {
+        // Verify that quantized pressure produces stable hashes
+        let mut vm = ViewModel::new();
+
+        // Set pressure multiple times to same value
+        vm.set_queue_pressure(0.123456);
+        let hash1 = viewmodel_hash(&vm);
+
+        vm.set_queue_pressure(0.123456);
+        let hash2 = viewmodel_hash(&vm);
+
+        assert_eq!(hash1, hash2);
+    }
+
+    // -----------------------------------------------------------------------
+    // Full pipeline stability test (M5.5)
+    // -----------------------------------------------------------------------
+
+    /// M5.5: Same EventLog + same ProjectionInvariants → same viewmodel.hash across 10 runs.
+    ///
+    /// This tests the full pipeline: events → reduce → project → hash.
+    /// Catches: HashMap regressions, float instability, any nondeterminism.
+    #[test]
+    fn test_full_pipeline_determinism_10_runs() {
+        use crate::event::{CommittedEvent, EventPayload, ImportEvent, Tier};
+        use crate::reducer::{reduce, State};
+
+        // Create a deterministic set of events
+        let events = vec![
+            CommittedEvent::commit(
+                ImportEvent {
+                    run_id: "run-001".to_string(),
+                    event_id: "evt-001".to_string(),
+                    source_id: "test-source".to_string(),
+                    source_seq: Some(0),
+                    timestamp_ns: 1000000000,
+                    tier: Tier::A,
+                    payload: EventPayload::RunStart {
+                        agent: "test-agent".to_string(),
+                        args: Some("--test".to_string()),
+                    },
+                    payload_ref: None,
+                    synthesized: false,
+                },
+                0,
+            ),
+            CommittedEvent::commit(
+                ImportEvent {
+                    run_id: "run-001".to_string(),
+                    event_id: "evt-002".to_string(),
+                    source_id: "test-source".to_string(),
+                    source_seq: Some(1),
+                    timestamp_ns: 2000000000,
+                    tier: Tier::A,
+                    payload: EventPayload::ToolCall {
+                        tool: "grep".to_string(),
+                        args: Some("pattern file.txt".to_string()),
+                    },
+                    payload_ref: None,
+                    synthesized: false,
+                },
+                1,
+            ),
+            CommittedEvent::commit(
+                ImportEvent {
+                    run_id: "run-001".to_string(),
+                    event_id: "evt-003".to_string(),
+                    source_id: "test-source".to_string(),
+                    source_seq: Some(2),
+                    timestamp_ns: 3000000000,
+                    tier: Tier::A,
+                    payload: EventPayload::ToolResult {
+                        tool: "grep".to_string(),
+                        result: Some("match found".to_string()),
+                        status: Some("success".to_string()),
+                    },
+                    payload_ref: None,
+                    synthesized: false,
+                },
+                2,
+            ),
+            CommittedEvent::commit(
+                ImportEvent {
+                    run_id: "run-001".to_string(),
+                    event_id: "evt-004".to_string(),
+                    source_id: "test-source".to_string(),
+                    source_seq: Some(3),
+                    timestamp_ns: 4000000000,
+                    tier: Tier::A,
+                    payload: EventPayload::RunEnd {
+                        exit_code: Some(0),
+                        reason: Some("completed".to_string()),
+                    },
+                    payload_ref: None,
+                    synthesized: false,
+                },
+                3,
+            ),
+        ];
+
+        let invariants = ProjectionInvariants::new();
+        let mut hashes = Vec::new();
+
+        // Run the full pipeline 10 times
+        for _ in 0..10 {
+            // Reduce events to state
+            let mut state = State::new();
+            for event in &events {
+                state = reduce(&state, event);
+            }
+
+            // Project state to ViewModel
+            let vm = project(&state, &invariants);
+
+            // Compute hash
+            let hash = viewmodel_hash(&vm);
+            hashes.push(hash);
+        }
+
+        // All 10 hashes must be identical
+        let first = &hashes[0];
+        for (i, hash) in hashes.iter().enumerate() {
+            assert_eq!(
+                hash, first,
+                "Hash mismatch at run {}: expected '{}', got '{}'",
+                i, first, hash
+            );
+        }
+    }
+
+    /// M5.5 variant: Test stability across different ladder levels.
+    #[test]
+    fn test_full_pipeline_determinism_all_ladder_levels() {
+        use crate::event::{CommittedEvent, EventPayload, ImportEvent, Tier};
+        use crate::reducer::{reduce, State};
+
+        let event = CommittedEvent::commit(
+            ImportEvent {
+                run_id: "run-001".to_string(),
+                event_id: "evt-001".to_string(),
+                source_id: "test-source".to_string(),
+                source_seq: Some(0),
+                timestamp_ns: 1000000000,
+                tier: Tier::A,
+                payload: EventPayload::RunStart {
+                    agent: "test-agent".to_string(),
+                    args: None,
+                },
+                payload_ref: None,
+                synthesized: false,
+            },
+            0,
+        );
+
+        // Test each ladder level
+        for level in LadderLevel::ALL {
+            let invariants = ProjectionInvariants::with_level(level);
+            let mut hashes = Vec::new();
+
+            for _ in 0..5 {
+                let mut state = State::new();
+                state = reduce(&state, &event);
+                let vm = project(&state, &invariants);
+                hashes.push(viewmodel_hash(&vm));
+            }
+
+            let first = &hashes[0];
+            for hash in &hashes {
+                assert_eq!(
+                    hash, first,
+                    "Hash instability at {:?}: hashes differ across runs",
+                    level
+                );
+            }
+        }
+    }
 }

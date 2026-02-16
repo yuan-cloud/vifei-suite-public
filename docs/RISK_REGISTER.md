@@ -174,3 +174,33 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced. The importer payload string conversion path is deterministic (`as_str` for string values, `to_string` for non-null non-string JSON), and commit index assignment remains single-writer deterministic.
 4. Security: No new direct security or privacy surface added. Importer now preserves more payload content fidelity for tool results (including object/scalar values), which can expose more raw content downstream; this is expected and still gated by export-time secret scanning in M8.
 5. Performance: Negligible impact. `scan_highest_index` already scanned the file; changing return type to `Option` does not add cost. Importer now calls one helper for args/result value conversion; allocation behavior is effectively unchanged.
+
+---
+
+## M5.4 · viewmodel.hash computation (BLAKE3) · 2026-02-17
+
+Context:
+- Bead owner: Claude Opus 4.5 (claude-code)
+- Invariants referenced: I4 (testable determinism)
+- Constitution touched: none
+
+1. Coupling: `viewmodel_hash()` couples ViewModel serialization to BLAKE3 hashing. If ViewModel fields change, hash outputs change. `viewmodel_hash_for_file()` is the format expected by Tour (M7) and CI assertions. The hash depends on `serde_json::to_vec()` serialization order — if serde changes field ordering, all hashes change.
+2. Untested claims: (a) `serde_json::to_vec()` on ViewModel never fails — uses `expect()`. Current ViewModel is all-safe types, but adding a non-serializable field would panic. (b) BLAKE3 hash is assumed stable across library versions — pinned in Cargo.lock.
+3. Nondeterminism: None introduced. BLAKE3 is deterministic. `serde_json::to_vec()` on ViewModel is deterministic (all BTreeMap, no floats in serialization). 12 tests verify hash stability including content-change detection.
+4. Security: No secrets, tokens, or PII. The hash is a digest of ViewModel metadata, not event payloads. BLAKE3 has no known vulnerabilities for this use case.
+5. Performance: No performance cliffs. BLAKE3 is fast (~3 GB/s on modern CPUs). ViewModel serialization is small (<1KB typical). 12 tests add <0.01s to the test suite.
+
+---
+
+## M5.5 · viewmodel.hash stability test (10 runs) · 2026-02-17
+
+Context:
+- Bead owner: Claude Opus 4.5 (claude-code)
+- Invariants referenced: I2 (deterministic projection), I4 (testable determinism)
+- Constitution touched: none
+
+1. Coupling: `test_full_pipeline_determinism_10_runs` couples event schema (ImportEvent, EventPayload) to reducer (State, reduce) to projection (project, viewmodel_hash). Any change in these layers affects the test. This is intentional — the test catches regressions in the full pipeline.
+2. Untested claims: (a) 10 runs is sufficient to detect nondeterminism — probabilistic, but catches common issues (HashMap iteration, RNG seeding). (b) The test events are representative — covers 4 of 8 Tier A types. Full coverage would require more events but test would be slower.
+3. Nondeterminism: This test specifically catches nondeterminism. If the test passes, the pipeline is deterministic for the tested inputs. The test also runs across all 6 ladder levels in a variant test.
+4. Security: No secrets, tokens, or PII. Test uses synthetic data.
+5. Performance: No performance cliffs. 10 iterations × 4 events × (reduce + project + hash) is fast (<1ms). The all-ladder-levels variant adds 6 × 5 = 30 more iterations but still completes in <1ms.
