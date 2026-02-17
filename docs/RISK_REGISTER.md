@@ -336,3 +336,11 @@ Context:
 3. Nondeterminism: None. Generator uses xorshift64 with fixed seed `0xDEAD_BEEF_CAFE_1234`. Same binary → same fixture. Fixture is committed as-is and verified deterministic through Tour pipeline.
 4. Security: No security implications. Fixture contains synthetic data only — no real credentials, paths, or PII.
 5. Performance: 9 integration tests add ~6.5s (dominated by Tour pipeline processing of 19K events). Fixture file is 6.7 MB — within acceptable limits for a committed test fixture.
+
+## bd-c7m.3 · Tour: proof artifact emission (metrics.json, timetravel.capture)
+
+1. Coupling: `DegradationTransition` struct in panopticon-tour mirrors `PolicyTransition` fields from panopticon-core reducer. If reducer adds/renames fields, tour must update. Acceptable — schema is documented in PLANS.md.
+2. Untested claims: `max_degradation_level` uses lexicographic string max over level names. This relies on the invariant that levels are named "L0"–"L5" where lex order matches severity. If a level is renamed (e.g., "Critical"), the max computation would break. Small fixtures produce no degradation_transitions, so the empty-array path is tested but the populated-array path is only exercised via the large stress fixture.
+3. Nondeterminism: `queue_pressure_micro` (u64) → f64 division is exact for values in [0, 1_000_000]. No HashMap iteration, no wall-clock, no random seeds. Seek point interval is deterministic from committed event count.
+4. Security: No security implications. Proof artifacts contain only hashes, counts, and level strings.
+5. Performance: Seek point capture projects at ~20 intervals during reduction, adding ~20 extra `project()` calls. For 19K events this is negligible. No unbounded allocation — seek_points vec grows to at most ~21 entries.

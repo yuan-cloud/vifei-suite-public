@@ -149,27 +149,66 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     }
     drop(writer);
 
-    // Stage 3: Reduce all events
+    // Stage 3: Reduce all events with periodic seek point capture
     let mut state = State::new();
     let committed_events = panopticon_core::eventlog::read_eventlog(&eventlog_path)?;
     let committed_event_count = committed_events.len();
-    let last_commit_index = committed_events.last().map_or(0, |e| e.commit_index);
-    for event in &committed_events {
+
+    // Capture ~20 seek points for time-travel replay, minimum 1 per event for small fixtures
+    let seek_interval = (committed_event_count / 20).max(1);
+    let mut seek_points = Vec::new();
+
+    for (i, event) in committed_events.iter().enumerate() {
         state = reduce(&state, event);
+
+        let is_interval = (i + 1) % seek_interval == 0;
+        let is_last = i == committed_event_count - 1;
+        if is_interval || is_last {
+            let inv = ProjectionInvariants::new();
+            let vm = project(&state, &inv);
+            seek_points.push(SeekPoint {
+                commit_index: event.commit_index,
+                state_hash: state_hash(&state),
+                viewmodel_hash: viewmodel_hash(&vm),
+            });
+        }
     }
 
-    // Stage 4: Project with stress-configured invariants
+    // Stage 4: Project final state
     let invariants = ProjectionInvariants::new();
     let viewmodel = project(&state, &invariants);
 
     // Stage 5: Build metrics
+    // Populate degradation_transitions from reducer's policy_decisions
+    let degradation_transitions: Vec<DegradationTransition> = state
+        .policy_decisions
+        .iter()
+        .map(|pd| DegradationTransition {
+            from_level: pd.from_level.clone(),
+            to_level: pd.to_level.clone(),
+            trigger: pd.trigger.clone(),
+            queue_pressure: pd.queue_pressure_micro as f64 / 1_000_000.0,
+        })
+        .collect();
+
+    // Compute max degradation level from transitions + final level
+    let final_level = format!("{}", viewmodel.degradation_level);
+    let max_degradation_level = state
+        .policy_decisions
+        .iter()
+        .map(|pd| pd.to_level.as_str())
+        .chain(std::iter::once(final_level.as_str()))
+        .max()
+        .unwrap_or("L0")
+        .to_string();
+
     let metrics = TourMetrics {
         projection_invariants_version: viewmodel.projection_invariants_version.clone(),
         event_count_total: committed_event_count,
         tier_a_drops: viewmodel.tier_a_drops,
-        max_degradation_level: format!("{}", viewmodel.degradation_level),
-        degradation_level_final: format!("{}", viewmodel.degradation_level),
-        degradation_transitions: Vec::new(), // No transitions in simple pipeline
+        max_degradation_level,
+        degradation_level_final: final_level,
+        degradation_transitions,
         aggregation_mode: viewmodel.aggregation_mode.clone(),
         aggregation_bin_size: viewmodel.aggregation_bin_size,
         queue_pressure: viewmodel.queue_pressure(),
@@ -200,14 +239,10 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
         "# ansi.capture placeholder\n# Full implementation in M7.5\n",
     )?;
 
-    // Write timetravel.capture (M7.3)
+    // Write timetravel.capture with ordered seek points
     let timetravel = TimeTravelCapture {
         projection_invariants_version: viewmodel.projection_invariants_version.clone(),
-        seek_points: vec![SeekPoint {
-            commit_index: last_commit_index,
-            state_hash: state_hash(&state),
-            viewmodel_hash: vm_hash.clone(),
-        }],
+        seek_points,
     };
     let timetravel_path = config.output_dir.join("timetravel.capture");
     let timetravel_json = serde_json::to_string_pretty(&timetravel).map_err(|e| {
@@ -403,7 +438,86 @@ mod tests {
 
         let timetravel_content = fs::read_to_string(output_dir.join("timetravel.capture")).unwrap();
         let capture: TimeTravelCapture = serde_json::from_str(&timetravel_content).unwrap();
-        assert_eq!(capture.seek_points.len(), 1);
-        assert_eq!(capture.seek_points[0].commit_index, 4);
+        // 5 committed events with seek_interval=max(5/20,1)=1 → seek point per event
+        assert_eq!(capture.seek_points.len(), 5);
+        // Last seek point must reference the final commit index
+        assert_eq!(capture.seek_points.last().unwrap().commit_index, 4);
+    }
+
+    #[test]
+    fn seek_points_monotonically_ordered() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_clock_skew_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        run_tour(&config).unwrap();
+
+        let content = fs::read_to_string(output_dir.join("timetravel.capture")).unwrap();
+        let capture: TimeTravelCapture = serde_json::from_str(&content).unwrap();
+
+        // commit_index must be monotonically increasing across seek points
+        for window in capture.seek_points.windows(2) {
+            assert!(
+                window[1].commit_index > window[0].commit_index,
+                "Seek points not ordered: {} should be > {}",
+                window[1].commit_index,
+                window[0].commit_index,
+            );
+        }
+    }
+
+    #[test]
+    fn metrics_schema_has_all_required_fields() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        run_tour(&config).unwrap();
+
+        let raw: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(output_dir.join("metrics.json")).unwrap())
+                .unwrap();
+
+        // All PLANS.md required fields must be present
+        for key in &[
+            "projection_invariants_version",
+            "event_count_total",
+            "tier_a_drops",
+            "max_degradation_level",
+            "degradation_level_final",
+            "degradation_transitions",
+            "aggregation_mode",
+            "aggregation_bin_size",
+            "queue_pressure",
+            "export_safety_state",
+        ] {
+            assert!(
+                raw.get(key).is_some(),
+                "metrics.json missing required field: {}",
+                key,
+            );
+        }
+
+        // degradation_transitions must be an array
+        assert!(raw["degradation_transitions"].is_array());
+    }
+
+    #[test]
+    fn degradation_transitions_structure() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        let result = run_tour(&config).unwrap();
+
+        // Small fixture has no backpressure transitions
+        assert!(result.metrics.degradation_transitions.is_empty());
+
+        // But degradation_level_final and max_degradation_level must be populated
+        assert!(!result.metrics.degradation_level_final.is_empty());
+        assert!(!result.metrics.max_degradation_level.is_empty());
     }
 }
