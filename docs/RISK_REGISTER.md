@@ -1287,3 +1287,16 @@ Context:
 3. Nondeterminism: No changes; existing deterministic append semantics remain intact.
 4. Security: No changes; no new surface introduced.
 5. Performance: Potential append-path optimization deferred; parse remains next likely target.
+
+## bd-141p · A3-5 enterprise closeout report · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: reporting only; no behavior changes
+- Constitution touched: none
+
+1. Coupling: Closeout numbers are tied to current fixture and profile command settings.
+2. Untested claims: Report summarizes measured outcomes; it does not establish broad production-SLA guarantees across all environments.
+3. Nondeterminism: No runtime changes; documentation-only aggregation.
+4. Security: No new surface; report references deterministic and refusal-safe behavior without exposing secrets.
+5. Performance: No runtime impact; improves prioritization clarity for next optimization round.

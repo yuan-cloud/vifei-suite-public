@@ -178,6 +178,7 @@ Failure diagnostics minimums:
 - `bd-6wkf` completed: A3 C2 streaming fixture parse is implemented with reader-mode equivalence proof (`stream_fixture_parse_matches_buffered_parse`) and full gate pass, documented in `docs/testing/perf-c2-streaming-parse-proof-a3-2026-02-17.md`.
 - `bd-2aum` completed: post-C2 profile refresh confirms further p95 improvement with updated hotspot split (parse vs append) and refreshed memory/I-O envelope in `docs/testing/perf-hotspots-a3-post-c2-2026-02-17.md`.
 - `bd-3ufi` completed: C3 decision gate recorded as no-go for A3 based on post-C2 hotspot split and proof/complexity tradeoff (`docs/testing/perf-c3-decision-gate-a3-2026-02-17.md`).
+- `bd-141p` completed: A3 closeout report consolidates C2 implementation proof, post-C2 performance deltas, C3 no-go rationale, and next-round guidance in `docs/testing/a3-closeout-report-2026-02-17.md`.
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 
