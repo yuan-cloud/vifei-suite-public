@@ -165,6 +165,7 @@ Failure diagnostics minimums:
 - `bd-15z` completed: PTY interactive diagnostics now converge on deterministic JSON schemas (`panopticon-pty-preflight-v1`, `panopticon-tui-e2e-assert-v1`) with stable reason-code taxonomy, transcript pointers, and CI artifact presence checks.
 - `bd-12m` completed: export/tour E2E expanded from artifact existence checks to cross-artifact semantic consistency and refusal-report schema/order determinism checks, including mixed inline+blob secret corpus coverage.
 - `bd-3fx` completed: CI now enforcing contract-tagged diagnostics (`FL0/FL1/CC*/FC1`) with explicit replay commands, coverage-contract path freshness checks, and artifact-stage presence validation across fastlane/full-confidence lanes.
+- `bd-qra` completed: full-confidence now treats PTY as capability-gated, runs interactive PTY only on passing preflight, and enforces deterministic PTY assertion/flake budget contracts via `scripts/testing/check_pty_flake_contract.sh`.
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 

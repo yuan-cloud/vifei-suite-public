@@ -21,15 +21,19 @@
 - `scripts/e2e/cli_e2e.sh`
 5. PTY preflight
 - `scripts/e2e/pty_preflight.sh`
+ - capability probe only; emits deterministic reason codes and gates PTY-only checks by capability
 6. Interactive TUI E2E
 - `cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture`
 - executed with explicit `TERM=xterm-256color` and workspace-scoped `PANOPTICON_E2E_OUT`
+- runs only when preflight reports `status=pass`
 - one bounded retry in CI to reduce transient PTY harness flake without masking persistent failures
+- flake budget is enforced via `scripts/testing/check_pty_flake_contract.sh` (`PTY_MAX_RETRY_PASSES`, default `1`)
 
 ## Artifacts
 The lane uploads `full-confidence-<sha>` containing:
 - `.tmp/full-confidence/logs/*.log`
 - `.tmp/full-confidence/pty-preflight.log`
+- `.tmp/full-confidence/logs/pty-contract.log`
 - `.tmp/full-confidence/coverage/test-inventory.txt`
 - `.tmp/full-confidence/coverage/coverage-matrix-v0.1.md`
 - `.tmp/full-confidence/coverage/defer-register-v0.1.json`

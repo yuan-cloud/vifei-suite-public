@@ -121,12 +121,48 @@ jobs:
           grep -q '"stage":"tour_metadata"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing tour_metadata stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
           grep -q '"stage":"export_refusal_report"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing export_refusal_report stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
 
-      - name: PTY preflight
+      - name: PTY preflight (capability probe)
+        id: pty_preflight
         run: |
+          set +e
           OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh \
-            2>&1 | tee .tmp/full-confidence/logs/pty-preflight.log
+            > .tmp/full-confidence/pty-preflight.log 2>&1
+          rc=$?
+          set -e
+
+          cat .tmp/full-confidence/pty-preflight.log | tee .tmp/full-confidence/logs/pty-preflight.log
+
+          status="$(python3 - <<'PY'
+import json
+import pathlib
+
+path = pathlib.Path(".tmp/full-confidence/pty-preflight.log")
+line = path.read_text(encoding="utf-8").strip()
+payload = json.loads(line) if line else {}
+status = payload.get("status")
+print(status if status in {"pass", "fail"} else "invalid")
+PY
+          )"
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [[ "$status" == "pass" ]]; then
+            echo "PTY preflight passed; interactive PTY suite will run."
+          elif [[ "$status" == "fail" ]]; then
+            echo "PTY preflight failed with capability reason; interactive PTY suite is gated for this runner."
+          else
+            echo "CONTRACT_FAIL[PTY0-preflight-schema] invalid preflight payload"
+            echo "replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh"
+            exit 1
+          fi
+
+          if [[ "$rc" -ne 0 && "$status" != "fail" ]]; then
+            echo "CONTRACT_FAIL[PTY0-preflight-exit] non-zero preflight exit without fail status"
+            echo "replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh"
+            exit 1
+          fi
 
       - name: TUI E2E interactive suite
+        if: steps.pty_preflight.outputs.status == 'pass'
         run: |
           set +e
           TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e \
@@ -142,25 +178,12 @@ jobs:
           set -e
           exit "$rc"
 
-      - name: Validate PTY diagnostics artifacts
+      - name: Validate PTY capability + flake budget contract
         if: always()
         run: |
-          test -f .tmp/full-confidence/pty-preflight.log
-          grep -q '"schema_version":"panopticon-pty-preflight-v1"' .tmp/full-confidence/pty-preflight.log
-          grep -q '"status":"' .tmp/full-confidence/pty-preflight.log
-
-          shopt -s nullglob
-          logs=(.tmp/full-confidence/tui-e2e/*.assertions.log)
-          if [ "${#logs[@]}" -eq 0 ]; then
-            echo "No TUI assertion logs produced under .tmp/full-confidence/tui-e2e/"
-            exit 1
-          fi
-
-          for log in "${logs[@]}"; do
-            grep -q '"schema_version":"panopticon-tui-e2e-assert-v1"' "$log"
-            grep -q '"status":"' "$log"
-            grep -q '"attempt":' "$log"
-          done
+          PTY_MAX_RETRY_PASSES=1 \
+            scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence \
+            2>&1 | tee .tmp/full-confidence/logs/pty-contract.log
 
       - name: Upload full-confidence evidence
         if: always()

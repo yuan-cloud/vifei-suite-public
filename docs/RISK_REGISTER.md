@@ -1106,3 +1106,16 @@ Context:
 3. Nondeterminism: No new runtime nondeterminism introduced; closeout explicitly reinforces deterministic stage markers and replayable failure evidence expectations.
 4. Security: No new runtime secret surface added; stronger refusal/export and diagnostics checks improve confidence that share-safe behavior fails closed with actionable evidence.
 5. Performance: No production runtime impact; testing/CI overhead remains slightly elevated due to additional contract checks and artifact verification.
+
+## bd-qra · TEST-4.7 capability-gated PTY CI and flake-budget enforcement · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (determinism is testable in CI), I5 (loud failure posture), PTY diagnostics contract stability
+- Constitution touched: none
+
+1. Coupling: CI now couples PTY behavior to structured preflight schema + assertion log schema; schema drift requires synchronized updates across tests, scripts, and workflow checks.
+2. Untested claims: We enforce capability-gated semantics and flake budgets in automation, but cannot guarantee PTY availability parity across every hosted runner image revision.
+3. Nondeterminism: This reduces nondeterministic CI failures by gating PTY-only checks behind explicit capability checks while preserving deterministic contract markers in logs.
+4. Security: No new runtime secret surface; replay hints remain command-only and diagnostic artifacts are local CI outputs.
+5. Performance: Minor CI overhead increase from additional contract validation; interactive PTY runs are skipped on unsupported runners, reducing wasted retry cycles.
