@@ -13,9 +13,9 @@ This plan answers four questions for v0.1:
 
 ## Critical Insight Check (Current Repo State)
 
-- Root `README.md` is currently missing, so "launch-quality docs" starts with creating a top-level README.
-- Existing launch track (`bd-x7q.*`) already covers README and assets, but not full release-channel operations.
-- Core M6/M7 work has been active; launch execution should remain gated on stabilization and review completion.
+- Root `README.md` is now present and has completed polish/QA tracks (`bd-x7q.*`, `bd-1w9.*`).
+- Launch docs and release operations tracks are complete; remaining near-term hardening is test-system work (`bd-2yv.*`).
+- Release execution should stay gated on green verification/test lanes.
 
 ## Do We Need "Deployment" for v0.1?
 

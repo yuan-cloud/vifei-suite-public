@@ -10,6 +10,10 @@ Scope:
 
 ## Validation results
 
+Detailed command evidence lives in `docs/README_VERIFICATION.md`.
+
+This QA report intentionally summarizes gate outcomes to avoid duplicating the full verification log.
+
 1. CLI help command
 
 ```bash
@@ -17,6 +21,7 @@ cargo run -p panopticon-tui --bin panopticon -- --help
 ```
 
 Result: PASS. Command surface matches README sections (`view`, `export`, `tour`).
+Source: `docs/README_VERIFICATION.md` (Command Validation Matrix items 1-3).
 
 2. Deterministic stress Tour command
 
@@ -26,9 +31,8 @@ cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl
 cat /tmp/readme-tour-a/viewmodel.hash /tmp/readme-tour-b/viewmodel.hash
 ```
 
-Result: PASS. Hashes matched:
-
-`000573091386a86cabe6935bbe997897a83f42cf89595238e55c2f9c8d45eda6`
+Result: PASS. Hashes matched.
+Source: `docs/README_VERIFICATION.md` (hash compare evidence).
 
 3. Share-safe export command
 
@@ -37,6 +41,7 @@ cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample
 ```
 
 Result: PASS. Bundle generated successfully.
+Source: `docs/README_VERIFICATION.md` (export success evidence).
 
 4. TUI `view` command behavior in non-interactive environment
 
@@ -44,7 +49,8 @@ Result: PASS. Bundle generated successfully.
 cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-eventlog.jsonl
 ```
 
-Result: expected failure in this non-TTY environment (`Permission denied (os error 13)`). README already states `view` requires an interactive terminal.
+Result: expected failure in non-TTY environments. README already states `view` requires an interactive terminal.
+Source: `docs/README_VERIFICATION.md` (view smoke note).
 
 5. Asset path checks
 
@@ -67,3 +73,4 @@ Result: PASS.
 ## Follow-up
 
 - Keep `README.md`, `docs/README_VERIFICATION.md`, and `docs/README_ASSET_PLAYBOOK.md` synchronized whenever CLI contract or asset generation changes.
+- Treat `docs/README_VERIFICATION.md` as the canonical command evidence log for README claims.
