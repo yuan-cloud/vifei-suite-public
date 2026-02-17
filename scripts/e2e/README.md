@@ -4,6 +4,7 @@
 
 - `scripts/e2e/cli_e2e.sh`: deterministic CLI end-to-end validation for help, non-TTY `view`, stress `tour`, clean `export`, and refusal `export`.
 - `scripts/e2e/fastlane.sh`: sub-5-minute deterministic smoke lane (core invariants, CLI success/refusal, TUI modality/interactive smoke, artifact checks).
+- `scripts/e2e/pty_preflight.sh`: explicit PTY capability check for CI/operator environments before interactive TUI E2E.
 - `cargo test -p panopticon-tui --test tui_e2e_interactive`: PTY-backed interactive TUI E2E for lens toggle, forensic navigation, Truth HUD visibility, clean exit, and narrow-terminal profile.
 
 ## Run
@@ -25,6 +26,12 @@ Interactive TUI output path:
 PANOPTICON_E2E_OUT=/tmp/panopticon-e2e/tui cargo test -p panopticon-tui --test tui_e2e_interactive
 ```
 
+CI/operator PTY preflight:
+
+```bash
+OUT_DIR=.tmp/e2e/tui scripts/e2e/pty_preflight.sh
+```
+
 ## Output Contract
 
 The script writes:
@@ -39,6 +46,7 @@ The interactive TUI test writes:
 
 - `<workspace-root>/.tmp/e2e/tui/*.typescript`: PTY transcripts (first failure and retry attempt transcripts preserved).
 - `<workspace-root>/.tmp/e2e/tui/*.assertions.log`: pass/fail summary with transcript pointers.
+- `<workspace-root>/.tmp/e2e/tui/pty-preflight.log`: explicit PTY capability pass/fail status.
 
 ## Failure Triage
 

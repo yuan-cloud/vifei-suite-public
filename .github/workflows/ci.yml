@@ -86,6 +86,11 @@ jobs:
           OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
             2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
 
+      - name: PTY preflight
+        run: |
+          OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh \
+            2>&1 | tee .tmp/full-confidence/logs/pty-preflight.log
+
       - name: TUI E2E interactive suite
         run: |
           cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \

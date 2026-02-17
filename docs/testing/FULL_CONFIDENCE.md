@@ -19,12 +19,15 @@
 - captures `docs/testing/defer-register-v0.1.json`
 4. CLI E2E
 - `scripts/e2e/cli_e2e.sh`
-5. Interactive TUI E2E
+5. PTY preflight
+- `scripts/e2e/pty_preflight.sh`
+6. Interactive TUI E2E
 - `cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture`
 
 ## Artifacts
 The lane uploads `full-confidence-<sha>` containing:
 - `.tmp/full-confidence/logs/*.log`
+- `.tmp/full-confidence/pty-preflight.log`
 - `.tmp/full-confidence/coverage/test-inventory.txt`
 - `.tmp/full-confidence/coverage/coverage-matrix-v0.1.md`
 - `.tmp/full-confidence/coverage/defer-register-v0.1.json`

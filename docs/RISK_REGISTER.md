@@ -688,3 +688,11 @@ Context:
 3. Nondeterminism: No nondeterminism introduced; path normalization is deterministic and independent of runtime clock/randomness.
 4. Security and privacy: No new secret/data exposure paths. Artifact location changed to improve traceability only.
 5. Performance cliffs: Negligible; path normalization is constant-time and only used in test harness setup.
+
+## bd-1un · TEST-E2E-PTY-CI: enforce PTY capability preflight in CI env docs/check
+
+1. Coupling: Interactive TUI E2E in CI is now coupled to explicit PTY preflight (`scripts/e2e/pty_preflight.sh`) and associated log paths in `full-confidence` artifacts.
+2. Untested claims: This environment intentionally fails PTY preflight (permission denied), so successful path is validated by script logic and CI wiring but requires first remote CI run confirmation.
+3. Nondeterminism: No product-path nondeterminism introduced; preflight is a deterministic capability probe with explicit pass/fail report.
+4. Security and privacy: Preflight logs include only capability diagnostics (no sensitive payloads), improving visibility without adding secret-bearing outputs.
+5. Performance cliffs: Minimal overhead (single `script -qefc true` probe) relative to interactive TUI test runtime.
