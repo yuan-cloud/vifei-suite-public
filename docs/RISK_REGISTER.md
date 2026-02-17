@@ -480,3 +480,11 @@ Context:
 3. Nondeterminism: None introduced. Docs-only updates with no runtime behavior changes.
 4. Security: The rubric reduces risk by requiring explicit evidence for security/export claims and by prioritizing secret-handling failures as P0.
 5. Performance cliffs: No runtime impact. Operational overhead is bounded to launch-week triage cadence.
+
+## bd-1w9.1 · README-TOOLS: evaluate and select beautification tooling · 2026-02-17
+
+1. Coupling: README polish now couples to selected tools (`shields.io`, Mermaid, optional `vhs`/`asciinema`, `markdownlint-cli2`). Future README updates should stay within this tool policy to avoid style drift.
+2. Untested claims: Tool selection guidance does not guarantee improved engagement; it defines implementation constraints and quality posture only.
+3. Nondeterminism: No runtime nondeterminism introduced; this is documentation and process guidance only.
+4. Security: Restricting visuals to deterministic terminal-native captures reduces risk of misleading or fabricated evidence imagery.
+5. Performance cliffs: No product runtime impact; minor contributor overhead when regenerating visual assets.
