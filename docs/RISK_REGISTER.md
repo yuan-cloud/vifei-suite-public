@@ -408,3 +408,11 @@ Context:
 3. Nondeterminism: None introduced. No runtime code paths changed.
 4. Security: Improves release hygiene by requiring verification findings to gate release tagging. No new secret/PII surface.
 5. Performance cliffs: None; documentation-only change.
+
+## bd-x7q.2 · README-CORE: root README proof-first rewrite · 2026-02-17
+
+1. Coupling: README command examples now couple to current CLI flags and subcommand names (`view`, `export`, `tour`); future CLI changes must update README and downstream verification bead.
+2. Untested claims: README intentionally avoids unverified claims about packaging channels, asset paths, or hosted deployment. Commands shown were validated against current CLI help and stress-tour execution shape.
+3. Nondeterminism: No product-path nondeterminism introduced; docs-only change.
+4. Security: README reinforces `--share-safe` export posture and trust-challenge checks. No new secret or credential handling surface added.
+5. Performance cliffs: None. Documentation-only changes.
