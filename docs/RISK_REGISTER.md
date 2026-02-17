@@ -1249,3 +1249,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; parsing order remains source-line order.
 4. Security: No new secret surface; change only affects read-path buffering strategy.
 5. Performance: Expected memory improvement from avoiding full-file string buffering; actual hotspot/memory deltas are measured in A3-2.
+
+## bd-2aum · A3-2 post-C2 hotspot and memory profile refresh · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (determinism evidence)
+- Constitution touched: none
+
+1. Coupling: Profiling conclusions are tied to current representative fixture and profile_tour staging model.
+2. Untested claims: Measurements indicate improvement, but no cross-host statistical confidence intervals were collected.
+3. Nondeterminism: No runtime behavior changes introduced; evidence-only bead.
+4. Security: No new security surface; profiling outputs contain only performance counters and deterministic stage metrics.
+5. Performance: C2 appears beneficial; next optimization decision should avoid overfitting to single workload signature.
