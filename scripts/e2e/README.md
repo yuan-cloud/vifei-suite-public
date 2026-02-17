@@ -3,6 +3,7 @@
 ## Script
 
 - `scripts/e2e/cli_e2e.sh`: deterministic CLI end-to-end validation for help, non-TTY `view`, stress `tour`, clean `export`, and refusal `export`.
+- `cargo test -p panopticon-tui --test tui_e2e_interactive`: PTY-backed interactive TUI E2E for lens toggle, forensic navigation, Truth HUD visibility, clean exit, and narrow-terminal profile.
 
 ## Run
 
@@ -16,6 +17,12 @@ Optional output path:
 OUT_DIR=/tmp/panopticon-e2e scripts/e2e/cli_e2e.sh
 ```
 
+Interactive TUI output path:
+
+```bash
+PANOPTICON_E2E_OUT=/tmp/panopticon-e2e/tui cargo test -p panopticon-tui --test tui_e2e_interactive
+```
+
 ## Output Contract
 
 The script writes:
@@ -25,6 +32,11 @@ The script writes:
 - `cmd/*.stdout.log` and `cmd/*.stderr.log`: per-step transcripts.
 - `tour/*`: generated Tour artifacts.
 - `export/*`: generated export artifacts.
+
+The interactive TUI test writes:
+
+- `.tmp/e2e/tui/*.typescript`: PTY transcripts (first failure and retry attempt transcripts preserved).
+- `.tmp/e2e/tui/*.assertions.log`: pass/fail summary with transcript pointers.
 
 ## Failure Triage
 

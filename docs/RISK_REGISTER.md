@@ -600,3 +600,11 @@ Context:
 3. Nondeterminism: Fixed a real nondeterminism source by removing stale `sample-refusal-eventlog.jsonl` before regenerating refusal artifacts; repeat runs now produce stable refusal output.
 4. Security and privacy: Refusal test fixtures intentionally include secret-like markers for scanner assertions only; no new secret exposure paths were introduced.
 5. Performance cliffs: Added unit tests are lightweight and file-local; no runtime production performance impact.
+
+## bd-2yv.4 · TEST-E2E-TUI: interactive TUI end-to-end harness
+
+1. Coupling: PTY E2E assertions now couple to visible TUI labels (Incident/Forensic lens and Truth HUD markers), so intentional UX copy changes must update this harness.
+2. Untested claims: True interactive key handling is now exercised; however, environments without PTY support follow explicit skip policy and rely on existing unit/snapshot coverage.
+3. Nondeterminism: Added bounded retry (max 1) and deterministic key sequences; preflight gate avoids flaky hard-fails in PTY-restricted environments.
+4. Security and privacy: Harness uses synthetic local fixtures only and writes transcripts to local `.tmp` output paths for failure triage.
+5. Performance cliffs: New PTY tests are lightweight but add external process overhead; they are scoped to one flow test plus one narrow-terminal profile.
