@@ -512,3 +512,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; documentation presentation changes only.
 4. Security: README still avoids unverified security claims and keeps trust language tied to reproducible commands.
 5. Performance cliffs: No product runtime impact; minor docs maintenance overhead when workflows/repo metadata change.
+
+## bd-1w9.5 · README-QA: readability, command validity, and launch-quality review · 2026-02-17
+
+1. Coupling: README examples are now explicitly validated against current CLI behavior and generated asset paths; future command/asset changes require QA report refresh.
+2. Untested claims: Readability improvements are reviewed manually and command-validated, but broader audience comprehension still depends on future UX sessions.
+3. Nondeterminism: Determinism checks were re-run and hash outputs matched; no new nondeterministic behavior introduced.
+4. Security: QA reinforces share-safe export posture and avoids introducing claims beyond validated behavior.
+5. Performance cliffs: QA process includes two stress Tour runs and can be time-consuming in CI-like environments, but this is intentional for trust verification.
