@@ -1002,3 +1002,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced.
 4. Security: Clarifies failure behavior and reduces risk of ambiguous parser rewrites in automation.
 5. Performance: No runtime impact.
+
+## bd-2j0 · CLI parse-error UX guidance polish · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: deterministic robot envelope schema, stable exit-code mapping
+- Constitution touched: none
+
+1. Coupling: Parse guidance now depends on clap error kinds; if clap kind semantics change, suggestions may need updates.
+2. Untested claims: We cover major parse categories (invalid subcommand, missing required args, conflicts), but not every clap error kind.
+3. Nondeterminism: No new nondeterminism introduced; messages/suggestions are deterministic and kind-based.
+4. Security: Better guidance reduces operator mis-invocation loops; no new secret or privilege surface added.
+5. Performance: Negligible runtime overhead (small match and static suggestions in parse-failure path only).

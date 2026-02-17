@@ -7,6 +7,7 @@ mod cli_contract;
 mod cli_handlers;
 mod cli_normalize;
 
+use clap::error::ErrorKind;
 use clap::Parser;
 use cli_contract::{AppExit, Cli, OutputMode, QUICK_HELP};
 use cli_handlers::{emit_json_error, emit_json_success, handle_command};
@@ -51,14 +52,11 @@ fn main() -> ExitCode {
     let cli = match Cli::try_parse_from(&args) {
         Ok(cli) => cli,
         Err(err) => {
-            let suggestions = vec![
-                "Run `panopticon --help` for command syntax.".to_string(),
-                "Run `panopticon <command> --help` for command-specific args.".to_string(),
-            ];
+            let (message, suggestions) = parse_error_guidance(err.kind());
             if mode == OutputMode::Json {
                 emit_json_error(
                     "INVALID_ARGS",
-                    "Invalid command syntax.",
+                    message,
                     &suggestions,
                     &repair_notes,
                     AppExit::InvalidArgs as u8,
@@ -70,6 +68,9 @@ fn main() -> ExitCode {
                     }
                 }
                 eprintln!("{err}");
+                for (idx, suggestion) in suggestions.iter().enumerate() {
+                    eprintln!("Hint {}: {}", idx + 1, suggestion);
+                }
             }
             return AppExit::InvalidArgs.code();
         }
@@ -79,9 +80,54 @@ fn main() -> ExitCode {
     handle_command(cli, mode, &repair_notes).code()
 }
 
+fn parse_error_guidance(kind: ErrorKind) -> (&'static str, Vec<String>) {
+    match kind {
+        ErrorKind::InvalidSubcommand => (
+            "Unknown subcommand.",
+            vec![
+                "Use one of: `panopticon view`, `panopticon export`, or `panopticon tour`."
+                    .to_string(),
+                "Run `panopticon --help` for full command syntax.".to_string(),
+            ],
+        ),
+        ErrorKind::UnknownArgument => (
+            "Unknown flag or option.",
+            vec![
+                "Run `panopticon --help` for global flags.".to_string(),
+                "Run `panopticon <command> --help` to inspect command-specific flags.".to_string(),
+            ],
+        ),
+        ErrorKind::MissingRequiredArgument => (
+            "Missing required argument.",
+            vec![
+                "Example: `panopticon view <eventlog.jsonl>`.".to_string(),
+                "Example: `panopticon export <eventlog.jsonl> --share-safe --output <bundle.tar.zst>`."
+                    .to_string(),
+            ],
+        ),
+        ErrorKind::ArgumentConflict => (
+            "Conflicting flags or arguments.",
+            vec![
+                "Use either `--json` or `--human`, but not both.".to_string(),
+                "Run `panopticon --help` to review valid flag combinations.".to_string(),
+            ],
+        ),
+        _ => (
+            "Invalid command syntax.",
+            vec![
+                "Run `panopticon --help` for command syntax.".to_string(),
+                "Run `panopticon <command> --help` for command-specific args.".to_string(),
+            ],
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{format_cli_failure, normalize_args, select_output_mode, OutputMode, QUICK_HELP};
+    use super::{
+        format_cli_failure, normalize_args, parse_error_guidance, select_output_mode, ErrorKind,
+        OutputMode, QUICK_HELP,
+    };
 
     #[test]
     fn cli_failure_template_has_required_sections() {
@@ -156,5 +202,19 @@ mod tests {
         assert!(repaired.contains(&"--share-safe".to_string()));
         assert!(repaired.contains(&"--output-dir".to_string()));
         assert_eq!(notes.len(), 2);
+    }
+
+    #[test]
+    fn parse_error_guidance_invalid_subcommand_is_specific() {
+        let (message, suggestions) = parse_error_guidance(ErrorKind::InvalidSubcommand);
+        assert_eq!(message, "Unknown subcommand.");
+        assert!(suggestions[0].contains("panopticon view"));
+    }
+
+    #[test]
+    fn parse_error_guidance_missing_required_argument_is_specific() {
+        let (message, suggestions) = parse_error_guidance(ErrorKind::MissingRequiredArgument);
+        assert_eq!(message, "Missing required argument.");
+        assert!(suggestions[1].contains("--share-safe --output"));
     }
 }

@@ -48,8 +48,59 @@ fn invalid_args_emit_structured_error_envelope() {
     assert_eq!(value["ok"], false);
     assert_eq!(value["code"], "INVALID_ARGS");
     assert_eq!(value["exit_code"], 2);
-    assert!(value["message"].is_string());
+    assert_eq!(value["message"], "Unknown subcommand.");
     assert!(value["suggestions"].is_array());
+    assert!(
+        value["suggestions"]
+            .as_array()
+            .expect("suggestions")
+            .iter()
+            .any(|v| v.as_str().is_some_and(|s| s.contains("panopticon view"))),
+        "unknown-subcommand guidance should contain concrete command suggestions"
+    );
+}
+
+#[test]
+fn missing_required_args_emit_specific_guidance() {
+    let (code, stdout, _stderr) = run_panopticon(&["--json", "export"]);
+    assert_eq!(code, 2, "parse failures must map to invalid-args code");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "INVALID_ARGS");
+    assert_eq!(value["message"], "Missing required argument.");
+    assert!(
+        value["suggestions"]
+            .as_array()
+            .expect("suggestions")
+            .iter()
+            .any(|v| v
+                .as_str()
+                .is_some_and(|s| s.contains("--share-safe --output"))),
+        "missing-required guidance should include export example"
+    );
+}
+
+#[test]
+fn conflicting_flags_emit_specific_guidance() {
+    let (code, stdout, _stderr) = run_panopticon(&["--json", "--human", "view", "x.jsonl"]);
+    assert_eq!(
+        code, 2,
+        "conflicting parse args should map to invalid-args code"
+    );
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "INVALID_ARGS");
+    assert_eq!(value["message"], "Conflicting flags or arguments.");
+    assert!(
+        value["suggestions"]
+            .as_array()
+            .expect("suggestions")
+            .iter()
+            .any(|v| v
+                .as_str()
+                .is_some_and(|s| s.contains("--json") && s.contains("--human"))),
+        "argument-conflict guidance should mention mutually-exclusive flags"
+    );
 }
 
 #[test]
