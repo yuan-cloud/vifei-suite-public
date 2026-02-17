@@ -99,7 +99,8 @@ Behavior contract:
 - `--json` returns compact structured output for success and errors.
 - When stdout is piped, CLI auto-switches to JSON (unless `--human` is set).
 - Error payloads include `code`, `message`, and `suggestions`.
-- Minor syntax variants may be auto-normalized when intent is clear.
+- Parser authority is explicit: `clap` owns subcommand aliases and parse semantics.
+- Normalization is bounded to known option spelling repairs and never rewrites positionals (including after `--`).
 
 Force human-readable output even when piping:
 

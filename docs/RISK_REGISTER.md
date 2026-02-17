@@ -989,3 +989,16 @@ Context:
 3. Nondeterminism: No new nondeterministic sources introduced. Parsing and normalization remain deterministic and now have stricter mutation boundaries (no positional rewrites, no mutation after `--`).
 4. Security: No new secret or privilege surface added. Structured error behavior remains explicit and deterministic; reduced silent rewrites lowers risk of hidden operator error in automation.
 5. Performance: Runtime overhead is neutral to improved; fewer normalization branches and clap-native alias handling avoid extra heuristic passes.
+
+## bd-1ey · CLI parser-authority durability docs guard · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: deterministic CLI contract behavior and parser-authority boundary
+- Constitution touched: none
+
+1. Coupling: AGENTS/README now explicitly couple contributor workflow to clap-as-authority and bounded normalization; future parser changes must keep docs and tests aligned.
+2. Untested claims: This bead is docs/process-only; it does not itself prove runtime behavior beyond existing CLI contract tests.
+3. Nondeterminism: No runtime nondeterminism introduced.
+4. Security: Clarifies failure behavior and reduces risk of ambiguous parser rewrites in automation.
+5. Performance: No runtime impact.

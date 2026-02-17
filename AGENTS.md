@@ -84,6 +84,13 @@ The `panopticon` CLI supports a robot-oriented mode for AI agents and automation
 
 Use this mode for scripted checks, bead automation, and CI diagnostics where token efficiency and determinism matter.
 
+Parser authority rule for robot mode:
+
+- `clap` is the only authority for command parsing and subcommand aliases.
+- Pre-parse normalization is limited to an explicit allowlist of option spelling repairs (for example underscore-to-hyphen long flags).
+- Normalization must never rewrite positional tokens and must stop at `--`.
+- Any change to parser/normalization behavior must include updates to CLI contract tests (`crates/panopticon-tui/tests/cli_robot_mode_contract.rs` and related unit tests) in the same commit.
+
 ---
 
 ## MULTI-AGENT REALITY
