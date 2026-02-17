@@ -12,6 +12,9 @@ Constitutional behavior rules remain in:
 - `docs/CAPACITY_ENVELOPE.md`
 - `docs/BACKPRESSURE_POLICY.md`
 
+Modality-specific expectations are defined in:
+- `docs/UX_MODALITY_MATRIX.md`
+
 ## Premium UX Principles for Panopticon
 1. Clarity first
 Critical state and next safe action must be obvious in the first screenful.

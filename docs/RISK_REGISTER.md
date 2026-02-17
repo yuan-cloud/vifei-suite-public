@@ -528,3 +528,11 @@ Context:
 3. Nondeterminism: None introduced. Documentation-only change; no runtime logic, ordering, hashing, or rendering behavior changed.
 4. Security and privacy: No new data handling. No secrets/PII introduced.
 5. Performance cliffs: None introduced. Potential process risk is over-scoping UX work; mitigated by ranked pain points and explicit non-goals in `docs/UX_SCOPE.md`.
+
+## bd-gxd.8 · UX-MODALITY-SPEC: define desktop, narrow-terminal, and mobile-readme UX matrix
+
+1. Coupling: Added `docs/UX_MODALITY_MATRIX.md` and linked it from `docs/UX_SCOPE.md`; downstream UX beads now rely on this matrix for width-bucket behavior and mobile-readme constraints.
+2. Untested claims: This bead defines planning constraints only. Runtime behavior remains untested until implementation beads (`bd-gxd.2`..`bd-gxd.6`) and validation beads (`bd-gxd.9`, `bd-gxd.10`) execute.
+3. Nondeterminism: None introduced. Documentation-only update; no runtime ordering, hashing, or projection logic changed.
+4. Security and privacy: No new data handling or exposure risk.
+5. Performance cliffs: None in runtime. Process risk is over-constraining layout decisions; mitigated by explicit required/optional/deferred tiers per width bucket.
