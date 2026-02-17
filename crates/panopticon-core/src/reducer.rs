@@ -52,10 +52,10 @@ use std::collections::BTreeMap;
 
 /// Reducer logic version. Included in state_hash so that reducer changes
 /// produce visibly different hashes.
-pub const REDUCER_VERSION: &str = "reducer-v0.1";
+pub(crate) const REDUCER_VERSION: &str = "reducer-v0.1";
 
 /// Checkpoint interval from `docs/CAPACITY_ENVELOPE.md`.
-pub const CHECKPOINT_INTERVAL: u64 = 5000;
+pub(crate) const CHECKPOINT_INTERVAL: u64 = 5000;
 
 // ---------------------------------------------------------------------------
 // State (M4.1)
@@ -268,7 +268,8 @@ pub fn reduce(state: &State, event: &CommittedEvent) -> State {
     }
 
     // Per-run event counting.
-    s.run_metadata
+    let run = s
+        .run_metadata
         .entry(event.run_id.clone())
         .or_insert_with(|| RunInfo {
             agent: String::new(),
@@ -277,40 +278,18 @@ pub fn reduce(state: &State, event: &CommittedEvent) -> State {
             exit_code: None,
             reason: None,
             event_count: 0,
-        })
-        .event_count += 1;
+        });
+    run.event_count += 1;
 
     // Dispatch on payload variant.
     match &event.payload {
         EventPayload::RunStart { agent, args } => {
-            let run = s
-                .run_metadata
-                .entry(event.run_id.clone())
-                .or_insert_with(|| RunInfo {
-                    agent: String::new(),
-                    args: None,
-                    ended: false,
-                    exit_code: None,
-                    reason: None,
-                    event_count: 0,
-                });
             run.agent = agent.clone();
             run.args = args.clone();
         }
         EventPayload::RunEnd {
             exit_code, reason, ..
         } => {
-            let run = s
-                .run_metadata
-                .entry(event.run_id.clone())
-                .or_insert_with(|| RunInfo {
-                    agent: String::new(),
-                    args: None,
-                    ended: false,
-                    exit_code: None,
-                    reason: None,
-                    event_count: 0,
-                });
             run.ended = true;
             run.exit_code = *exit_code;
             run.reason = reason.clone();
@@ -452,6 +431,8 @@ pub fn state_hash(state: &State) -> String {
     hasher.update(REDUCER_VERSION.as_bytes());
     // Canonical JSON serialization. serde_json serializes struct fields in
     // declaration order, BTreeMap keys in sorted order.
+    // State contains only primitive types and BTreeMaps, so serialization
+    // should never fail.
     let state_bytes = serde_json::to_vec(state).expect("State serialization should never fail");
     hasher.update(&state_bytes);
     hasher.finalize().to_hex().to_string()
@@ -462,7 +443,8 @@ pub fn state_hash(state: &State) -> String {
 // ---------------------------------------------------------------------------
 
 /// Create a checkpoint for the current state.
-pub fn create_checkpoint(state: &State) -> Checkpoint {
+#[allow(dead_code)] // Used in tests, will be used for checkpoint persistence
+pub(crate) fn create_checkpoint(state: &State) -> Checkpoint {
     Checkpoint {
         reducer_version: REDUCER_VERSION.to_string(),
         commit_index: state.last_commit_index,
@@ -471,15 +453,17 @@ pub fn create_checkpoint(state: &State) -> Checkpoint {
 }
 
 /// Serialize a checkpoint to JSON bytes.
-pub fn serialize_checkpoint(checkpoint: &Checkpoint) -> Vec<u8> {
-    serde_json::to_vec_pretty(checkpoint).expect("Checkpoint serialization should never fail")
+#[allow(dead_code)] // Used in tests, will be used for checkpoint persistence
+pub(crate) fn serialize_checkpoint(checkpoint: &Checkpoint) -> Result<Vec<u8>, serde_json::Error> {
+    serde_json::to_vec_pretty(checkpoint)
 }
 
 /// Deserialize a checkpoint from JSON bytes.
 ///
 /// Returns `None` if deserialization fails or if the `reducer_version`
 /// doesn't match the current version (stale checkpoint).
-pub fn load_checkpoint(data: &[u8]) -> Option<Checkpoint> {
+#[allow(dead_code)] // Used in tests, will be used for checkpoint loading
+pub(crate) fn load_checkpoint(data: &[u8]) -> Option<Checkpoint> {
     let checkpoint: Checkpoint = serde_json::from_slice(data).ok()?;
     if checkpoint.reducer_version != REDUCER_VERSION {
         return None;
@@ -893,7 +877,7 @@ mod tests {
         state.tier_a_count = 5000;
         state.event_counts_by_type.insert("RunStart".into(), 1);
         let checkpoint = create_checkpoint(&state);
-        let bytes = serialize_checkpoint(&checkpoint);
+        let bytes = serialize_checkpoint(&checkpoint).unwrap();
         let loaded = load_checkpoint(&bytes).unwrap();
         assert_eq!(loaded.reducer_version, REDUCER_VERSION);
         assert_eq!(loaded.commit_index, 4999);
@@ -1059,7 +1043,7 @@ mod tests {
         // Checkpoint replay: reduce first 5000, checkpoint, then resume.
         let (state_at_checkpoint, _) = replay(&events[..5000]);
         let checkpoint = create_checkpoint(&state_at_checkpoint);
-        let checkpoint_bytes = serialize_checkpoint(&checkpoint);
+        let checkpoint_bytes = serialize_checkpoint(&checkpoint).unwrap();
         let loaded = load_checkpoint(&checkpoint_bytes).unwrap();
 
         // Resume from checkpoint.
@@ -1090,7 +1074,7 @@ mod tests {
 
         let (state_at_cp, _) = replay(&events[..5000]);
         let checkpoint = create_checkpoint(&state_at_cp);
-        let loaded = load_checkpoint(&serialize_checkpoint(&checkpoint)).unwrap();
+        let loaded = load_checkpoint(&serialize_checkpoint(&checkpoint).unwrap()).unwrap();
         let (state_from_cp, _) = replay_from(loaded.state, &[]);
 
         assert_eq!(state_full, state_from_cp);
@@ -1116,7 +1100,8 @@ mod tests {
 
         let (state_at_cp, _) = replay(&events[..5000]);
         let loaded =
-            load_checkpoint(&serialize_checkpoint(&create_checkpoint(&state_at_cp))).unwrap();
+            load_checkpoint(&serialize_checkpoint(&create_checkpoint(&state_at_cp)).unwrap())
+                .unwrap();
         let (state_from_cp, _) = replay_from(loaded.state, &events[5000..]);
 
         assert_eq!(state_full, state_from_cp);
@@ -1144,7 +1129,8 @@ mod tests {
         // Resume from second checkpoint (at 9999, i.e., first 10000 events).
         let (state_at_cp2, _) = replay(&events[..10000]);
         let loaded =
-            load_checkpoint(&serialize_checkpoint(&create_checkpoint(&state_at_cp2))).unwrap();
+            load_checkpoint(&serialize_checkpoint(&create_checkpoint(&state_at_cp2)).unwrap())
+                .unwrap();
         let (state_from_cp2, _) = replay_from(loaded.state, &events[10000..]);
 
         assert_eq!(state_full, state_from_cp2);

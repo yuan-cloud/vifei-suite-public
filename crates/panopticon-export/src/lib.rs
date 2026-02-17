@@ -72,7 +72,7 @@ pub struct RefusalReport {
 
 impl RefusalReport {
     /// Create a new refusal report with the given findings.
-    pub fn new(findings: Vec<SecretFinding>) -> Self {
+    pub(crate) fn new(findings: Vec<SecretFinding>) -> Self {
         let summary = format!(
             "Export refused: {} secret(s) detected in {} location(s)",
             findings.len(),
@@ -90,7 +90,7 @@ impl RefusalReport {
     }
 
     /// Write the refusal report to a JSON file.
-    pub fn write_to(&self, path: &Path) -> io::Result<()> {
+    pub(crate) fn write_to(&self, path: &Path) -> io::Result<()> {
         let json = serde_json::to_string_pretty(self).map_err(|e| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -147,7 +147,7 @@ impl ExportConfig {
 
 /// Discovered content from an EventLog ready for export.
 #[derive(Debug)]
-pub struct DiscoveredContent {
+pub(crate) struct DiscoveredContent {
     /// Path to the EventLog file.
     pub eventlog_path: PathBuf,
     /// Set of blob payload_refs referenced by events.
@@ -159,20 +159,21 @@ pub struct DiscoveredContent {
 /// Discover all content referenced by an EventLog.
 ///
 /// Reads the EventLog and identifies all blob references.
-pub fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
+pub(crate) fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
     let events = read_eventlog(eventlog_path)?;
+    let event_count = events.len();
     let mut blob_refs = HashSet::new();
 
-    for event in &events {
-        if let Some(ref payload_ref) = event.payload_ref {
-            blob_refs.insert(payload_ref.clone());
+    for event in events {
+        if let Some(payload_ref) = event.payload_ref {
+            blob_refs.insert(payload_ref);
         }
     }
 
     Ok(DiscoveredContent {
         eventlog_path: eventlog_path.to_path_buf(),
         blob_refs,
-        event_count: events.len(),
+        event_count,
     })
 }
 
@@ -181,7 +182,7 @@ pub fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
 /// Returns a list of findings. Empty list means clean.
 ///
 /// NOTE: Full implementation in M8.2. This is a pipeline stub.
-pub fn scan_for_secrets(
+pub(crate) fn scan_for_secrets(
     _content: &DiscoveredContent,
     _blob_store: Option<&BlobStore>,
 ) -> io::Result<Vec<SecretFinding>> {
@@ -193,7 +194,7 @@ pub fn scan_for_secrets(
 /// Bundle discovered content into a deterministic archive.
 ///
 /// NOTE: Full implementation in M8.4. This is a pipeline stub.
-pub fn create_bundle(
+pub(crate) fn create_bundle(
     content: &DiscoveredContent,
     _blob_store: Option<&BlobStore>,
     output_path: &Path,

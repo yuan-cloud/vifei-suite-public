@@ -1,10 +1,11 @@
 //! Panopticon CLI entry point.
 //!
-//! Provides the `panopticon` binary with subcommands for viewing and
-//! exporting EventLogs.
+//! Provides the `panopticon` binary with subcommands for viewing,
+//! exporting, and stress-testing EventLogs.
 
 use clap::{Parser, Subcommand};
 use panopticon_export::{ExportConfig, ExportResult};
+use panopticon_tour::TourConfig;
 use panopticon_tui::run_viewer;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -42,6 +43,20 @@ enum Commands {
         /// Path to write refusal report if secrets are detected.
         #[arg(long)]
         refusal_report: Option<PathBuf>,
+    },
+
+    /// Run the Tour stress harness to generate proof artifacts.
+    Tour {
+        /// Path to the fixture file (Agent Cassette JSONL).
+        fixture: PathBuf,
+
+        /// Enable stress mode (required in v0.1).
+        #[arg(long)]
+        stress: bool,
+
+        /// Output directory for proof artifacts (default: tour-output).
+        #[arg(long, default_value = "tour-output")]
+        output_dir: PathBuf,
     },
 }
 
@@ -104,6 +119,45 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!("Export error: {}", e);
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+
+        Commands::Tour {
+            fixture,
+            stress,
+            output_dir,
+        } => {
+            // Require --stress flag
+            if !stress {
+                eprintln!(
+                    "Error: --stress flag is required in v0.1.\n\
+                     Tour without stress mode is not supported.\n\n\
+                     Usage: panopticon tour --stress <fixture>"
+                );
+                return ExitCode::FAILURE;
+            }
+
+            let config = TourConfig::new(&fixture).with_output_dir(&output_dir);
+
+            match panopticon_tour::run_tour(&config) {
+                Ok(result) => {
+                    println!("Tour completed successfully!");
+                    println!("  Output:   {}", result.output_dir.display());
+                    println!("  Events:   {}", result.metrics.event_count_total);
+                    println!("  Drops:    {}", result.metrics.tier_a_drops);
+                    println!("  Level:    {}", result.metrics.degradation_level_final);
+                    println!("  Hash:     {}", result.viewmodel_hash);
+                    println!();
+                    println!("Artifacts:");
+                    println!("  - metrics.json");
+                    println!("  - viewmodel.hash");
+                    println!("  - ansi.capture");
+                    println!("  - timetravel.capture");
+                }
+                Err(e) => {
+                    eprintln!("Tour error: {}", e);
                     return ExitCode::FAILURE;
                 }
             }

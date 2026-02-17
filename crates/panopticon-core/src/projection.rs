@@ -139,18 +139,18 @@ impl LadderLevel {
     }
 
     /// Returns true if Tier B/C events should be aggregated at this level.
-    pub fn should_aggregate(&self) -> bool {
+    pub(crate) fn should_aggregate(&self) -> bool {
         *self >= LadderLevel::L1
     }
 
     /// Returns true if Tier B/C events should be collapsed to counts at this level.
-    pub fn should_collapse(&self) -> bool {
+    pub(crate) fn should_collapse(&self) -> bool {
         *self >= LadderLevel::L2
     }
 
     /// Returns the next escalation level, if any.
     /// L5 has no further escalation.
-    pub fn escalate(&self) -> Option<LadderLevel> {
+    pub(crate) fn escalate(&self) -> Option<LadderLevel> {
         match self {
             LadderLevel::L0 => Some(LadderLevel::L1),
             LadderLevel::L1 => Some(LadderLevel::L2),
@@ -163,7 +163,7 @@ impl LadderLevel {
 
     /// Returns the next de-escalation level, if any.
     /// L0 has no further de-escalation.
-    pub fn deescalate(&self) -> Option<LadderLevel> {
+    pub(crate) fn deescalate(&self) -> Option<LadderLevel> {
         match self {
             LadderLevel::L0 => None,
             LadderLevel::L1 => Some(LadderLevel::L0),
@@ -281,7 +281,7 @@ impl ProjectionInvariants {
     }
 
     /// Returns true if in safe failure posture.
-    pub fn is_safe_failure(&self) -> bool {
+    pub(crate) fn is_safe_failure(&self) -> bool {
         self.degradation_level.is_safe_failure()
     }
 }
@@ -328,17 +328,17 @@ impl ExportSafetyState {
     ];
 
     /// Returns true if the state indicates safety has not been evaluated.
-    pub fn is_unknown(&self) -> bool {
+    pub(crate) fn is_unknown(&self) -> bool {
         *self == ExportSafetyState::Unknown
     }
 
     /// Returns true if the EventLog is safe to export.
-    pub fn is_safe(&self) -> bool {
+    pub(crate) fn is_safe(&self) -> bool {
         *self == ExportSafetyState::Clean
     }
 
     /// Returns true if secrets were detected.
-    pub fn has_secrets(&self) -> bool {
+    pub(crate) fn has_secrets(&self) -> bool {
         matches!(self, ExportSafetyState::Dirty | ExportSafetyState::Refused)
     }
 }
@@ -396,7 +396,7 @@ impl FromStr for ExportSafetyState {
 /// Precision for queue_pressure quantization.
 /// Multiply f64 by this value and truncate to i64 for deterministic hashing.
 /// 6 decimal places = 1,000,000.
-pub const QUEUE_PRESSURE_PRECISION: i64 = 1_000_000;
+pub(crate) const QUEUE_PRESSURE_PRECISION: i64 = 1_000_000;
 
 /// The hashable data structure that drives the TUI.
 ///
@@ -491,17 +491,17 @@ impl ViewModel {
     }
 
     /// Returns true if the system is in normal operation (L0, no drops).
-    pub fn is_healthy(&self) -> bool {
+    pub(crate) fn is_healthy(&self) -> bool {
         self.degradation_level.is_normal() && self.tier_a_drops == 0
     }
 
     /// Returns true if any Tier A events were dropped (invariant violation).
-    pub fn has_tier_a_drops(&self) -> bool {
+    pub(crate) fn has_tier_a_drops(&self) -> bool {
         self.tier_a_drops > 0
     }
 
     /// Returns true if the UI should be frozen at the current degradation level.
-    pub fn is_ui_frozen(&self) -> bool {
+    pub(crate) fn is_ui_frozen(&self) -> bool {
         self.degradation_level.is_ui_frozen()
     }
 }
@@ -599,7 +599,7 @@ pub fn project(state: &State, invariants: &ProjectionInvariants) -> ViewModel {
 ///
 /// Use this when you have a live queue pressure value from the backpressure
 /// controller, rather than relying on the last recorded PolicyDecision event.
-pub fn project_with_pressure(
+pub(crate) fn project_with_pressure(
     state: &State,
     invariants: &ProjectionInvariants,
     queue_pressure: f64,
@@ -654,7 +654,9 @@ pub fn project_with_pressure(
 /// Returns a 64-character lowercase hex string (BLAKE3 produces 256-bit hash).
 /// For file output, the caller should append a newline.
 pub fn viewmodel_hash(vm: &ViewModel) -> String {
-    // Serialize ViewModel to canonical JSON bytes
+    // Serialize ViewModel to canonical JSON bytes.
+    // ViewModel contains only primitive types and BTreeMaps, so serialization
+    // should never fail.
     let bytes = serde_json::to_vec(vm).expect("ViewModel serialization should never fail");
 
     // Compute BLAKE3 hash

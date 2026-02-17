@@ -518,6 +518,10 @@ name = "panopticon-tour"
 version = "0.1.0"
 dependencies = [
  "panopticon-core",
+ "panopticon-import",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -528,6 +532,7 @@ dependencies = [
  "crossterm",
  "panopticon-core",
  "panopticon-export",
+ "panopticon-tour",
  "ratatui",
 ]
 

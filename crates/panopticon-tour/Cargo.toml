@@ -5,3 +5,7 @@ edition.workspace = true
 
 [dependencies]
 panopticon-core = { path = "../panopticon-core" }
+panopticon-import = { path = "../panopticon-import" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
