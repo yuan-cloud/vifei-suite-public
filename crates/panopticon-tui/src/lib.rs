@@ -20,6 +20,7 @@
 //! - **I2 (Deterministic projection):** ViewModel is deterministic.
 //! - Truth HUD is always visible and confesses system state.
 
+mod forensic_lens;
 mod incident_lens;
 mod truth_hud;
 
@@ -29,16 +30,14 @@ use crossterm::{
     ExecutableCommand,
 };
 use panopticon_core::{
+    event::CommittedEvent,
     eventlog::read_eventlog,
     projection::{project, LadderLevel, ProjectionInvariants, ViewModel},
     reducer::{reduce, State},
 };
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
 use std::io::{self, stdout};
@@ -89,6 +88,10 @@ struct App {
     eventlog_path: String,
     /// Total events in the EventLog.
     total_events: usize,
+    /// Committed events for the Forensic Lens.
+    events: Vec<CommittedEvent>,
+    /// Forensic Lens navigation state.
+    forensic_state: forensic_lens::ForensicState,
 }
 
 impl App {
@@ -115,6 +118,8 @@ impl App {
             should_quit: false,
             eventlog_path: eventlog_path.display().to_string(),
             total_events,
+            events,
+            forensic_state: forensic_lens::ForensicState::new(),
         })
     }
 
@@ -126,6 +131,16 @@ impl App {
             }
             KeyCode::Tab => {
                 self.active_lens = self.active_lens.toggle();
+            }
+            // Forensic Lens navigation (only active in Forensic mode)
+            KeyCode::Char('j') | KeyCode::Down if self.active_lens == ActiveLens::Forensic => {
+                self.forensic_state.move_down(self.events.len());
+            }
+            KeyCode::Char('k') | KeyCode::Up if self.active_lens == ActiveLens::Forensic => {
+                self.forensic_state.move_up();
+            }
+            KeyCode::Enter if self.active_lens == ActiveLens::Forensic => {
+                self.forensic_state.toggle_expand();
             }
             _ => {}
         }
@@ -189,10 +204,10 @@ pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
 fn render(frame: &mut Frame, app: &App) {
     let area = frame.area();
 
-    // Layout: Truth HUD at bottom (3 lines), main content above
+    // Layout: Truth HUD at bottom (4 lines: 2 borders + status line + version line)
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(5), Constraint::Length(3)])
+        .constraints([Constraint::Min(5), Constraint::Length(4)])
         .split(area);
 
     let main_area = chunks[0];
@@ -207,53 +222,50 @@ fn render(frame: &mut Frame, app: &App) {
             &app.eventlog_path,
             app.total_events,
         ),
-        ActiveLens::Forensic => render_forensic_lens(frame, main_area, app),
+        ActiveLens::Forensic => {
+            forensic_lens::render_forensic_lens(frame, main_area, &app.events, &app.forensic_state)
+        }
     }
 
     // Render Truth HUD (always visible, in both lenses)
     truth_hud::render_truth_hud(frame, hud_area, &app.viewmodel);
 }
 
-/// Render the Forensic Lens (timeline + inspector).
-fn render_forensic_lens(frame: &mut Frame, area: Rect, app: &App) {
-    let block = Block::default()
-        .title(" Forensic Lens (Tab to toggle) ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Yellow));
-
-    let inner = block.inner(area);
-    frame.render_widget(block, area);
-
-    // Forensic lens content (stub for M6.3)
-    let lines = vec![
-        Line::from(Span::styled(
-            "Timeline View",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Line::from(""),
-        Line::from(format!(
-            "Viewing {} events by commit_index",
-            app.total_events
-        )),
-        Line::from(""),
-        Line::from(Span::styled(
-            "[Forensic Lens details: M6.3]",
-            Style::default().fg(Color::DarkGray),
-        )),
-        Line::from(""),
-        Line::from(Span::styled(
-            "Keys: Tab=toggle lens, q=quit",
-            Style::default().fg(Color::DarkGray),
-        )),
-    ];
-
-    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
-    frame.render_widget(paragraph, inner);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use panopticon_core::event::{EventPayload, ImportEvent, Tier};
+    use panopticon_core::eventlog::EventLogWriter;
+    use ratatui::backend::TestBackend;
+    use ratatui::layout::Rect;
+
+    fn make_test_event(id: &str, ts: u64) -> ImportEvent {
+        ImportEvent {
+            run_id: "run-1".into(),
+            event_id: id.into(),
+            source_id: "test".into(),
+            source_seq: Some(0),
+            timestamp_ns: ts,
+            tier: Tier::A,
+            payload: EventPayload::RunStart {
+                agent: "test-agent".into(),
+                args: None,
+            },
+            payload_ref: None,
+            synthesized: false,
+        }
+    }
+
+    fn buffer_text(terminal: &Terminal<TestBackend>, area: Rect) -> String {
+        let buf = terminal.backend().buffer();
+        let mut text = String::new();
+        for y in area.y..area.y + area.height {
+            for x in area.x..area.x + area.width {
+                text.push(buf[(x, y)].symbol().chars().next().unwrap_or(' '));
+            }
+        }
+        text
+    }
 
     #[test]
     fn test_active_lens_toggle() {
@@ -271,5 +283,34 @@ mod tests {
     #[test]
     fn test_active_lens_default() {
         assert_eq!(ActiveLens::default(), ActiveLens::Incident);
+    }
+
+    #[test]
+    fn truth_hud_both_lines_visible() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.jsonl");
+        let mut writer = EventLogWriter::open(&path).unwrap();
+        writer.append(make_test_event("e1", 1_000_000_000)).unwrap();
+        drop(writer);
+
+        let app = App::new(&path).unwrap();
+
+        let backend = TestBackend::new(120, 20);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        terminal.draw(|frame| render(frame, &app)).unwrap();
+
+        // The Truth HUD occupies the bottom 4 rows (index 16..20)
+        let hud_text = buffer_text(&terminal, Rect::new(0, 16, 120, 4));
+        assert!(
+            hud_text.contains("Level:"),
+            "HUD status line must be visible, got: {}",
+            hud_text
+        );
+        assert!(
+            hud_text.contains("Version:"),
+            "HUD version line must be visible (was clipped at Length(3)), got: {}",
+            hud_text
+        );
     }
 }

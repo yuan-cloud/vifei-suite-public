@@ -593,6 +593,7 @@ dependencies = [
  "panopticon-export",
  "panopticon-tour",
  "ratatui",
+ "tempfile",
 ]
 
 [[package]]

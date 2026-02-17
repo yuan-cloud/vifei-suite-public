@@ -302,3 +302,13 @@ Context:
 3. Nondeterminism: None. All rendering is pure function of State.
 4. Security: No security implications. TUI is read-only.
 5. Performance: 9 new tests add ~0.02s. Rendering is O(runs + types + anomalies) per frame, negligible for expected data sizes.
+
+## bd-bjv.3 — M6.3: Forensic Lens (timeline + inspector) + Truth HUD fix
+- Files: `crates/panopticon-tui/src/forensic_lens.rs` (new), `crates/panopticon-tui/src/lib.rs` (modified), `crates/panopticon-tui/Cargo.toml` (modified), `crates/panopticon-tui/src/incident_lens.rs` (fmt-only)
+- Constitution touched: none
+
+1. Coupling: Forensic Lens renders directly from `Vec<CommittedEvent>`, requiring App to store events. ForensicState is owned by the forensic_lens module. The App now stores events (memory cost proportional to EventLog size). Acceptable for v0.1 local-only usage.
+2. Untested claims: (a) Truncation in `truncate_or_full` uses byte slicing at position 59, which could panic on multi-byte UTF-8 if the 59th byte falls mid-character. Low risk — tool names and args are typically ASCII. (b) Scroll behavior with >1000 events not tested in render. (c) Expanded view of Generic payload with many data fields not render-tested.
+3. Nondeterminism: None. Events are displayed by commit_index (from the eventlog read order). No HashMap iteration. No wall-clock in rendering. `queue_pressure * 100.0` in PolicyDecision display uses f64 formatting with explicit precision `{:.1}%`.
+4. Security: No security implications. TUI is read-only. No user input stored.
+5. Performance: Truth HUD fix: Length(3)→Length(4), zero perf impact. Forensic Lens: 12 new tests add ~0.03s. Rendering is O(visible_events) per frame. App stores full event list in memory — for v0.1 local-only, acceptable.

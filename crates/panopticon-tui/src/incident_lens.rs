@@ -220,9 +220,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use panopticon_core::reducer::{
-        ClockSkewEntry, ErrorEntry, PolicyTransition, RunInfo, State,
-    };
+    use panopticon_core::reducer::{ClockSkewEntry, ErrorEntry, PolicyTransition, RunInfo, State};
     use ratatui::{backend::TestBackend, Terminal};
 
     /// Extract the text content from a rendered buffer area.
