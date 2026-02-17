@@ -155,6 +155,7 @@ Robot-mode error envelope (JSON):
 
 ```json
 {
+  "schema_version": "panopticon-cli-robot-v1.1",
   "ok": false,
   "code": "INVALID_ARGS",
   "message": "Invalid command syntax.",
@@ -165,6 +166,34 @@ Robot-mode error envelope (JSON):
   "exit_code": 2
 }
 ```
+
+Robot-mode success envelope (JSON):
+
+```json
+{
+  "schema_version": "panopticon-cli-robot-v1.1",
+  "ok": true,
+  "code": "OK",
+  "message": "Tour completed successfully.",
+  "suggestions": [],
+  "exit_code": 0,
+  "command": "tour",
+  "data": {
+    "output_dir": "tour-output",
+    "event_count": 10000,
+    "tier_a_drops": 0,
+    "degradation_level": "L2",
+    "viewmodel_hash": "..."
+  }
+}
+```
+
+Contract requirements:
+
+- `schema_version`, `ok`, `code`, `message`, `suggestions`, and `exit_code` are required in every JSON envelope.
+- `data` is required on success envelopes.
+- `notes` is optional and used only when normalization/repair was applied.
+- `command` is optional metadata for command-scoped responses.
 
 ### Intent-repair policy
 

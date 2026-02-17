@@ -101,6 +101,19 @@ Behavior contract:
 - Error payloads include `code`, `message`, and `suggestions`.
 - Minor syntax variants may be auto-normalized when intent is clear.
 
+Robot JSON contract keys (`schema_version=panopticon-cli-robot-v1.1`):
+
+| Key | Type | Notes |
+|---|---|---|
+| `schema_version` | string | Contract version for parsers |
+| `ok` | bool | Success/failure discriminator |
+| `code` | string | Stable status code (`OK`, `INVALID_ARGS`, `NOT_FOUND`, `EXPORT_REFUSED`, `RUNTIME_ERROR`) |
+| `message` | string | Human-readable summary |
+| `suggestions` | array[string] | Actionable next commands or hints |
+| `exit_code` | number | Process exit code mirror |
+| `data` | object | Success payload (present on success envelopes) |
+| `notes` | array[string] | Optional normalization notes when intent-repair was applied |
+
 Exit codes:
 
 - `0`: success

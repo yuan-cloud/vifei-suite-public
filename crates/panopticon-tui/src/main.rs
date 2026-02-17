@@ -103,6 +103,7 @@ Commands:
 Tips:
   panopticon --help
   panopticon <command> --help";
+const ROBOT_SCHEMA_VERSION: &str = "panopticon-cli-robot-v1.1";
 
 fn format_cli_failure(
     what_failed: &str,
@@ -188,6 +189,35 @@ fn emit_json(value: Value) {
     );
 }
 
+fn emit_json_success(
+    code: &str,
+    message: &str,
+    command: Option<&str>,
+    exit_code: u8,
+    notes: &[String],
+    mut data: Value,
+) {
+    if data.is_null() {
+        data = json!({});
+    }
+    let mut obj = json!({
+        "schema_version": ROBOT_SCHEMA_VERSION,
+        "ok": true,
+        "code": code,
+        "message": message,
+        "suggestions": [],
+        "exit_code": exit_code,
+        "data": data,
+    });
+    if let Some(command) = command {
+        obj["command"] = json!(command);
+    }
+    if !notes.is_empty() {
+        obj["notes"] = json!(notes);
+    }
+    emit_json(obj);
+}
+
 fn emit_json_error(
     code: &str,
     message: &str,
@@ -196,6 +226,7 @@ fn emit_json_error(
     exit_code: u8,
 ) {
     let mut obj = json!({
+        "schema_version": ROBOT_SCHEMA_VERSION,
         "ok": false,
         "code": code,
         "message": message,
@@ -218,17 +249,30 @@ fn ensure_file_exists(path: &Path, label: &str) -> Result<(), String> {
 
 fn main() -> ExitCode {
     let raw_args: Vec<String> = env::args().collect();
+    let mode = select_output_mode(
+        looks_like_json_requested(&raw_args),
+        looks_like_human_requested(&raw_args),
+        io::stdout().is_terminal(),
+    );
     if raw_args.len() == 1 {
-        println!("{QUICK_HELP}");
+        if mode == OutputMode::Json {
+            emit_json_success(
+                "OK",
+                "Quick help emitted.",
+                Some("help"),
+                AppExit::Success as u8,
+                &[],
+                json!({
+                    "quick_help": QUICK_HELP,
+                }),
+            );
+        } else {
+            println!("{QUICK_HELP}");
+        }
         return AppExit::Success.code();
     }
 
     let (args, repair_notes) = normalize_args(raw_args);
-    let mode = select_output_mode(
-        looks_like_json_requested(&args),
-        looks_like_human_requested(&args),
-        io::stdout().is_terminal(),
-    );
 
     let cli = match Cli::try_parse_from(&args) {
         Ok(cli) => cli,
@@ -398,20 +442,19 @@ fn main() -> ExitCode {
             match panopticon_export::run_export(&config) {
                 Ok(ExportResult::Success(success)) => {
                     if mode == OutputMode::Json {
-                        let mut resp = json!({
-                            "ok": true,
-                            "code": "OK",
-                            "command": "export",
-                            "bundle_path": success.bundle_path,
-                            "bundle_hash": success.bundle_hash,
-                            "event_count": success.event_count,
-                            "blob_count": success.blob_count,
-                            "exit_code": AppExit::Success as u8,
-                        });
-                        if !repair_notes.is_empty() {
-                            resp["notes"] = json!(repair_notes);
-                        }
-                        emit_json(resp);
+                        emit_json_success(
+                            "OK",
+                            "Export completed successfully.",
+                            Some("export"),
+                            AppExit::Success as u8,
+                            &repair_notes,
+                            json!({
+                                "bundle_path": success.bundle_path,
+                                "bundle_hash": success.bundle_hash,
+                                "event_count": success.event_count,
+                                "blob_count": success.blob_count,
+                            }),
+                        );
                     } else {
                         println!("Export successful!");
                         println!("  Bundle: {}", success.bundle_path.display());
@@ -435,6 +478,7 @@ fn main() -> ExitCode {
                     ];
                     if mode == OutputMode::Json {
                         let mut resp = json!({
+                            "schema_version": ROBOT_SCHEMA_VERSION,
                             "ok": false,
                             "code": "EXPORT_REFUSED",
                             "message": report.summary,
@@ -571,27 +615,26 @@ fn main() -> ExitCode {
             match panopticon_tour::run_tour(&config) {
                 Ok(result) => {
                     if mode == OutputMode::Json {
-                        let mut resp = json!({
-                            "ok": true,
-                            "code": "OK",
-                            "command": "tour",
-                            "output_dir": result.output_dir,
-                            "event_count": result.metrics.event_count_total,
-                            "tier_a_drops": result.metrics.tier_a_drops,
-                            "degradation_level": result.metrics.degradation_level_final,
-                            "viewmodel_hash": result.viewmodel_hash,
-                            "artifacts": [
-                                "metrics.json",
-                                "viewmodel.hash",
-                                "ansi.capture",
-                                "timetravel.capture"
-                            ],
-                            "exit_code": AppExit::Success as u8,
-                        });
-                        if !repair_notes.is_empty() {
-                            resp["notes"] = json!(repair_notes);
-                        }
-                        emit_json(resp);
+                        emit_json_success(
+                            "OK",
+                            "Tour completed successfully.",
+                            Some("tour"),
+                            AppExit::Success as u8,
+                            &repair_notes,
+                            json!({
+                                "output_dir": result.output_dir,
+                                "event_count": result.metrics.event_count_total,
+                                "tier_a_drops": result.metrics.tier_a_drops,
+                                "degradation_level": result.metrics.degradation_level_final,
+                                "viewmodel_hash": result.viewmodel_hash,
+                                "artifacts": [
+                                    "metrics.json",
+                                    "viewmodel.hash",
+                                    "ansi.capture",
+                                    "timetravel.capture"
+                                ],
+                            }),
+                        );
                     } else {
                         println!("Tour completed successfully!");
                         println!("  Output:   {}", result.output_dir.display());

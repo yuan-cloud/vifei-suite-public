@@ -728,3 +728,11 @@ Context:
 3. Nondeterminism: Product-path determinism is unchanged; this change only hardens test harness handling of environmental PTY capture jitter.
 4. Security and privacy: Additional assertion logs can include transcript file paths and stderr context; they do not introduce new secret-bearing surfaces.
 5. Performance cliffs: Test runtime impact is bounded (single extra retry at most) and only applies to PTY interactive tests when first attempt output is incomplete.
+
+## bd-24k · ROBOT-MODE-CLI-V1.1: strict contract guarantees
+
+1. Coupling: Robot-mode consumers are now coupled to an explicit envelope schema version (`panopticon-cli-robot-v1.1`) and required key set, reducing ambiguity but requiring version-aware clients for future schema evolution.
+2. Untested claims: We added integration coverage for no-arg auto-JSON, invalid args, and not-found failures; we did not yet add golden snapshot tests for every success payload variant across all subcommands.
+3. Nondeterminism: No truth-path nondeterminism introduced; contract changes are output-shape and parsing behavior only, and remain deterministic for identical inputs.
+4. Security and privacy: Structured envelopes surface actionable path-level diagnostics and suggestions; this improves automation but means logs should still be treated as operational artifacts.
+5. Performance cliffs: Envelope standardization adds negligible serialization overhead; the main long-term risk is payload growth if optional fields are added without token-budget discipline.
