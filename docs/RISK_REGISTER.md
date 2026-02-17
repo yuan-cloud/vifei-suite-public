@@ -720,3 +720,11 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism introduced; robot-mode output is deterministic for identical inputs, and intent-repair is limited to unambiguous alias/flag normalization.
 4. Security and privacy: Structured errors can now surface path strings and scanner refusal metadata in JSON output, which improves agent triage but should still be treated as operational output not intended for secret-bearing logs.
 5. Performance cliffs: JSON envelope serialization adds negligible overhead compared with command execution; the main future risk is contract bloat increasing token usage if response fields grow without discipline.
+
+## bd-1rl · TEST-E2E-PTY-FLAKE-HARDEN: stabilize interactive transcript assertions
+
+1. Coupling: PTY interactive retry behavior is now coupled to transcript marker validation, not only process exit status, which makes capture expectations explicit in test harness logic.
+2. Untested claims: We validated the retry-on-missing-marker path in normal runs, but we did not add a synthetic fault-injection harness to force partial transcript captures deterministically.
+3. Nondeterminism: Product-path determinism is unchanged; this change only hardens test harness handling of environmental PTY capture jitter.
+4. Security and privacy: Additional assertion logs can include transcript file paths and stderr context; they do not introduce new secret-bearing surfaces.
+5. Performance cliffs: Test runtime impact is bounded (single extra retry at most) and only applies to PTY interactive tests when first attempt output is incomplete.

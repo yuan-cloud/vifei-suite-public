@@ -190,6 +190,7 @@ fn run_with_retry(
     columns: u16,
     lines: u16,
     key_bytes: &[u8],
+    validate: impl Fn(&SessionRun) -> Result<(), String>,
 ) -> SessionRun {
     let out_dir = test_out_dir();
     let input_path = out_dir.join(format!("{test_name}.keys"));
@@ -197,7 +198,8 @@ fn run_with_retry(
     let assertions_log = out_dir.join(format!("{test_name}.assertions.log"));
 
     let first = run_once(test_name, 1, fixture, columns, lines, &input_path);
-    if first.status.success() {
+    let first_validation = validate(&first);
+    if first.status.success() && first_validation.is_ok() {
         fs::write(
             assertions_log,
             format!(
@@ -212,10 +214,15 @@ fn run_with_retry(
     fs::write(
         &assertions_log,
         format!(
-            "status=fail attempt=1 transcript={}\nexit={:?}\nstderr={}\n",
+            "status=fail attempt=1 transcript={}\nexit={:?}\nstderr={}\nvalidation={}\n",
             first.transcript_path.display(),
             first.status.code(),
-            first.stderr.trim()
+            first.stderr.trim(),
+            first_validation
+                .as_ref()
+                .err()
+                .map(String::as_str)
+                .unwrap_or("ok"),
         ),
     )
     .expect("write first-failure assertion log");
@@ -225,16 +232,22 @@ fn run_with_retry(
     }
 
     let second = run_once(test_name, 2, fixture, columns, lines, &input_path);
+    let second_validation = validate(&second);
     let summary = format!(
-        "status={} attempt=2 transcript={}\nexit={:?}\nstderr={}\n",
-        if second.status.success() {
+        "status={} attempt=2 transcript={}\nexit={:?}\nstderr={}\nvalidation={}\n",
+        if second.status.success() && second_validation.is_ok() {
             "pass"
         } else {
             "fail"
         },
         second.transcript_path.display(),
         second.status.code(),
-        second.stderr.trim()
+        second.stderr.trim(),
+        second_validation
+            .as_ref()
+            .err()
+            .map(String::as_str)
+            .unwrap_or("ok"),
     );
     fs::write(assertions_log, summary).expect("write retry assertion log");
     second
@@ -261,6 +274,18 @@ fn interactive_tui_flow_lens_toggle_nav_and_quit() {
         120,
         30,
         b"\tj\nq",
+        |run| {
+            if !run.transcript.contains("Incident Lens") {
+                return Err("missing marker: Incident Lens".to_string());
+            }
+            if !run.transcript.contains("Forensic Lens") {
+                return Err("missing marker: Forensic Lens".to_string());
+            }
+            if !run.transcript.contains("Level:") {
+                return Err("missing marker: Level:".to_string());
+            }
+            Ok(())
+        },
     );
 
     assert!(
@@ -307,6 +332,12 @@ fn interactive_tui_narrow_terminal_profile_stays_healthy() {
         72,
         22,
         b"\tq",
+        |run| {
+            if !run.transcript.contains("Version:") {
+                return Err("missing marker: Version:".to_string());
+            }
+            Ok(())
+        },
     );
 
     assert!(
