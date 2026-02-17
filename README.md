@@ -77,7 +77,11 @@ Run in a real interactive terminal (TTY).
 ### Export with share-safe checks
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output out/bundle.tar.zst --refusal-report out/refusal-report.json
+cargo run -p panopticon-tui --bin panopticon -- export \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --share-safe \
+  --output out/bundle.tar.zst \
+  --refusal-report out/refusal-report.json
 ```
 
 ## Architecture Snapshot

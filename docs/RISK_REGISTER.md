@@ -616,3 +616,11 @@ Context:
 3. Nondeterminism: Protocol uses deterministic command scripts and fixed fixture inputs; PTY-dependent tasks include explicit skip reasons to avoid flaky implicit failures.
 4. Security and privacy: Evidence artifacts are local test outputs only; no production secrets were introduced.
 5. Performance cliffs: Baseline protocol includes stress tour and can be heavier than inner-loop tests, so it should run in validation lanes rather than every edit step.
+
+## bd-gxd.9 · UX-MODALITY-VALIDATION: execute width-bucket and mobile-readability validation
+
+1. Coupling: Added automated modality checks (`modality_validation` integration test) that couple UX contract labels and README section/readability constraints to explicit assertions.
+2. Untested claims: Interactive PTY behavior still depends on host PTY capability; in constrained environments this remains skip-based and tracked via dedicated follow-up beads.
+3. Nondeterminism: Validation runs are deterministic over fixed fixtures and explicit width buckets; no time/random inputs are used in new assertions.
+4. Security and privacy: Validation artifacts are local and fixture-based, with no secret-bearing production data.
+5. Performance cliffs: Added tests increase validation surface slightly but remain lightweight relative to existing full test suite.
