@@ -292,3 +292,13 @@ Context:
 3. Nondeterminism: None. All tests use deterministic fixtures. No time-dependent assertions.
 4. Security: Test fixtures include known secret patterns (AWS keys, passwords) for refusal testing. These are well-known example values (AKIAIOSFODNN7EXAMPLE) that are not real credentials.
 5. Performance: 8 integration tests add ~0.04s to the test suite. Each creates temporary directories with small fixtures. No performance risk.
+
+## bd-bjv.2 — M6.2: Incident Lens (default view)
+- Files: `crates/panopticon-tui/src/incident_lens.rs` (new), `crates/panopticon-tui/src/lib.rs` (modified)
+- Constitution touched: none
+
+1. Coupling: Incident Lens renders directly from reducer `State` (run_metadata, event_counts_by_type, error_log, clock_skew_events, policy_decisions). Changes to State fields will require Incident Lens updates. This is acceptable — the TUI is a consumer of State.
+2. Untested claims: (a) Visual appearance with very long run IDs or agent names is untested (could overflow). (b) Behavior with >100 anomalies rendering in a small terminal not tested. Both acceptable for v0.1.
+3. Nondeterminism: None. All rendering is pure function of State.
+4. Security: No security implications. TUI is read-only.
+5. Performance: 9 new tests add ~0.02s. Rendering is O(runs + types + anomalies) per frame, negligible for expected data sizes.

@@ -20,6 +20,7 @@
 //! - **I2 (Deterministic projection):** ViewModel is deterministic.
 //! - Truth HUD is always visible and confesses system state.
 
+mod incident_lens;
 mod truth_hud;
 
 use crossterm::{
@@ -75,8 +76,7 @@ impl ActiveLens {
 struct App {
     /// The ViewModel derived from the EventLog.
     viewmodel: ViewModel,
-    /// Reducer state (kept for potential re-projection).
-    #[allow(dead_code)] // Used by set_degradation_level
+    /// Reducer state — used by Incident Lens and re-projection.
     state: State,
     /// Projection invariants.
     #[allow(dead_code)] // Used by set_degradation_level
@@ -200,62 +200,18 @@ fn render(frame: &mut Frame, app: &App) {
 
     // Render main content based on active lens
     match app.active_lens {
-        ActiveLens::Incident => render_incident_lens(frame, main_area, app),
+        ActiveLens::Incident => incident_lens::render_incident_lens(
+            frame,
+            main_area,
+            &app.state,
+            &app.eventlog_path,
+            app.total_events,
+        ),
         ActiveLens::Forensic => render_forensic_lens(frame, main_area, app),
     }
 
     // Render Truth HUD (always visible, in both lenses)
     truth_hud::render_truth_hud(frame, hud_area, &app.viewmodel);
-}
-
-/// Render the Incident Lens (default view).
-fn render_incident_lens(frame: &mut Frame, area: Rect, app: &App) {
-    let block = Block::default()
-        .title(" Incident Lens (Tab to toggle) ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan));
-
-    let inner = block.inner(area);
-    frame.render_widget(block, area);
-
-    // Build content
-    let mut lines = vec![
-        Line::from(vec![
-            Span::styled("EventLog: ", Style::default().add_modifier(Modifier::BOLD)),
-            Span::raw(&app.eventlog_path),
-        ]),
-        Line::from(vec![
-            Span::styled(
-                "Total Events: ",
-                Style::default().add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(format!("{}", app.total_events)),
-        ]),
-        Line::from(""),
-        Line::from(Span::styled(
-            "Tier A Event Summary:",
-            Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
-        )),
-    ];
-
-    // Add Tier A summaries
-    if app.viewmodel.tier_a_summaries.is_empty() {
-        lines.push(Line::from("  (no Tier A events)"));
-    } else {
-        for (event_type, count) in &app.viewmodel.tier_a_summaries {
-            lines.push(Line::from(format!("  {}: {}", event_type, count)));
-        }
-    }
-
-    // Add some spacing and help
-    lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        "Keys: Tab=toggle lens, q=quit",
-        Style::default().fg(Color::DarkGray),
-    )));
-
-    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
-    frame.render_widget(paragraph, inner);
 }
 
 /// Render the Forensic Lens (timeline + inspector).
