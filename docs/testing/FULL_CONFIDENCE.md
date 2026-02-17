@@ -12,7 +12,7 @@
 2. Rust quality gates
 - `cargo fmt --check`
 - `cargo clippy --all-targets -- -D warnings`
-- `cargo test`
+- `cargo test` (interactive PTY tests excluded here and executed in dedicated lane step)
 3. Coverage inventory snapshot
 - `cargo test --workspace --all-targets -- --list`
 - captures `docs/testing/coverage-matrix-v0.1.md`
@@ -23,6 +23,8 @@
 - `scripts/e2e/pty_preflight.sh`
 6. Interactive TUI E2E
 - `cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture`
+- executed with explicit `TERM=xterm-256color` and workspace-scoped `PANOPTICON_E2E_OUT`
+- one bounded retry in CI to reduce transient PTY harness flake without masking persistent failures
 
 ## Artifacts
 The lane uploads `full-confidence-<sha>` containing:

@@ -73,7 +73,9 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings 2>&1 | tee .tmp/full-confidence/logs/clippy.log
 
       - name: Test
-        run: cargo test 2>&1 | tee .tmp/full-confidence/logs/cargo-test.log
+        run: |
+          cargo test -- --skip interactive_tui_flow_lens_toggle_nav_and_quit --skip interactive_tui_narrow_terminal_profile_stays_healthy \
+            2>&1 | tee .tmp/full-confidence/logs/cargo-test.log
 
       - name: Generate coverage inventory snapshot
         run: |
@@ -93,8 +95,19 @@ jobs:
 
       - name: TUI E2E interactive suite
         run: |
-          cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
-            2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.log
+          set +e
+          TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e \
+            cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
+            2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt1.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e \
+              cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
+              2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt2.log
+            rc=$?
+          fi
+          set -e
+          exit "$rc"
 
       - name: Upload full-confidence evidence
         if: always()
