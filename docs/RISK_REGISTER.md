@@ -448,3 +448,11 @@ Context:
 3. Nondeterminism: Release binaries may differ across toolchain/host metadata, but checksum generation and verification flow is deterministic for a given build output.
 4. Security: This improves supply-chain posture by enforcing checksum verification in CI before artifact upload.
 5. Performance cliffs: Release packaging adds extra CI minutes on release-trust runs; impact is bounded to release paths and does not affect runtime behavior.
+
+## bd-3qq.3 · RELEASE-OPS: packaging matrix + publish checklist · 2026-02-17
+
+1. Coupling: Introduced explicit coupling between release gates and docs (`docs/RELEASE_PACKAGING_CHECKLIST.md`, `docs/RELEASE_TRUST_VERIFICATION.md`) so operational flow stays single-sourced.
+2. Untested claims: Homebrew/winget channels remain optional and unimplemented in-repo; checklist marks them deferred rather than claiming readiness.
+3. Nondeterminism: No runtime/path changes; checklist only. Deterministic checks remain delegated to existing Tour and checksum verification paths.
+4. Security: Go/no-go now explicitly requires checksum verification and green release-trust CI before publication, reducing accidental unverified release risk.
+5. Performance cliffs: No runtime performance impact; process overhead is release-time only.

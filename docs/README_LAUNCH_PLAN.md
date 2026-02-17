@@ -216,6 +216,11 @@ These constraints are mandatory for launch-docs execution in this repo.
 - `LAUNCH-DISTRIBUTION`: GitHub release + crates publish + package-manager follow-through
 - `POST-LAUNCH-LEARN`: issue triage rubric and feedback ingestion loop
 
+## Release Ops Artifacts
+
+- Packaging matrix and go/no-go checklist: `docs/RELEASE_PACKAGING_CHECKLIST.md`
+- Trust verification and attestation rollback: `docs/RELEASE_TRUST_VERIFICATION.md`
+
 ## Sources
 
 - Cargo publishing reference: https://doc.rust-lang.org/cargo/reference/publishing.html
