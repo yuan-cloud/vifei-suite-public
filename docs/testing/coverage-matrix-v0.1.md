@@ -175,6 +175,7 @@ Failure diagnostics minimums:
 - `bd-18m` completed: investigation-flow UX audit captured desktop+narrow evidence, ranked top operator friction, and defined a single deterministic UX lever for implementation (`docs/testing/ux-audit-a2-2026-02-17.md`).
 - `bd-hov` completed: Incident Lens now keeps explicit `Next action:` guidance visible in narrow layouts with width-aware hint text and wrap-aware section height budgeting; regression covered by `incident_lens_narrow_keeps_next_action_hint_visible`.
 - `bd-3q5` completed: A2 enterprise-ready closeout consolidates before/after perf deltas, hotspot closure status, UX gains, determinism safety checks, and residual risk posture in `docs/testing/a2-closeout-report-2026-02-17.md`.
+- `bd-6wkf` completed: A3 C2 streaming fixture parse is implemented with reader-mode equivalence proof (`stream_fixture_parse_matches_buffered_parse`) and full gate pass, documented in `docs/testing/perf-c2-streaming-parse-proof-a3-2026-02-17.md`.
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 

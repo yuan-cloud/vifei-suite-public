@@ -47,7 +47,7 @@ use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants}
 use panopticon_core::reducer::{reduce_in_place, state_hash, State};
 use panopticon_import::cassette::parse_cassette;
 use std::fs;
-use std::io::{self, BufReader, Cursor};
+use std::io::{self, BufReader};
 use std::path::PathBuf;
 use std::time::Duration;
 use std::time::Instant;
@@ -121,8 +121,8 @@ pub fn run_tour_with_profile(config: &TourConfig) -> io::Result<(TourResult, Tou
 
     // Stage 1: Parse fixture
     let parse_start = Instant::now();
-    let fixture_content = fs::read_to_string(&config.fixture_path)?;
-    let reader = BufReader::new(Cursor::new(&fixture_content));
+    let fixture_file = fs::File::open(&config.fixture_path)?;
+    let reader = BufReader::new(fixture_file);
     let events = parse_cassette(reader);
     let parse_fixture = parse_start.elapsed();
 
@@ -396,6 +396,18 @@ mod tests {
             from_append, from_readback,
             "append results must preserve canonical committed sequence"
         );
+    }
+
+    #[test]
+    fn stream_fixture_parse_matches_buffered_parse() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_clock_skew_fixture(dir.path());
+        let fixture_content = fs::read_to_string(&fixture_path).unwrap();
+
+        let buffered = parse_cassette(BufReader::new(Cursor::new(fixture_content)));
+        let streamed = parse_cassette(BufReader::new(fs::File::open(&fixture_path).unwrap()));
+
+        assert_eq!(streamed, buffered);
     }
 
     #[test]

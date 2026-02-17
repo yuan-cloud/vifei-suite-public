@@ -1236,3 +1236,16 @@ Context:
 3. Nondeterminism: No runtime behavior changes introduced; report-only aggregation.
 4. Security: No new security surface; report highlights refusal safety and deterministic contract posture without exposing secrets.
 5. Performance: No runtime impact; documentation improves decision quality for subsequent optimization rounds.
+
+## bd-6wkf · A3-1 stream fixture parsing with equivalence proof · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4 (ordering and determinism)
+- Constitution touched: none
+
+1. Coupling: Tour parse stage now couples directly to file-stream semantics; malformed I/O edge behavior remains delegated to existing parser behavior.
+2. Untested claims: We proved event-sequence equivalence for representative fixture mode; broader malformed corpus parity is still covered primarily by importer tests.
+3. Nondeterminism: No new nondeterminism introduced; parsing order remains source-line order.
+4. Security: No new secret surface; change only affects read-path buffering strategy.
+5. Performance: Expected memory improvement from avoiding full-file string buffering; actual hotspot/memory deltas are measured in A3-2.
