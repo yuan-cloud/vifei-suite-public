@@ -35,6 +35,7 @@ mod scanner;
 use panopticon_core::blob_store::BlobStore;
 use panopticon_core::event::CommittedEvent;
 use panopticon_core::eventlog::read_eventlog;
+use panopticon_core::projection::PROJECTION_INVARIANTS_VERSION;
 use scanner::{redact_match, scan_bytes, scan_text, SecretPatterns};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -348,6 +349,38 @@ fn scan_blob(patterns: &SecretPatterns, blob_ref: &str, data: &[u8]) -> Vec<Bloc
     items
 }
 
+/// Integrity manifest embedded in export bundles (M8.5).
+///
+/// The manifest is the "receipt" for bundle consumers — tells them exactly
+/// what's inside and how to verify individual file integrity.
+///
+/// Note: `bundle_hash` (BLAKE3 of the overall .tar.zst) is NOT in the manifest
+/// because the manifest is inside the archive (circular dependency). The
+/// `bundle_hash` is returned in [`ExportSuccess`] for external verification.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BundleManifest {
+    /// Manifest schema version.
+    pub manifest_version: String,
+    /// Files in the bundle with BLAKE3 digests, stably sorted by path.
+    pub files: Vec<ManifestEntry>,
+    /// EventLog commit_index range: (first, last). None if EventLog is empty.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commit_index_range: Option<[u64; 2]>,
+    /// Projection invariants version for context.
+    pub projection_invariants_version: String,
+}
+
+/// A single file entry in the bundle manifest.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ManifestEntry {
+    /// Archive path (e.g., "eventlog.jsonl", "blobs/abcd...").
+    pub path: String,
+    /// BLAKE3 hex digest of the file contents.
+    pub blake3: String,
+    /// File size in bytes.
+    pub size: u64,
+}
+
 /// Bundle discovered content into a deterministic tar+zstd archive.
 ///
 /// Determinism requirements (CAPACITY_ENVELOPE Export determinism targets):
@@ -386,6 +419,43 @@ pub(crate) fn create_bundle(
     // Sort all entries alphabetically by path (deterministic archive order)
     entries.sort_by(|a, b| a.0.cmp(&b.0));
 
+    // Build manifest entries with BLAKE3 digests for each file
+    let manifest_file_entries: Vec<ManifestEntry> = entries
+        .iter()
+        .map(|(path, data)| ManifestEntry {
+            path: path.clone(),
+            blake3: blake3::hash(data).to_hex().to_string(),
+            size: data.len() as u64,
+        })
+        .collect();
+
+    // Compute commit_index range from events
+    let commit_index_range = if content.events.is_empty() {
+        None
+    } else {
+        let first = content.events.first().unwrap().commit_index;
+        let last = content.events.last().unwrap().commit_index;
+        Some([first, last])
+    };
+
+    // Build the manifest
+    let manifest = BundleManifest {
+        manifest_version: "manifest-v0.1".to_string(),
+        files: manifest_file_entries,
+        commit_index_range,
+        projection_invariants_version: PROJECTION_INVARIANTS_VERSION.to_string(),
+    };
+    let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("manifest serialization: {e}"),
+        )
+    })?;
+
+    // Add manifest to entries (will be sorted into correct position)
+    entries.push(("manifest.json".to_string(), manifest_json.into_bytes()));
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
+
     // Build tar+zstd into a memory buffer so we can BLAKE3-hash the result
     let mut compressed_bytes: Vec<u8> = Vec::new();
     {
@@ -395,23 +465,7 @@ pub(crate) fn create_bundle(
         let mut tar_builder = tar::Builder::new(encoder);
 
         for (path, data) in &entries {
-            let mut header = tar::Header::new_ustar();
-            header.set_size(data.len() as u64);
-            header.set_mtime(0);
-            header.set_uid(0);
-            header.set_gid(0);
-            header.set_mode(0o644);
-            // Empty username/groupname to prevent machine-specific values
-            header
-                .set_username("")
-                .map_err(|e| io::Error::other(format!("set_username: {e}")))?;
-            header
-                .set_groupname("")
-                .map_err(|e| io::Error::other(format!("set_groupname: {e}")))?;
-            header.set_entry_type(tar::EntryType::Regular);
-            header.set_cksum();
-
-            tar_builder.append_data(&mut header, path, data.as_slice())?;
+            append_tar_entry(&mut tar_builder, path, data)?;
         }
 
         // Finish tar (writes final blocks), then finish zstd (flushes frame)
@@ -431,6 +485,32 @@ pub(crate) fn create_bundle(
         event_count: content.event_count(),
         blob_count,
     })
+}
+
+/// Append a single entry to a tar archive with normalized metadata.
+///
+/// All metadata is normalized per CAPACITY_ENVELOPE Export determinism targets.
+fn append_tar_entry<W: io::Write>(
+    builder: &mut tar::Builder<W>,
+    path: &str,
+    data: &[u8],
+) -> io::Result<()> {
+    let mut header = tar::Header::new_ustar();
+    header.set_size(data.len() as u64);
+    header.set_mtime(0);
+    header.set_uid(0);
+    header.set_gid(0);
+    header.set_mode(0o644);
+    header
+        .set_username("")
+        .map_err(|e| io::Error::other(format!("set_username: {e}")))?;
+    header
+        .set_groupname("")
+        .map_err(|e| io::Error::other(format!("set_groupname: {e}")))?;
+    header.set_entry_type(tar::EntryType::Regular);
+    header.set_cksum();
+    builder.append_data(&mut header, path, data)?;
+    Ok(())
 }
 
 /// Run the full export pipeline.
@@ -888,7 +968,7 @@ mod tests {
             .unwrap()
             .collect::<Result<Vec<_>, _>>()
             .unwrap();
-        assert_eq!(entries.len(), 1);
+        assert_eq!(entries.len(), 2); // eventlog.jsonl + manifest.json
     }
 
     #[test]
@@ -1008,7 +1088,8 @@ mod tests {
 
         // Verify expected entries present
         assert!(paths.iter().any(|p| p == "eventlog.jsonl"));
-        assert_eq!(paths.len(), 3); // eventlog + 2 blobs
+        assert!(paths.iter().any(|p| p == "manifest.json"));
+        assert_eq!(paths.len(), 4); // eventlog + 2 blobs + manifest
     }
 
     #[test]
@@ -1030,5 +1111,207 @@ mod tests {
         let file_bytes = std::fs::read(&bundle_path).unwrap();
         let expected_hash = blake3::hash(&file_bytes).to_hex().to_string();
         assert_eq!(result.bundle_hash, expected_hash);
+    }
+
+    // ---- M8.5: Integrity manifest tests ----
+
+    #[test]
+    fn manifest_included_in_bundle() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "manifest test"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        // Extract manifest.json from the bundle
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        let mut found_manifest = false;
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                found_manifest = true;
+                let mut content = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut content).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&content).unwrap();
+                assert_eq!(manifest.manifest_version, "manifest-v0.1");
+                break;
+            }
+        }
+        assert!(found_manifest, "manifest.json must be in the bundle");
+    }
+
+    #[test]
+    fn manifest_file_hashes_correct() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "hash check"))
+            .unwrap();
+        drop(writer);
+
+        let eventlog_bytes = std::fs::read(&eventlog_path).unwrap();
+        let expected_hash = blake3::hash(&eventlog_bytes).to_hex().to_string();
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        // Extract and verify manifest
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                let mut json = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut json).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&json).unwrap();
+
+                // Find eventlog entry in manifest
+                let el_entry = manifest
+                    .files
+                    .iter()
+                    .find(|f| f.path == "eventlog.jsonl")
+                    .expect("eventlog.jsonl must be in manifest");
+                assert_eq!(el_entry.blake3, expected_hash);
+                assert_eq!(el_entry.size, eventlog_bytes.len() as u64);
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn manifest_commit_index_range() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "first"))
+            .unwrap();
+        writer
+            .append(make_event("e2", 2_000_000_000, "second"))
+            .unwrap();
+        writer
+            .append(make_event("e3", 3_000_000_000, "third"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        // Extract manifest and check commit_index_range
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                let mut json = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut json).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&json).unwrap();
+
+                let range = manifest
+                    .commit_index_range
+                    .expect("commit_index_range must be present");
+                assert_eq!(range[0], 0, "first commit_index");
+                assert_eq!(range[1], 2, "last commit_index");
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn manifest_projection_invariants_version() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "version check"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                let mut json = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut json).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&json).unwrap();
+
+                assert_eq!(
+                    manifest.projection_invariants_version,
+                    PROJECTION_INVARIANTS_VERSION
+                );
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn manifest_files_stably_sorted() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+        let blobs_dir = dir.path().join("blobs");
+
+        let blob_store = panopticon_core::blob_store::BlobStore::open(&blobs_dir).unwrap();
+        let ref_z = blob_store.write_blob(b"z-data").unwrap();
+        let ref_a = blob_store.write_blob(b"a-data").unwrap();
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        let mut ev1 = make_event("e1", 1_000_000_000, "sort test");
+        ev1.payload_ref = Some(ref_z);
+        writer.append(ev1).unwrap();
+        let mut ev2 = make_event("e2", 2_000_000_000, "sort test 2");
+        ev2.payload_ref = Some(ref_a);
+        writer.append(ev2).unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, Some(&blob_store), &bundle_path).unwrap();
+
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                let mut json = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut json).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&json).unwrap();
+
+                // Manifest file entries must be sorted by path
+                let paths: Vec<&str> = manifest.files.iter().map(|f| f.path.as_str()).collect();
+                let mut sorted = paths.clone();
+                sorted.sort();
+                assert_eq!(paths, sorted, "Manifest files must be sorted by path");
+                break;
+            }
+        }
     }
 }

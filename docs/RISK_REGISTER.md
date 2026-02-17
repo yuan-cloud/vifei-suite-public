@@ -262,3 +262,18 @@ Context:
 3. Nondeterminism: All metadata is normalized (mtime=0, uid/gid=0, username/groupname="", mode=0644). Entries are sorted alphabetically. Zstd level is pinned at 3. No wall clock, no RNG, no thread-local state. The only source of potential nondeterminism is crate version changes (tar/zstd library internals).
 4. Security: No new security risk. `create_bundle` is only called after `scan_for_secrets` passes (no secrets). Bundle contents are EventLog + blobs that passed scanning. No credentials or PII in the archive metadata.
 5. Performance: Entire bundle is built in memory (`Vec<u8>`) before writing to disk. For large EventLogs + many blobs, this could cause high memory usage. Current mitigation: max blob size is 50MB, practical bundle sizes are expected to be <100MB for v0.1. Streaming to disk would be needed for larger bundles in future versions.
+
+---
+
+## bd-d7c.5 · M8.5: Integrity manifest for clean bundles · 2026-02-17
+
+Context:
+- Bead owner: CloudyLake (claude-code)
+- Invariants referenced: I3 (share-safe export — manifest provides verifiable receipt of bundle contents)
+- Constitution touched: none (references CAPACITY_ENVELOPE and BACKPRESSURE_POLICY for projection_invariants_version)
+
+1. Coupling: `BundleManifest` references `PROJECTION_INVARIANTS_VERSION` from panopticon-core. If the version constant changes, new bundles will embed the new version. Manifest schema version "manifest-v0.1" is hardcoded — changing the manifest format requires updating this and potentially adding backward-compatible parsing. The manifest does NOT include `bundle_hash` (circular dependency since manifest is inside the archive); `bundle_hash` lives in `ExportSuccess` only.
+2. Untested claims: (a) `commit_index_range` assumes events are already sorted by commit_index in the EventLog file (relies on I1/I4: append writer assigns monotonic indices). No test verifies behavior with reordered events. (b) No test for empty EventLog edge case where `commit_index_range` is `None`. (c) Manifest JSON is pretty-printed (`to_string_pretty`), which slightly increases bundle size but aids debugging.
+3. Nondeterminism: None. Manifest entries are sorted alphabetically (inheriting the sorted `entries` vec). All fields are deterministic: file hashes are BLAKE3, commit_index range is from deterministic EventLog, projection_invariants_version is a constant. No wall clock, no RNG.
+4. Security: No new security risk. Manifest exposes file paths (archive-relative), sizes, and BLAKE3 hashes. No event content or blob data flows through the manifest. BLAKE3 hashes of blob data are already exposed via `payload_ref` in the EventLog.
+5. Performance: Manifest creation adds one BLAKE3 hash per file entry (already computed as part of collecting entries) and one JSON serialization. Negligible overhead.
