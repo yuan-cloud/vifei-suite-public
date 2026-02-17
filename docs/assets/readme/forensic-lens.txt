@@ -8,26 +8,26 @@
 ││     5 ClockSkewDetected                     ││                                                                     ││
 ││     6 RedactionApplied                      ││  agent: codex                                                       ││
 ││     7 RunEnd                                ││  args:  capture-assets --deterministic                              ││
-││     8 [S] ClockSkewDetected                 ││                                                                     ││
-││     9 RunStart                              ││  Press Enter to expand details                                      ││
-││    10 [S] ClockSkewDetected                 ││                                                                     ││
-││    11 ToolCall                              ││                                                                     ││
-││    12 ToolResult                            ││                                                                     ││
-││    13 PolicyDecision                        ││                                                                     ││
-││    14 Error                                 ││                                                                     ││
-││    15 ClockSkewDetected                     ││                                                                     ││
-││    16 RedactionApplied                      ││                                                                     ││
-││    17 RunEnd                                ││                                                                     ││
-││    18 [S] ClockSkewDetected                 ││                                                                     ││
-││    19 RunStart                              ││                                                                     ││
-││    20 [S] ClockSkewDetected                 ││                                                                     ││
-││    21 ToolCall                              ││                                                                     ││
-││    22 ToolResult                            ││                                                                     ││
-││    23 PolicyDecision                        ││                                                                     ││
-││    24 Error                                 ││                                                                     ││
-││    25 ClockSkewDetected                     ││                                                                     ││
 ││                                             ││                                                                     ││
-││j/k=nav Enter=expand                         ││                                                                     ││
+││Next: #0 RunStart | Enter=expand | j/k       ││  Press Enter to expand details                                      ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
 │└─────────────────────────────────────────────┘└─────────────────────────────────────────────────────────────────────┘│
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌ Truth HUD ───────────────────────────────────────────────────────────────────────────────────────────────────────────┐

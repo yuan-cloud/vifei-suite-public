@@ -624,3 +624,11 @@ Context:
 3. Nondeterminism: Validation runs are deterministic over fixed fixtures and explicit width buckets; no time/random inputs are used in new assertions.
 4. Security and privacy: Validation artifacts are local and fixture-based, with no secret-bearing production data.
 5. Performance cliffs: Added tests increase validation surface slightly but remain lightweight relative to existing full test suite.
+
+## bd-gxd.10 · UX-EVIDENCE-ASSETS: deterministic UX captures for README and release proof
+
+1. Coupling: README evidence assets are now explicitly coupled to the capture pipeline contract, including the new narrow capture artifact (`incident-lens-narrow-72.txt`).
+2. Untested claims: Determinism is validated via two-pass hash comparison for normalized asset set; `refusal-report.json` remains intentionally variable due export metadata and is documented as excluded.
+3. Nondeterminism: Removed append-based drift by resetting sample eventlog files before regeneration; this closes a real deterministic-capture defect.
+4. Security and privacy: Evidence artifacts are fixture-derived and local; refusal examples intentionally include redacted secret patterns for scanner behavior proof.
+5. Performance cliffs: Refresh pipeline now produces one additional render artifact; overhead is negligible compared with tour generation already in the pipeline.

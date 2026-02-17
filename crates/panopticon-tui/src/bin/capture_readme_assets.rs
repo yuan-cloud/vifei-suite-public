@@ -22,6 +22,9 @@ fn main() -> io::Result<()> {
     let incident = render_incident_multiline(&eventlog_path, 120, 36)?;
     fs::write(out_dir.join("incident-lens.txt"), incident)?;
 
+    let incident_narrow = render_incident_multiline(&eventlog_path, 72, 28)?;
+    fs::write(out_dir.join("incident-lens-narrow-72.txt"), incident_narrow)?;
+
     let forensic = render_forensic_multiline(&eventlog_path, 120, 36)?;
     fs::write(out_dir.join("forensic-lens.txt"), forensic)?;
 
@@ -42,6 +45,9 @@ fn main() -> io::Result<()> {
 }
 
 fn write_sample_eventlog(path: &Path) -> io::Result<()> {
+    if path.exists() {
+        fs::remove_file(path)?;
+    }
     let mut writer = EventLogWriter::open(path)?;
     for event in sample_events() {
         writer.append(event)?;
@@ -173,6 +179,9 @@ fn sample_events() -> Vec<ImportEvent> {
 }
 
 fn write_sample_export_clean_eventlog(path: &Path) -> io::Result<()> {
+    if path.exists() {
+        fs::remove_file(path)?;
+    }
     let mut writer = EventLogWriter::open(path)?;
     let events = vec![
         ImportEvent {
@@ -306,6 +315,7 @@ fn asset_index_markdown() -> String {
         "",
         "Files:",
         "- incident-lens.txt",
+        "- incident-lens-narrow-72.txt",
         "- forensic-lens.txt",
         "- truth-hud-degraded.txt",
         "- export-refusal.txt",
@@ -368,6 +378,7 @@ mod tests {
     fn asset_index_lists_expected_files() {
         let index = asset_index_markdown();
         assert!(index.contains("incident-lens.txt"));
+        assert!(index.contains("incident-lens-narrow-72.txt"));
         assert!(index.contains("forensic-lens.txt"));
         assert!(index.contains("truth-hud-degraded.txt"));
         assert!(index.contains("tour-artifacts/"));
