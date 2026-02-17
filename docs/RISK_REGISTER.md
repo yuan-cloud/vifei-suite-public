@@ -352,3 +352,11 @@ Context:
 3. Nondeterminism: None. `render_ansi_capture` is a pure function from ViewModel + event_count + hash → String. No wall-clock, no randomness, no platform-dependent formatting. Uses `std::fmt::Write` which is deterministic. Determinism is tested explicitly.
 4. Security: No security implications. ANSI capture contains only ViewModel field values (levels, counts, hashes). No secrets or PII.
 5. Performance: Single `render_ansi_capture` call per Tour run — trivial String formatting. No allocation concerns.
+
+## bd-c7m.4 · M7.4: CI assertion tests for Tour invariants
+
+1. Coupling: The new invariant tests depend on Tour's current ingestion path (cassette -> append writer -> reducer). If importer mappings change, expected PolicyDecision derivation behavior may change and these tests will fail. This is acceptable because the tests are intended to pin invariant semantics, not implementation details.
+2. Untested claims: Large fixture currently does not produce non-empty PolicyDecision transitions, so production-path transition parity is asserted mainly on the empty-set case. A non-tautological ladder validator test with synthetic transitions was added, but real non-empty fixture coverage remains future work.
+3. Nondeterminism: No new nondeterminism introduced. Tests run deterministic pipelines and compare stable artifact outputs and derived transition tuples.
+4. Security: No new security risk. Tests use synthetic fixture data and do not handle secrets or credentials.
+5. Performance: Added integration tests rerun Tour and replay EventLog, increasing test time by several seconds. This is acceptable for CI given the value of invariant enforcement.
