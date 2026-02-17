@@ -43,6 +43,14 @@ git commit -m "<scope>: <summary>"
 
 When multiple agents are active, stage explicit files only.
 
+Before committing, run a quick claim-to-diff check:
+
+```bash
+git diff --cached --stat
+```
+
+Then verify each claimed "fixed/changed" item in your commit message maps to at least one staged diff hunk.
+
 ## 5. Push Gate
 
 ```bash

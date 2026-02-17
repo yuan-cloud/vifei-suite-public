@@ -684,7 +684,8 @@ When ending a work session, you MUST complete ALL steps below. Work is NOT compl
 3. Update beads: close finished work, update in-progress items.
 4. Risk assessment: append to `docs/RISK_REGISTER.md` if a bead was completed.
 5. Sync beads: `br sync --flush-only`.
-6. Commit all changes:
+6. Claim-to-diff check (required): every "fixed/changed X" statement in your commit message and handoff must map to an actual staged diff hunk in the touched files.
+7. Commit all changes:
 
 ```bash
 git status
@@ -694,8 +695,8 @@ git commit -m "<bead-id>: <summary>
 <what changed and why>"
 ```
 
-7. Produce the handoff note (template below).
-8. Release Agent Mail file reservations (if multi-agent session).
+8. Produce the handoff note (template below).
+9. Release Agent Mail file reservations (if multi-agent session).
 
 ### Handoff note template
 
@@ -722,6 +723,13 @@ git commit -m "<bead-id>: <summary>
 ```
 
 If you have no open questions, write "None". Do not omit the section.
+
+### Reviewer checklist (hygiene)
+
+Before approving or handing off:
+- For each claim line ("fixed X", "added Y", "removed Z"), point to at least one corresponding diff hunk.
+- If a claim has no diff evidence, either revise the claim text or add the missing change.
+- Keep commit body and handoff sections consistent with the actual staged files.
 
 ### Critical rules
 

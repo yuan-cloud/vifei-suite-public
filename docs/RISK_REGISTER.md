@@ -392,3 +392,11 @@ Context:
 3. Nondeterminism: None introduced. Policy reinforces existing deterministic artifact modes and adds tests to prevent accidental serializer mode drift.
 4. Security: No new secret surface. This is documentation + deterministic test enforcement.
 5. Performance cliffs: Pretty JSON remains slightly larger than compact JSON; this is an intentional readability/stability tradeoff and unchanged from prior behavior.
+
+## bd-38h · Process: enforce handoff/commit-message accuracy checks · 2026-02-17
+
+1. Coupling: Process coupling increases between commit messages, handoff notes, and staged diffs; this is intentional governance coupling to reduce ambiguity.
+2. Untested claims: No executable behavior changed; policy enforcement relies on human checklist adherence rather than automated linting.
+3. Nondeterminism: None introduced; documentation/process updates only.
+4. Security: Improves audit integrity by reducing mismatch between claimed and actual changes; no new data/security surface.
+5. Performance cliffs: Negligible; adds a lightweight manual review step before commit/handoff.
