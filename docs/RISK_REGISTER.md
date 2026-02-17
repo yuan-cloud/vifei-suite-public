@@ -584,3 +584,11 @@ Context:
 3. Nondeterminism: None introduced in product behavior; documentation-only audit artifact.
 4. Security and privacy: No secret handling changes. Commands and findings reference existing local fixtures and test targets.
 5. Performance cliffs: No runtime impact. Audit command set is heavier than smoke tests and should remain in planning/release lanes, not every edit loop.
+
+## bd-2yv.2 · TEST-E2E-CLI: end-to-end script suite with detailed structured logs
+
+1. Coupling: The new CLI e2e harness couples to current command UX text (`Export successful`, `export refused`, `Likely cause`) and artifact names; command copy contract changes must update script assertions.
+2. Untested claims: Script currently validates refusal via stderr contract rather than guaranteed refusal-report file presence; refusal-report persistence behavior should be tightened in a follow-on bead.
+3. Nondeterminism: Structured log format is deterministic (`run_id`, monotonic `seq`, stable fields). Runtime command output may vary in timing but is captured as transcripts.
+4. Security and privacy: Uses repo fixtures only; refusal transcript may include masked secret indicators by design.
+5. Performance cliffs: Script runs full stress tour and export flows, so it is not suitable for every edit loop; intended for e2e lane usage.

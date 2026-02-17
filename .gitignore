@@ -6,3 +6,4 @@
 # local agent/runtime artifacts
 .ntm/
 .beads/.br_history/
+.tmp/
