@@ -49,6 +49,8 @@ use panopticon_import::cassette::parse_cassette;
 use std::fs;
 use std::io::{self, BufReader, Cursor};
 use std::path::PathBuf;
+use std::time::Duration;
+use std::time::Instant;
 
 /// Tour configuration.
 #[derive(Debug, Clone)]
@@ -89,8 +91,25 @@ pub struct TourResult {
     pub viewmodel_hash: String,
 }
 
+/// Stage-level timing profile for a Tour run.
+#[derive(Debug, Clone)]
+pub struct TourStageProfile {
+    pub parse_fixture: Duration,
+    pub append_writer: Duration,
+    pub reducer: Duration,
+    pub projection: Duration,
+    pub metrics_emit: Duration,
+    pub total: Duration,
+}
+
 /// Run the Tour stress harness.
 pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
+    let (result, _) = run_tour_with_profile(config)?;
+    Ok(result)
+}
+
+/// Run the Tour stress harness and return stage-level timing profile.
+pub fn run_tour_with_profile(config: &TourConfig) -> io::Result<(TourResult, TourStageProfile)> {
     // Validate stress mode is enabled
     if !config.stress {
         return Err(io::Error::new(
@@ -98,11 +117,14 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
             "Tour requires --stress flag in v0.1",
         ));
     }
+    let total_start = Instant::now();
 
     // Stage 1: Parse fixture
+    let parse_start = Instant::now();
     let fixture_content = fs::read_to_string(&config.fixture_path)?;
     let reader = BufReader::new(Cursor::new(&fixture_content));
     let events = parse_cassette(reader);
+    let parse_fixture = parse_start.elapsed();
 
     let imported_event_count = events.len();
     if imported_event_count == 0 {
@@ -117,6 +139,7 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
 
     // Stage 2: Import through append writer (to temp EventLog), while collecting
     // the exact committed sequence from append results.
+    let append_start = Instant::now();
     let temp_dir = tempfile::tempdir()?;
     let eventlog_path = temp_dir.path().join("eventlog.jsonl");
     let mut writer = EventLogWriter::open(&eventlog_path)?;
@@ -128,8 +151,10 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
         committed_events.push(result.committed_event().clone());
     }
     drop(writer);
+    let append_writer = append_start.elapsed();
 
     // Stage 3: Reduce all events with periodic seek point capture
+    let reducer_start = Instant::now();
     let mut state = State::new();
     let committed_event_count = committed_events.len();
 
@@ -152,12 +177,16 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
             });
         }
     }
+    let reducer = reducer_start.elapsed();
 
     // Stage 4: Project final state
+    let projection_start = Instant::now();
     let invariants = ProjectionInvariants::new();
     let viewmodel = project(&state, &invariants);
+    let projection = projection_start.elapsed();
 
     // Stage 5: Build metrics
+    let metrics_start = Instant::now();
     let metrics = build_metrics(&state, &viewmodel, committed_event_count);
 
     // Stage 6: Emit proof artifacts
@@ -170,12 +199,24 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
         committed_event_count,
         seek_points,
     )?;
+    let metrics_emit = metrics_start.elapsed();
+    let total = total_start.elapsed();
 
-    Ok(TourResult {
+    let result = TourResult {
         output_dir: config.output_dir.clone(),
         metrics,
         viewmodel_hash: vm_hash,
-    })
+    };
+    let profile = TourStageProfile {
+        parse_fixture,
+        append_writer,
+        reducer,
+        projection,
+        metrics_emit,
+        total,
+    };
+
+    Ok((result, profile))
 }
 
 #[cfg(test)]

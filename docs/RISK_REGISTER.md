@@ -1158,3 +1158,16 @@ Context:
 3. Nondeterminism: No runtime behavior changes introduced; this bead records measurements only.
 4. Security: No new secret-bearing data introduced; artifacts contain timing/resource metadata and existing deterministic evidence paths.
 5. Performance: No product runtime impact; enables tighter optimization prioritization by replacing stale assumptions with fresh measurements.
+
+## bd-2jw · A2-2 hotspot profiling evidence (CPU/allocation/I-O) · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (deterministic evidence and replayable diagnostics)
+- Constitution touched: none
+
+1. Coupling: Added `profile_tour` stage-profile path couples optimization planning to current Tour pipeline stage boundaries.
+2. Untested claims: Fallback profile reports stage wall-time percentages, not kernel sampled stacks; deeper symbol-level attribution still needs privileged host profiling.
+3. Nondeterminism: Runtime behavior for normal commands unchanged; profiling output is deterministic for a fixed fixture and iteration count.
+4. Security: No new secret surface; outputs include only timing/resource metadata and existing artifact paths.
+5. Performance: No production-path regression expected; profiling helper is opt-in and used only for measurement workflows.

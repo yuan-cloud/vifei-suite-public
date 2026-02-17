@@ -169,6 +169,7 @@ Failure diagnostics minimums:
 - `bd-22i` completed: fastlane now records PTY preflight capability status explicitly and gates interactive PTY smoke deterministically, while CI validates `tui_pty_preflight` stage presence and preflight artifact output.
 - `bd-2gs` completed: PTY flake checker now emits explicit lane-scope diagnostics for wrong-directory usage (fastlane vs full-confidence), preserving strict failures while reducing first-use operator confusion.
 - `bd-qhk` completed: baseline refresh pack captured fastlane/cli-e2e results, 12-run Tour latency distribution, release bench percentiles, and resource snapshots to drive profiler-first candidate selection.
+- `bd-2jw` completed: hotspot evidence captured with non-privileged stage profiling fallback (`profile_tour`) plus memory/I-O envelope counters; privileged profiler blocker and repro recipe documented in `docs/testing/perf-hotspots-a2-2026-02-17.md`.
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 
