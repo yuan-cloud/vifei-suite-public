@@ -348,39 +348,88 @@ fn scan_blob(patterns: &SecretPatterns, blob_ref: &str, data: &[u8]) -> Vec<Bloc
     items
 }
 
-/// Bundle discovered content into a deterministic archive.
+/// Bundle discovered content into a deterministic tar+zstd archive.
 ///
-/// NOTE: Full implementation in M8.4. This is a pipeline stub.
+/// Determinism requirements (CAPACITY_ENVELOPE Export determinism targets):
+/// - Tar format: POSIX (UStar/PAX-compatible)
+/// - Zstd compression level: 3 (pinned, not library default)
+/// - Tar mtime: 0 (Unix epoch, all entries normalized)
+/// - Tar uid/gid: 0 (normalized to prevent machine-specific values)
+/// - Tar username/groupname: empty
+/// - Entries sorted alphabetically by path
+/// - bundle_hash = BLAKE3 of final .tar.zst bytes
 pub(crate) fn create_bundle(
     content: &DiscoveredContent,
-    _blob_store: Option<&BlobStore>,
+    blob_store: Option<&BlobStore>,
     output_path: &Path,
 ) -> io::Result<ExportSuccess> {
-    // M8.4 will implement deterministic tar+zstd bundling.
-    // For now, create a placeholder file to test the pipeline.
+    // Collect all entries as (archive_path, data) for deterministic sorting
+    let mut entries: Vec<(String, Vec<u8>)> = Vec::new();
 
-    // Create a minimal bundle placeholder
-    let placeholder = format!(
-        "# Panopticon Export Bundle (placeholder)\n\
-         # Full implementation in M8.4\n\
-         eventlog: {}\n\
-         event_count: {}\n\
-         blob_count: {}\n",
-        content.eventlog_path.display(),
-        content.event_count(),
-        content.blob_refs.len()
-    );
+    // Add EventLog
+    let eventlog_bytes = std::fs::read(&content.eventlog_path)?;
+    entries.push(("eventlog.jsonl".to_string(), eventlog_bytes));
 
-    std::fs::write(output_path, &placeholder)?;
+    // Add blobs (sorted by ref for deterministic ordering)
+    let mut blob_count = 0usize;
+    if let Some(store) = blob_store {
+        let mut sorted_refs: Vec<&str> = content.blob_refs.iter().map(|s| s.as_str()).collect();
+        sorted_refs.sort();
+        for blob_ref in sorted_refs {
+            if let Some(data) = store.read_blob(blob_ref)? {
+                entries.push((format!("blobs/{}", blob_ref), data));
+                blob_count += 1;
+            }
+        }
+    }
 
-    // Compute bundle hash
-    let bundle_hash = blake3::hash(placeholder.as_bytes()).to_hex().to_string();
+    // Sort all entries alphabetically by path (deterministic archive order)
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
+
+    // Build tar+zstd into a memory buffer so we can BLAKE3-hash the result
+    let mut compressed_bytes: Vec<u8> = Vec::new();
+    {
+        // Zstd level 3 (pinned per CAPACITY_ENVELOPE)
+        let encoder = zstd::stream::write::Encoder::new(&mut compressed_bytes, 3)
+            .map_err(|e| io::Error::other(format!("zstd init: {e}")))?;
+        let mut tar_builder = tar::Builder::new(encoder);
+
+        for (path, data) in &entries {
+            let mut header = tar::Header::new_ustar();
+            header.set_size(data.len() as u64);
+            header.set_mtime(0);
+            header.set_uid(0);
+            header.set_gid(0);
+            header.set_mode(0o644);
+            // Empty username/groupname to prevent machine-specific values
+            header
+                .set_username("")
+                .map_err(|e| io::Error::other(format!("set_username: {e}")))?;
+            header
+                .set_groupname("")
+                .map_err(|e| io::Error::other(format!("set_groupname: {e}")))?;
+            header.set_entry_type(tar::EntryType::Regular);
+            header.set_cksum();
+
+            tar_builder.append_data(&mut header, path, data.as_slice())?;
+        }
+
+        // Finish tar (writes final blocks), then finish zstd (flushes frame)
+        let encoder = tar_builder.into_inner()?;
+        encoder.finish()?;
+    }
+
+    // bundle_hash = BLAKE3 of final .tar.zst bytes
+    let bundle_hash = blake3::hash(&compressed_bytes).to_hex().to_string();
+
+    // Write the completed bundle to disk
+    std::fs::write(output_path, &compressed_bytes)?;
 
     Ok(ExportSuccess {
         bundle_path: output_path.to_path_buf(),
         bundle_hash,
         event_count: content.event_count(),
-        blob_count: content.blob_refs.len(),
+        blob_count,
     })
 }
 
@@ -806,5 +855,180 @@ mod tests {
         let json = serde_json::to_string(&report).unwrap();
         // blob_ref should be skipped when None
         assert!(!json.contains("blob_ref"));
+    }
+
+    // ---- M8.4: Deterministic tar+zstd bundling tests ----
+
+    #[test]
+    fn bundle_is_valid_tar_zstd() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "hello"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        let result = create_bundle(&content, None, &bundle_path).unwrap();
+
+        assert!(bundle_path.exists());
+        assert_eq!(result.event_count, 1);
+        assert_eq!(result.blob_count, 0);
+        assert_eq!(result.bundle_hash.len(), 64); // BLAKE3 hex
+
+        // Verify it decompresses and contains the eventlog entry
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+        let entries: Vec<_> = archive
+            .entries()
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        assert_eq!(entries.len(), 1);
+    }
+
+    #[test]
+    fn bundle_deterministic_same_inputs_same_bytes() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "deterministic"))
+            .unwrap();
+        writer
+            .append(make_event("e2", 2_000_000_000, "test"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+
+        // Create bundle twice
+        let bundle1_path = dir.path().join("bundle1.tar.zst");
+        let bundle2_path = dir.path().join("bundle2.tar.zst");
+        let result1 = create_bundle(&content, None, &bundle1_path).unwrap();
+        let result2 = create_bundle(&content, None, &bundle2_path).unwrap();
+
+        // Same inputs must produce identical bytes
+        let bytes1 = std::fs::read(&bundle1_path).unwrap();
+        let bytes2 = std::fs::read(&bundle2_path).unwrap();
+        assert_eq!(
+            bytes1, bytes2,
+            "Bundle bytes must be identical for same inputs"
+        );
+        assert_eq!(result1.bundle_hash, result2.bundle_hash);
+    }
+
+    #[test]
+    fn bundle_metadata_normalized() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "metadata test"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        // Decompress and verify metadata
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let entry = entry.unwrap();
+            let header = entry.header();
+            assert_eq!(header.mtime().unwrap(), 0, "mtime must be 0");
+            assert_eq!(header.uid().unwrap(), 0, "uid must be 0");
+            assert_eq!(header.gid().unwrap(), 0, "gid must be 0");
+            assert_eq!(
+                header.username().unwrap().unwrap_or(""),
+                "",
+                "username must be empty"
+            );
+            assert_eq!(
+                header.groupname().unwrap().unwrap_or(""),
+                "",
+                "groupname must be empty"
+            );
+            assert_eq!(header.mode().unwrap(), 0o644, "mode must be 0644");
+        }
+    }
+
+    #[test]
+    fn bundle_entries_sorted_alphabetically() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+        let blobs_dir = dir.path().join("blobs");
+
+        // Write blobs using BlobStore (correct on-disk layout)
+        let blob_store = panopticon_core::blob_store::BlobStore::open(&blobs_dir).unwrap();
+        let ref_a = blob_store.write_blob(b"blob-a-data").unwrap();
+        let ref_f = blob_store.write_blob(b"blob-f-data").unwrap();
+
+        // Create EventLog with blob references
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        let mut ev1 = make_event("e1", 1_000_000_000, "blob test");
+        ev1.payload_ref = Some(ref_f.clone());
+        writer.append(ev1).unwrap();
+        let mut ev2 = make_event("e2", 2_000_000_000, "blob test 2");
+        ev2.payload_ref = Some(ref_a.clone());
+        writer.append(ev2).unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, Some(&blob_store), &bundle_path).unwrap();
+
+        // Verify entry ordering
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+        let paths: Vec<String> = archive
+            .entries()
+            .unwrap()
+            .map(|e| {
+                let e = e.unwrap();
+                e.path().unwrap().to_string_lossy().to_string()
+            })
+            .collect();
+
+        // Must be sorted alphabetically
+        let mut sorted = paths.clone();
+        sorted.sort();
+        assert_eq!(paths, sorted, "Entries must be in alphabetical order");
+
+        // Verify expected entries present
+        assert!(paths.iter().any(|p| p == "eventlog.jsonl"));
+        assert_eq!(paths.len(), 3); // eventlog + 2 blobs
+    }
+
+    #[test]
+    fn bundle_hash_is_blake3_of_file_bytes() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "hash test"))
+            .unwrap();
+        drop(writer);
+
+        let content = discover_content(&eventlog_path).unwrap();
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        let result = create_bundle(&content, None, &bundle_path).unwrap();
+
+        // Independently hash the file bytes
+        let file_bytes = std::fs::read(&bundle_path).unwrap();
+        let expected_hash = blake3::hash(&file_bytes).to_hex().to_string();
+        assert_eq!(result.bundle_hash, expected_hash);
     }
 }

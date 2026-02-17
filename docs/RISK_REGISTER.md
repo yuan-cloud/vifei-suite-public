@@ -247,3 +247,18 @@ Context:
 3. Nondeterminism: None introduced. All rendering is deterministic given the same ViewModel. No RNG, no wall clock, no HashMap. Color selection is pure function of ViewModel values.
 4. Security: No secrets, tokens, or PII. The HUD displays only system metadata (levels, counts, versions). No event payloads flow through the HUD.
 5. Performance: No performance cliffs. `render_truth_hud` creates a small number of `Span` objects (<20) and renders two text lines. O(1) in event count. 10 tests add <0.01s to the test suite.
+
+---
+
+## bd-d7c.4 · M8.4: Deterministic tar+zstd bundling · 2026-02-17
+
+Context:
+- Bead owner: CloudyLake (claude-code)
+- Invariants referenced: I3 (share-safe export — deterministic bundles)
+- Constitution touched: none (implements CAPACITY_ENVELOPE Export determinism targets)
+
+1. Coupling: `create_bundle` depends on `tar` (0.4) and `zstd` (0.13) crates. The tar crate's UStar header layout and zstd's compression output are version-dependent. Pinned in Cargo.lock per bead spec. If either crate is upgraded, bundle bytes will change and BLAKE3 hashes will differ — any reproducibility checks across versions will break.
+2. Untested claims: (a) `header.set_size(data.len() as u64)` uses `as` cast — safe for files under 2^64 bytes but not checked with TryFrom. Acceptable since the max blob size is 50MB per CAPACITY_ENVELOPE. (b) PAX extended headers: using UStar format which is PAX-compatible; true PAX extended headers are not explicitly emitted but also not needed for paths <100 chars and sizes <8GB. (c) No test verifies cross-platform determinism (same bytes on macOS vs Linux) — only tested same-machine determinism.
+3. Nondeterminism: All metadata is normalized (mtime=0, uid/gid=0, username/groupname="", mode=0644). Entries are sorted alphabetically. Zstd level is pinned at 3. No wall clock, no RNG, no thread-local state. The only source of potential nondeterminism is crate version changes (tar/zstd library internals).
+4. Security: No new security risk. `create_bundle` is only called after `scan_for_secrets` passes (no secrets). Bundle contents are EventLog + blobs that passed scanning. No credentials or PII in the archive metadata.
+5. Performance: Entire bundle is built in memory (`Vec<u8>`) before writing to disk. For large EventLogs + many blobs, this could cause high memory usage. Current mitigation: max blob size is 50MB, practical bundle sizes are expected to be <100MB for v0.1. Streaming to disk would be needed for larger bundles in future versions.
