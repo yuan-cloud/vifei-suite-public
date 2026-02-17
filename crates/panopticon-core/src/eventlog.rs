@@ -253,24 +253,32 @@ impl EventLogWriter {
         let reader = BufReader::new(file);
         let mut metadata = ScanMetadata::default();
 
-        for line in reader.lines() {
+        for (line_no, line) in reader.lines().enumerate() {
             let line = line?;
             let trimmed = line.trim();
             if trimmed.is_empty() {
                 continue;
             }
-            // Parse committed events from JSONL.
-            if let Ok(event) = serde_json::from_str::<CommittedEvent>(trimmed) {
-                metadata.highest_commit_index = Some(match metadata.highest_commit_index {
-                    Some(h) => h.max(event.commit_index),
-                    None => event.commit_index,
-                });
-                metadata
-                    .source_timestamps
-                    .entry(event.source_id)
-                    .and_modify(|existing| *existing = (*existing).max(event.timestamp_ns))
-                    .or_insert(event.timestamp_ns);
-            }
+            // Parse committed events from JSONL. Fail loudly on malformed lines
+            // to avoid silently resuming from a corrupted truth log.
+            let event = serde_json::from_str::<CommittedEvent>(trimmed).map_err(|e| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!(
+                        "failed to parse EventLog line {} while resuming writer: {e}",
+                        line_no + 1
+                    ),
+                )
+            })?;
+            metadata.highest_commit_index = Some(match metadata.highest_commit_index {
+                Some(h) => h.max(event.commit_index),
+                None => event.commit_index,
+            });
+            metadata
+                .source_timestamps
+                .entry(event.source_id)
+                .and_modify(|existing| *existing = (*existing).max(event.timestamp_ns))
+                .or_insert(event.timestamp_ns);
         }
 
         Ok(metadata)
@@ -736,5 +744,19 @@ mod tests {
             assert_eq!(*actual_ns, 1_000_000_000);
             assert_eq!(*delta_ns, 1_000_000_000);
         }
+    }
+
+    #[test]
+    fn open_fails_loudly_on_malformed_existing_line() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("eventlog.jsonl");
+        std::fs::write(&path, "{\"not\":\"a-committed-event\"}\n").unwrap();
+
+        let err = match EventLogWriter::open(&path) {
+            Ok(_) => panic!("expected open() to fail for malformed existing EventLog"),
+            Err(err) => err,
+        };
+        assert_eq!(err.kind(), io::ErrorKind::InvalidData);
+        assert!(err.to_string().contains("failed to parse EventLog line 1"));
     }
 }

@@ -58,14 +58,12 @@ pub(crate) fn normalize_args(args: Vec<String>) -> (Vec<String>, Vec<String>) {
     let mut repaired = args;
     let mut notes = Vec::new();
 
+    // Normalize option spellings anywhere in argv.
     for arg in &mut repaired {
         let replacement = match arg.as_str() {
             "--share_safe" => Some("--share-safe"),
             "--refusal_report" => Some("--refusal-report"),
             "--output_dir" => Some("--output-dir"),
-            "viewer" => Some("view"),
-            "exports" => Some("export"),
-            "tours" => Some("tour"),
             _ => None,
         };
 
@@ -75,5 +73,37 @@ pub(crate) fn normalize_args(args: Vec<String>) -> (Vec<String>, Vec<String>) {
         }
     }
 
+    // Normalize common subcommand variants only at argv[1] so we never rewrite
+    // positional values like file names.
+    if let Some(cmd) = repaired.get_mut(1) {
+        let replacement = match cmd.as_str() {
+            "viewer" => Some("view"),
+            "exports" => Some("export"),
+            "tours" => Some("tour"),
+            _ => None,
+        };
+        if let Some(new) = replacement {
+            notes.push(format!("normalized `{}` -> `{}`", cmd, new));
+            *cmd = new.to_string();
+        }
+    }
+
     (repaired, notes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_args;
+
+    #[test]
+    fn normalize_only_rewrites_subcommand_slot() {
+        let (repaired, notes) = normalize_args(vec![
+            "panopticon".to_string(),
+            "view".to_string(),
+            "viewer".to_string(),
+        ]);
+        assert_eq!(repaired[1], "view");
+        assert_eq!(repaired[2], "viewer");
+        assert!(notes.is_empty());
+    }
 }
