@@ -28,10 +28,13 @@
 //! - Same fixture → identical artifacts
 
 use panopticon_core::eventlog::EventLogWriter;
-use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants};
+use panopticon_core::projection::{
+    project, viewmodel_hash, ExportSafetyState, LadderLevel, ProjectionInvariants, ViewModel,
+};
 use panopticon_core::reducer::{reduce, state_hash, State};
 use panopticon_import::cassette::parse_cassette;
 use serde::{Deserialize, Serialize};
+use std::fmt::Write as _;
 use std::fs;
 use std::io::{self, BufReader, Cursor};
 use std::path::PathBuf;
@@ -232,12 +235,10 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     let hash_path = config.output_dir.join("viewmodel.hash");
     fs::write(&hash_path, format!("{}\n", vm_hash))?;
 
-    // Write placeholder for ansi.capture (M7.5)
+    // Write ansi.capture — deterministic ANSI rendering of ViewModel state
     let ansi_path = config.output_dir.join("ansi.capture");
-    fs::write(
-        &ansi_path,
-        "# ansi.capture placeholder\n# Full implementation in M7.5\n",
-    )?;
+    let ansi_content = render_ansi_capture(&viewmodel, committed_event_count, &vm_hash);
+    fs::write(&ansi_path, &ansi_content)?;
 
     // Write timetravel.capture with ordered seek points
     let timetravel = TimeTravelCapture {
@@ -278,6 +279,130 @@ pub struct SeekPoint {
     pub state_hash: String,
     /// ViewModel hash at this point.
     pub viewmodel_hash: String,
+}
+
+// --- ANSI escape helpers (deterministic, no external dependencies) ---
+
+const RESET: &str = "\x1b[0m";
+const BOLD: &str = "\x1b[1m";
+const FG_GREEN: &str = "\x1b[32m";
+const FG_YELLOW: &str = "\x1b[33m";
+const FG_RED: &str = "\x1b[31m";
+const FG_WHITE: &str = "\x1b[37m";
+const FG_MAGENTA: &str = "\x1b[35m";
+const FG_GRAY: &str = "\x1b[90m";
+
+/// ANSI color for degradation level (mirrors Truth HUD semantics).
+fn ansi_level(level: LadderLevel) -> &'static str {
+    match level {
+        LadderLevel::L0 => FG_GREEN,
+        LadderLevel::L1 | LadderLevel::L2 | LadderLevel::L3 => FG_YELLOW,
+        LadderLevel::L4 | LadderLevel::L5 => FG_RED,
+    }
+}
+
+/// ANSI color for Tier A drops.
+fn ansi_drops(drops: u64) -> &'static str {
+    if drops > 0 {
+        FG_RED
+    } else {
+        FG_GREEN
+    }
+}
+
+/// ANSI color for export safety state.
+fn ansi_export(state: ExportSafetyState) -> &'static str {
+    match state {
+        ExportSafetyState::Unknown => FG_GRAY,
+        ExportSafetyState::Clean => FG_GREEN,
+        ExportSafetyState::Dirty | ExportSafetyState::Refused => FG_RED,
+    }
+}
+
+/// ANSI color for queue pressure percentage.
+fn ansi_pressure(pct: u32) -> &'static str {
+    if pct >= 80 {
+        FG_RED
+    } else if pct >= 50 {
+        FG_YELLOW
+    } else {
+        FG_GREEN
+    }
+}
+
+/// Render deterministic ANSI capture of the ViewModel.
+///
+/// Mirrors Truth HUD layout and color semantics using raw ANSI escape codes.
+/// Same ViewModel → identical output bytes (no wall-clock, no randomness).
+fn render_ansi_capture(vm: &ViewModel, event_count: usize, vm_hash: &str) -> String {
+    let mut buf = String::new();
+
+    // Header
+    let _ = writeln!(
+        buf,
+        "{FG_MAGENTA}{BOLD}╔══════════════════════════════════════════════════════════════╗{RESET}"
+    );
+    let _ = writeln!(
+        buf,
+        "{FG_MAGENTA}{BOLD}║  Panopticon Tour · ansi.capture                             ║{RESET}"
+    );
+    let _ = writeln!(
+        buf,
+        "{FG_MAGENTA}{BOLD}╚══════════════════════════════════════════════════════════════╝{RESET}"
+    );
+    let _ = writeln!(buf);
+
+    // Truth HUD section
+    let _ = writeln!(buf, "{FG_MAGENTA}{BOLD}── Truth HUD ──{RESET}");
+
+    let level_color = ansi_level(vm.degradation_level);
+    let _ = writeln!(
+        buf,
+        "  {FG_WHITE}Level:{RESET}    {level_color}{}{RESET}",
+        vm.degradation_level,
+    );
+
+    let agg_display = vm
+        .aggregation_bin_size
+        .map(|bin| format!("{} (bin={bin})", vm.aggregation_mode))
+        .unwrap_or_else(|| vm.aggregation_mode.clone());
+    let _ = writeln!(buf, "  {FG_WHITE}Agg:{RESET}      {agg_display}");
+
+    let pressure_pct = (vm.queue_pressure() * 100.0) as u32;
+    let pressure_color = ansi_pressure(pressure_pct);
+    let _ = writeln!(
+        buf,
+        "  {FG_WHITE}Pressure:{RESET} {pressure_color}{pressure_pct}%{RESET}",
+    );
+
+    let drops_color = ansi_drops(vm.tier_a_drops);
+    let _ = writeln!(
+        buf,
+        "  {FG_WHITE}Drops:{RESET}    {drops_color}{}{RESET}",
+        vm.tier_a_drops,
+    );
+
+    let export_color = ansi_export(vm.export_safety_state);
+    let _ = writeln!(
+        buf,
+        "  {FG_WHITE}Export:{RESET}   {export_color}{}{RESET}",
+        vm.export_safety_state,
+    );
+
+    let _ = writeln!(
+        buf,
+        "  {FG_GRAY}Version:{RESET}  {FG_GRAY}{}{RESET}",
+        vm.projection_invariants_version,
+    );
+
+    let _ = writeln!(buf);
+
+    // Summary section
+    let _ = writeln!(buf, "{FG_MAGENTA}{BOLD}── Summary ──{RESET}");
+    let _ = writeln!(buf, "  {FG_WHITE}Events:{RESET}   {event_count}");
+    let _ = writeln!(buf, "  {FG_WHITE}Hash:{RESET}     {vm_hash}");
+
+    buf
 }
 
 #[cfg(test)]
@@ -402,6 +527,11 @@ mod tests {
         let metrics1 = fs::read_to_string(output1.join("metrics.json")).unwrap();
         let metrics2 = fs::read_to_string(output2.join("metrics.json")).unwrap();
         assert_eq!(metrics1, metrics2);
+
+        // Same ansi.capture
+        let ansi1 = fs::read_to_string(output1.join("ansi.capture")).unwrap();
+        let ansi2 = fs::read_to_string(output2.join("ansi.capture")).unwrap();
+        assert_eq!(ansi1, ansi2);
     }
 
     #[test]
@@ -519,5 +649,66 @@ mod tests {
         // But degradation_level_final and max_degradation_level must be populated
         assert!(!result.metrics.degradation_level_final.is_empty());
         assert!(!result.metrics.max_degradation_level.is_empty());
+    }
+
+    #[test]
+    fn ansi_capture_contains_truth_hud_fields() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        let result = run_tour(&config).unwrap();
+
+        let ansi = fs::read_to_string(output_dir.join("ansi.capture")).unwrap();
+
+        // All 6 Truth HUD fields must appear
+        assert!(ansi.contains("Level:"), "Missing Level label");
+        assert!(ansi.contains("L0"), "Missing level value");
+        assert!(ansi.contains("Agg:"), "Missing Agg label");
+        assert!(ansi.contains("Pressure:"), "Missing Pressure label");
+        assert!(ansi.contains("Drops:"), "Missing Drops label");
+        assert!(ansi.contains("Export:"), "Missing Export label");
+        assert!(ansi.contains("Version:"), "Missing Version label");
+
+        // Summary section
+        assert!(ansi.contains("Events:"), "Missing event count");
+        assert!(ansi.contains("Hash:"), "Missing hash");
+        assert!(ansi.contains(&result.viewmodel_hash), "Hash value mismatch");
+    }
+
+    #[test]
+    fn ansi_capture_contains_escape_codes() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        run_tour(&config).unwrap();
+
+        let ansi = fs::read_to_string(output_dir.join("ansi.capture")).unwrap();
+
+        // Must contain ANSI escape sequences (not plain text)
+        assert!(ansi.contains("\x1b["), "No ANSI escape codes found");
+        // Must contain reset sequences
+        assert!(ansi.contains("\x1b[0m"), "No ANSI reset codes found");
+    }
+
+    #[test]
+    fn ansi_capture_not_placeholder() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        run_tour(&config).unwrap();
+
+        let ansi = fs::read_to_string(output_dir.join("ansi.capture")).unwrap();
+
+        // Must not be the old placeholder
+        assert!(
+            !ansi.contains("placeholder"),
+            "ansi.capture still contains placeholder text"
+        );
     }
 }

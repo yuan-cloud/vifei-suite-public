@@ -344,3 +344,11 @@ Context:
 3. Nondeterminism: `queue_pressure_micro` (u64) → f64 division is exact for values in [0, 1_000_000]. No HashMap iteration, no wall-clock, no random seeds. Seek point interval is deterministic from committed event count.
 4. Security: No security implications. Proof artifacts contain only hashes, counts, and level strings.
 5. Performance: Seek point capture projects at ~20 intervals during reduction, adding ~20 extra `project()` calls. For 19K events this is negligible. No unbounded allocation — seek_points vec grows to at most ~21 entries.
+
+## bd-c7m.5 · Tour: ansi.capture emission
+
+1. Coupling: ANSI color logic (`ansi_level`, `ansi_drops`, `ansi_export`, `ansi_pressure`) mirrors Truth HUD color semantics from `panopticon-tui/src/truth_hud.rs`. If TUI changes color thresholds (e.g., pressure 80% → 75%), tour's ANSI capture will diverge. Acceptable for v0.1 — both are derived from the same BACKPRESSURE_POLICY specification. Cannot use panopticon-tui directly due to circular dependency (tui → tour).
+2. Untested claims: ANSI output is not compared byte-for-byte against TUI rendering. The capture mirrors Truth HUD fields and color logic but uses raw ANSI codes rather than ratatui. Visual parity with the actual TUI is not verified — only that all required fields and escape codes are present.
+3. Nondeterminism: None. `render_ansi_capture` is a pure function from ViewModel + event_count + hash → String. No wall-clock, no randomness, no platform-dependent formatting. Uses `std::fmt::Write` which is deterministic. Determinism is tested explicitly.
+4. Security: No security implications. ANSI capture contains only ViewModel field values (levels, counts, hashes). No secrets or PII.
+5. Performance: Single `render_ansi_capture` call per Tour run — trivial String formatting. No allocation concerns.
