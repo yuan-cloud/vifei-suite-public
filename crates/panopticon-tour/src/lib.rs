@@ -35,14 +35,17 @@
 //! PANOPTICON_TOUR_BENCH_ITERS=10 cargo run -p panopticon-tour --bin bench_tour --release
 //! ```
 
+mod artifacts;
+mod metrics;
+
+use artifacts::emit_artifacts;
+pub use artifacts::{SeekPoint, TimeTravelCapture};
+use metrics::build_metrics;
+pub use metrics::{DegradationTransition, TourMetrics};
 use panopticon_core::eventlog::EventLogWriter;
-use panopticon_core::projection::{
-    project, viewmodel_hash, ExportSafetyState, LadderLevel, ProjectionInvariants, ViewModel,
-};
+use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants};
 use panopticon_core::reducer::{reduce, state_hash, State};
 use panopticon_import::cassette::parse_cassette;
-use serde::{Deserialize, Serialize};
-use std::fmt::Write as _;
 use std::fs;
 use std::io::{self, BufReader, Cursor};
 use std::path::PathBuf;
@@ -84,44 +87,6 @@ pub struct TourResult {
     pub metrics: TourMetrics,
     /// The viewmodel hash.
     pub viewmodel_hash: String,
-}
-
-/// Metrics emitted by Tour.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TourMetrics {
-    /// Projection invariants version.
-    pub projection_invariants_version: String,
-    /// Total number of events processed.
-    pub event_count_total: usize,
-    /// Tier A drops (must be 0 for CI pass).
-    pub tier_a_drops: u64,
-    /// Maximum degradation level reached.
-    pub max_degradation_level: String,
-    /// Final degradation level.
-    pub degradation_level_final: String,
-    /// Degradation transitions (ordered list).
-    pub degradation_transitions: Vec<DegradationTransition>,
-    /// Aggregation mode.
-    pub aggregation_mode: String,
-    /// Aggregation bin size (if applicable).
-    pub aggregation_bin_size: Option<u64>,
-    /// Queue pressure (normalized 0.0-1.0).
-    pub queue_pressure: f64,
-    /// Export safety state.
-    pub export_safety_state: String,
-}
-
-/// A degradation level transition.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DegradationTransition {
-    /// Level before transition.
-    pub from_level: String,
-    /// Level after transition.
-    pub to_level: String,
-    /// What triggered the transition.
-    pub trigger: String,
-    /// Queue pressure at transition time.
-    pub queue_pressure: f64,
 }
 
 /// Run the Tour stress harness.
@@ -193,227 +158,24 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     let viewmodel = project(&state, &invariants);
 
     // Stage 5: Build metrics
-    // Populate degradation_transitions from reducer's policy_decisions
-    let degradation_transitions: Vec<DegradationTransition> = state
-        .policy_decisions
-        .iter()
-        .map(|pd| DegradationTransition {
-            from_level: pd.from_level.clone(),
-            to_level: pd.to_level.clone(),
-            trigger: pd.trigger.clone(),
-            queue_pressure: pd.queue_pressure_micro as f64 / 1_000_000.0,
-        })
-        .collect();
-
-    // Compute max degradation level from transitions + final level
-    let final_level = format!("{}", viewmodel.degradation_level);
-    let max_degradation_level = state
-        .policy_decisions
-        .iter()
-        .map(|pd| pd.to_level.as_str())
-        .chain(std::iter::once(final_level.as_str()))
-        .max()
-        .unwrap_or("L0")
-        .to_string();
-
-    let metrics = TourMetrics {
-        projection_invariants_version: viewmodel.projection_invariants_version.clone(),
-        event_count_total: committed_event_count,
-        tier_a_drops: viewmodel.tier_a_drops,
-        max_degradation_level,
-        degradation_level_final: final_level,
-        degradation_transitions,
-        aggregation_mode: viewmodel.aggregation_mode.clone(),
-        aggregation_bin_size: viewmodel.aggregation_bin_size,
-        queue_pressure: viewmodel.queue_pressure(),
-        export_safety_state: format!("{}", viewmodel.export_safety_state),
-    };
+    let metrics = build_metrics(&state, &viewmodel, committed_event_count);
 
     // Stage 6: Emit proof artifacts
     let vm_hash = viewmodel_hash(&viewmodel);
-
-    // Write metrics.json
-    let metrics_path = config.output_dir.join("metrics.json");
-    let metrics_json = serde_json::to_string_pretty(&metrics).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Failed to serialize metrics: {e}"),
-        )
-    })?;
-    fs::write(&metrics_path, metrics_json)?;
-
-    // Write viewmodel.hash (single line, newline-terminated)
-    let hash_path = config.output_dir.join("viewmodel.hash");
-    fs::write(&hash_path, format!("{}\n", vm_hash))?;
-
-    // Write ansi.capture — deterministic ANSI rendering of ViewModel state
-    let ansi_path = config.output_dir.join("ansi.capture");
-    let ansi_content = render_ansi_capture(&viewmodel, committed_event_count, &vm_hash);
-    fs::write(&ansi_path, &ansi_content)?;
-
-    // Write timetravel.capture with ordered seek points
-    let timetravel = TimeTravelCapture {
-        projection_invariants_version: viewmodel.projection_invariants_version.clone(),
+    emit_artifacts(
+        &config.output_dir,
+        &metrics,
+        &viewmodel,
+        &vm_hash,
+        committed_event_count,
         seek_points,
-    };
-    let timetravel_path = config.output_dir.join("timetravel.capture");
-    let timetravel_json = serde_json::to_string_pretty(&timetravel).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Failed to serialize timetravel: {e}"),
-        )
-    })?;
-    fs::write(&timetravel_path, timetravel_json)?;
+    )?;
 
     Ok(TourResult {
         output_dir: config.output_dir.clone(),
         metrics,
         viewmodel_hash: vm_hash,
     })
-}
-
-/// Time-travel capture artifact.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TimeTravelCapture {
-    /// Projection invariants version.
-    pub projection_invariants_version: String,
-    /// Ordered list of seek points.
-    pub seek_points: Vec<SeekPoint>,
-}
-
-/// A seek point in the time-travel capture.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SeekPoint {
-    /// Commit index at this point.
-    pub commit_index: u64,
-    /// State hash at this point.
-    pub state_hash: String,
-    /// ViewModel hash at this point.
-    pub viewmodel_hash: String,
-}
-
-// --- ANSI escape helpers (deterministic, no external dependencies) ---
-
-const RESET: &str = "\x1b[0m";
-const BOLD: &str = "\x1b[1m";
-const FG_GREEN: &str = "\x1b[32m";
-const FG_YELLOW: &str = "\x1b[33m";
-const FG_RED: &str = "\x1b[31m";
-const FG_WHITE: &str = "\x1b[37m";
-const FG_MAGENTA: &str = "\x1b[35m";
-const FG_GRAY: &str = "\x1b[90m";
-
-/// ANSI color for degradation level (mirrors Truth HUD semantics).
-fn ansi_level(level: LadderLevel) -> &'static str {
-    match level {
-        LadderLevel::L0 => FG_GREEN,
-        LadderLevel::L1 | LadderLevel::L2 | LadderLevel::L3 => FG_YELLOW,
-        LadderLevel::L4 | LadderLevel::L5 => FG_RED,
-    }
-}
-
-/// ANSI color for Tier A drops.
-fn ansi_drops(drops: u64) -> &'static str {
-    if drops > 0 {
-        FG_RED
-    } else {
-        FG_GREEN
-    }
-}
-
-/// ANSI color for export safety state.
-fn ansi_export(state: ExportSafetyState) -> &'static str {
-    match state {
-        ExportSafetyState::Unknown => FG_GRAY,
-        ExportSafetyState::Clean => FG_GREEN,
-        ExportSafetyState::Dirty | ExportSafetyState::Refused => FG_RED,
-    }
-}
-
-/// ANSI color for queue pressure percentage.
-fn ansi_pressure(pct: u32) -> &'static str {
-    if pct >= 80 {
-        FG_RED
-    } else if pct >= 50 {
-        FG_YELLOW
-    } else {
-        FG_GREEN
-    }
-}
-
-/// Render deterministic ANSI capture of the ViewModel.
-///
-/// Mirrors Truth HUD layout and color semantics using raw ANSI escape codes.
-/// Same ViewModel → identical output bytes (no wall-clock, no randomness).
-fn render_ansi_capture(vm: &ViewModel, event_count: usize, vm_hash: &str) -> String {
-    let mut buf = String::new();
-
-    // Header
-    let _ = writeln!(
-        buf,
-        "{FG_MAGENTA}{BOLD}╔══════════════════════════════════════════════════════════════╗{RESET}"
-    );
-    let _ = writeln!(
-        buf,
-        "{FG_MAGENTA}{BOLD}║  Panopticon Tour · ansi.capture                             ║{RESET}"
-    );
-    let _ = writeln!(
-        buf,
-        "{FG_MAGENTA}{BOLD}╚══════════════════════════════════════════════════════════════╝{RESET}"
-    );
-    let _ = writeln!(buf);
-
-    // Truth HUD section
-    let _ = writeln!(buf, "{FG_MAGENTA}{BOLD}── Truth HUD ──{RESET}");
-
-    let level_color = ansi_level(vm.degradation_level);
-    let _ = writeln!(
-        buf,
-        "  {FG_WHITE}Level:{RESET}    {level_color}{}{RESET}",
-        vm.degradation_level,
-    );
-
-    let agg_display = vm
-        .aggregation_bin_size
-        .map(|bin| format!("{} (bin={bin})", vm.aggregation_mode))
-        .unwrap_or_else(|| vm.aggregation_mode.clone());
-    let _ = writeln!(buf, "  {FG_WHITE}Agg:{RESET}      {agg_display}");
-
-    let pressure_pct = (vm.queue_pressure() * 100.0) as u32;
-    let pressure_color = ansi_pressure(pressure_pct);
-    let _ = writeln!(
-        buf,
-        "  {FG_WHITE}Pressure:{RESET} {pressure_color}{pressure_pct}%{RESET}",
-    );
-
-    let drops_color = ansi_drops(vm.tier_a_drops);
-    let _ = writeln!(
-        buf,
-        "  {FG_WHITE}Drops:{RESET}    {drops_color}{}{RESET}",
-        vm.tier_a_drops,
-    );
-
-    let export_color = ansi_export(vm.export_safety_state);
-    let _ = writeln!(
-        buf,
-        "  {FG_WHITE}Export:{RESET}   {export_color}{}{RESET}",
-        vm.export_safety_state,
-    );
-
-    let _ = writeln!(
-        buf,
-        "  {FG_GRAY}Version:{RESET}  {FG_GRAY}{}{RESET}",
-        vm.projection_invariants_version,
-    );
-
-    let _ = writeln!(buf);
-
-    // Summary section
-    let _ = writeln!(buf, "{FG_MAGENTA}{BOLD}── Summary ──{RESET}");
-    let _ = writeln!(buf, "  {FG_WHITE}Events:{RESET}   {event_count}");
-    let _ = writeln!(buf, "  {FG_WHITE}Hash:{RESET}     {vm_hash}");
-
-    buf
 }
 
 #[cfg(test)]

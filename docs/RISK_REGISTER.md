@@ -937,3 +937,16 @@ Context:
 3. Nondeterminism: No new nondeterminism sources were introduced; deterministic ordering and hashing logic were moved, not rewritten.
 4. Security: Secret scanning and refusal behavior remain unchanged in logic and still fail closed; no new parsing or secret-surface expansion was introduced.
 5. Performance: Runtime cost should be unchanged; only code organization changed, with negligible compile-time impact from extra modules.
+
+## bd-d9m · STRUCT-2.2: split panopticon-tour internals by pipeline and artifact emitters · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: Tour artifact contracts (`metrics.json`, `viewmodel.hash`, `ansi.capture`, `timetravel.capture`)
+- Constitution touched: none
+
+1. Coupling: Tour flow now spans `lib.rs`, `metrics.rs`, and `artifacts.rs`; future changes must keep cross-module API alignment to avoid orchestration drift.
+2. Untested claims: We claim artifact-shape preservation via refactor-only decomposition; this is covered by existing unit and integration tests but not by an external golden corpus beyond current fixtures.
+3. Nondeterminism: No new nondeterministic sources introduced; hashing, sequencing, and artifact rendering logic were moved intact.
+4. Security: No new input or secret-handling paths added; artifact emission and fixture parsing behavior are unchanged.
+5. Performance: Runtime behavior should be equivalent; module split adds negligible compile-time overhead only.
