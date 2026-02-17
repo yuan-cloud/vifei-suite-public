@@ -400,3 +400,11 @@ Context:
 3. Nondeterminism: None introduced; documentation/process updates only.
 4. Security: Improves audit integrity by reducing mismatch between claimed and actual changes; no new data/security surface.
 5. Performance cliffs: Negligible; adds a lightweight manual review step before commit/handoff.
+
+## bd-x7q.1 · README-PLAN: finalize launch sequencing + acceptance checklist · 2026-02-17
+
+1. Coupling: `docs/README_LAUNCH_PLAN.md` now explicitly couples execution order across `bd-x7q.1`..`bd-x7q.5`; this is intentional to prevent out-of-order launch work.
+2. Untested claims: This bead is docs/process only. It does not assert runtime behavior changes; no new executable claims were introduced.
+3. Nondeterminism: None introduced. No runtime code paths changed.
+4. Security: Improves release hygiene by requiring verification findings to gate release tagging. No new secret/PII surface.
+5. Performance cliffs: None; documentation-only change.

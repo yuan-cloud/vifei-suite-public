@@ -174,6 +174,40 @@ Higher-variance "viral" upside requires:
 6. Post-launch learning gate
 - capture feedback and convert into prioritized beads
 
+## README Launch Sequencing Constraints (`bd-x7q.*`)
+
+These constraints are mandatory for launch-docs execution in this repo.
+
+1. `bd-x7q.1` must complete before any README writing:
+- finalize this plan as the single coordination source
+- lock acceptance criteria for `bd-x7q.2` to `bd-x7q.5`
+
+2. `bd-x7q.2` (`README.md` core rewrite) must complete before asset capture:
+- assets are captured against final section structure, not drafts
+
+3. `bd-x7q.3` (assets) must complete before verification:
+- verification references concrete screenshot/diagram paths
+
+4. `bd-x7q.4` (verification) must complete before independent QA:
+- QA validates what was actually executed and recorded
+
+5. `bd-x7q.5` is a findings-first gate:
+- unresolved factual or reproducibility findings block launch tagging
+
+## Acceptance Checklist for `bd-x7q.1`
+
+`bd-x7q.1` is done only when all items below are true:
+
+- `docs/README_LAUNCH_PLAN.md` explicitly defines ordered `bd-x7q.1` → `bd-x7q.5` constraints.
+- The plan states which bead owns each artifact type:
+  - README structure/content: `bd-x7q.2`
+  - screenshots/diagram assets: `bd-x7q.3`
+  - command/trust-step validation: `bd-x7q.4`
+  - independent QA/polish: `bd-x7q.5`
+- The plan includes a hard gate that unresolved verification findings block release tagging.
+- The plan avoids constitutional duplication (no copied threshold/ladder tables from constitution docs).
+- The bead and risk register are updated in the same commit.
+
 ## Proposed Bead Families (new)
 
 - `RELEASE-OPS`: binary packaging, checksums, release checklist, publish flow
