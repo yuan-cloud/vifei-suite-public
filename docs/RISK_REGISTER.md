@@ -472,3 +472,11 @@ Context:
 3. Nondeterminism: None introduced. Documentation-only changes with no runtime behavior changes.
 4. Security: Guardrails explicitly prohibit over-claiming hosted deployment or unsupported channels, reducing risk of misleading trust/security statements.
 5. Performance cliffs: None in runtime. Minor process overhead during launch prep due to copy review and claim verification.
+
+## bd-3qq.5 · POST-LAUNCH-LEARN: feedback intake and prioritization rubric · 2026-02-17
+
+1. Coupling: Triage workflow now couples launch feedback handling to GitHub issue labels and evidence artifacts (`metrics.json`, `viewmodel.hash`, `refusal-report.json`). Process discipline is required to keep classifications consistent.
+2. Untested claims: This bead defines process and prioritization rules only; it does not guarantee issue volume reduction or social channel conversion outcomes.
+3. Nondeterminism: None introduced. Docs-only updates with no runtime behavior changes.
+4. Security: The rubric reduces risk by requiring explicit evidence for security/export claims and by prioritizing secret-handling failures as P0.
+5. Performance cliffs: No runtime impact. Operational overhead is bounded to launch-week triage cadence.
