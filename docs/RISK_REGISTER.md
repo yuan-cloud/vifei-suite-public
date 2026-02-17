@@ -576,3 +576,11 @@ Context:
 3. Nondeterminism: None introduced. Style tokenization and copy updates are static mappings with no time/random input.
 4. Security and privacy: No new data collection or output exposure; changes are presentation and documentation only.
 5. Performance cliffs: Negligible. Shared style helper calls are lightweight and replace equivalent inline style construction.
+
+## bd-2yv.1 · TEST-AUDIT: coverage baseline and gap matrix
+
+1. Coupling: The new baseline matrix now couples downstream testing beads (`bd-2yv.2`..`bd-2yv.8`, `bd-gxd.9`, `bd-gxd.10`) to a shared gap taxonomy; future test work should update this matrix to prevent drift.
+2. Untested claims: Numeric line/function percentages are not available yet because `cargo llvm-cov` is not installed; this audit uses a command-backed inventory fallback and explicit risk ranking.
+3. Nondeterminism: None introduced in product behavior; documentation-only audit artifact.
+4. Security and privacy: No secret handling changes. Commands and findings reference existing local fixtures and test targets.
+5. Performance cliffs: No runtime impact. Audit command set is heavier than smoke tests and should remain in planning/release lanes, not every edit loop.
