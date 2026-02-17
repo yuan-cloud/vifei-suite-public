@@ -217,3 +217,18 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced. Metadata scan uses deterministic max operations; blob ref validation is pure and deterministic.
 4. Security: This fix removes a concrete traversal class by rejecting malformed `payload_ref` values in blob read/existence paths. Remaining security risk is that inline payload content can still contain secrets until M8 export scanner enforcement.
 5. Performance: EventLog open now stores per-source timestamp maxima while scanning, adding small map-update overhead proportional to existing line count. This is acceptable for v0.1 scale and buys correctness across process restarts.
+
+---
+
+### M8.3 — Refusal report generation
+
+Context:
+- Bead owner: CloudyLake (claude-code)
+- Invariants referenced: I3, I5
+- Constitution touched: none
+
+1. Coupling: `RefusalReport` now requires `eventlog_path` at construction, coupling the report to the export pipeline's knowledge of the source path. This is intentional — the schema contract requires it.
+2. Untested claims: `format_utc_now()` hand-rolled date formatting is used instead of a date library. Tested implicitly via non-empty assertion but not validated against edge cases (leap seconds, year 2100). Acceptable since `scan_timestamp_utc` is informational only and excluded from hashing.
+3. Nondeterminism: `scan_timestamp_utc` uses wall clock (`SystemTime::now()`), introducing non-determinism in the report file. This is explicitly permitted by the bead spec ("informational only, not in hash if report is hashed"). All other fields are deterministic; `blocked_items` is stably sorted by `(event_id, field_path, matched_pattern)`.
+4. Security: No new security risk. Refusal reports contain redacted matches only (via `redact_match()`). The `blob_ref` field exposes content-addressed hashes, not secrets.
+5. Performance: No new performance risk. Sorting blocked items is O(n log n) on finding count, negligible for expected volumes.

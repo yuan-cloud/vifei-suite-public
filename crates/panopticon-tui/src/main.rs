@@ -103,13 +103,15 @@ fn main() -> ExitCode {
                 }
                 Ok(ExportResult::Refused(report)) => {
                     eprintln!("Export REFUSED: {}", report.summary);
-                    for finding in &report.findings {
+                    for item in &report.blocked_items {
+                        let loc = item
+                            .blob_ref
+                            .as_deref()
+                            .map(|b| format!("blob:{}", b))
+                            .unwrap_or_else(|| format!("event:{}", item.event_id));
                         eprintln!(
                             "  - {} @ {}: {} ({})",
-                            finding.location,
-                            finding.field_path,
-                            finding.pattern,
-                            finding.redacted_match
+                            loc, item.field_path, item.matched_pattern, item.redacted_match
                         );
                     }
                     if let Some(ref report_path) = config.refusal_report_path {
