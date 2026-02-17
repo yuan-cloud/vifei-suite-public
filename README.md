@@ -164,6 +164,7 @@ Workspace crates:
 - `CONTRIBUTING.md`: contribution expectations and report quality checklist
 - `SUPPORT.md`: support channels and triage priorities
 - `SECURITY.md`: private vulnerability reporting policy
+- `docs/COMMUNITY_TRIAGE_PLAYBOOK.md`: maintainer triage and severity flow
 
 ## Status
 

@@ -20,6 +20,7 @@ What to expect for pull requests:
 - PRs may be used as discussion artifacts
 - PRs are not guaranteed to be reviewed or merged
 - Equivalent fixes may be reimplemented internally
+- Use `.github/pull_request_template.md` so reports include validation evidence
 
 ## Best way to help
 
@@ -27,6 +28,12 @@ What to expect for pull requests:
 2. Include environment details (OS, Rust toolchain, terminal/multiplexer).
 3. Attach minimal fixtures or logs when possible.
 4. If the issue is security-sensitive, use `SECURITY.md` instead of public issues.
+
+If you still open a PR, include:
+
+- exact validation commands run
+- determinism/export evidence when relevant
+- explicit scope boundaries and risk notes
 
 ## Report quality checklist
 

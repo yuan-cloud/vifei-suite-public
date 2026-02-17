@@ -794,3 +794,55 @@ Context:
 3. Nondeterminism: No nondeterminism introduced. This bead adds deterministic documentation only.
 4. Security: Checklist encourages stronger branch/ruleset hygiene and private vulnerability flow; no new secret-bearing surfaces were added.
 5. Performance: No product runtime impact. Operational overhead is limited to periodic checklist review during release prep.
+
+## bd-qip · COMM-3: maintainer-facing PR template and submission gate guidance · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Contributor expectations are now coupled to `.github/pull_request_template.md` and `CONTRIBUTING.md`; future process changes must keep both consistent.
+2. Untested claims: We did not validate GitHub web UI rendering of the PR template in this local run; correctness is based on plain markdown template semantics.
+3. Nondeterminism: No product-path nondeterminism introduced; this bead is documentation/template only.
+4. Security: Security reporting path is made clearer in template text, reducing accidental public disclosure risk.
+5. Performance: No runtime impact.
+
+## bd-3ou · COMM-4: add docs_guard-adjacent community health presence check · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: CI/test health now depends on a specific set of community-health files and README link references; intentional coupling to prevent accidental deletions.
+2. Untested claims: Guard test does not validate semantic quality of docs, only existence and README linkage.
+3. Nondeterminism: No runtime nondeterminism introduced; the new test uses deterministic file presence/string checks.
+4. Security: No new secret surfaces; guard test improves governance hygiene but does not alter secret handling logic.
+5. Performance: Minimal test-time overhead (single file-read pass).
+
+## bd-zfj · COMM-5: maintainer triage and labeling playbook · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1, I2, I3, I5 (referenced as triage severity categories)
+- Constitution touched: none
+
+1. Coupling: Support flow is now coupled to `docs/COMMUNITY_TRIAGE_PLAYBOOK.md` and `SUPPORT.md` references for severity/response posture.
+2. Untested claims: Recommended response windows and severity policy are governance targets, not behavior enforced by code.
+3. Nondeterminism: No nondeterminism introduced; docs-only change.
+4. Security: Playbook reduces risk of mishandled public security reports by explicit escalation routing.
+5. Performance: No product runtime impact.
+
+## bd-2se · COMMUNITY-NEXT: maintainer workflow and repo health automation · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none directly; supports operational trust posture around I1-I5
+- Constitution touched: none
+
+1. Coupling: Maintainer operations now rely on a small community-doc/testing framework; changes to repo policy should update templates, playbook, and guard tests together.
+2. Untested claims: This feature hardens governance surfaces but does not enforce social-response timing in automation.
+3. Nondeterminism: No product-path nondeterminism introduced.
+4. Security: Improves policy clarity and private-report routing; no new credential or data-handling surfaces added.
+5. Performance: Negligible overhead from the added guard test and docs references.

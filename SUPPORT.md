@@ -4,6 +4,7 @@
 
 - Use GitHub Issues for bugs, reproducibility failures, and docs gaps.
 - Use Discussions if/when enabled for broader design questions.
+- Maintainers triage using `docs/COMMUNITY_TRIAGE_PLAYBOOK.md`.
 
 ## What to include
 
