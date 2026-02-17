@@ -1,5 +1,9 @@
 # Panopticon Suite
 
+[![CI](https://img.shields.io/github/actions/workflow/status/yuan-cloud/panopticon-suite/ci.yml?branch=main&label=CI)](https://github.com/yuan-cloud/panopticon-suite/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/tag/yuan-cloud/panopticon-suite?label=release)](https://github.com/yuan-cloud/panopticon-suite/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Deterministic, local-first run evidence for AI agent workflows.
 
 Panopticon records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can re-run and verify.
@@ -78,23 +82,20 @@ cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample
 
 ## Architecture Snapshot
 
-```text
-Agent Cassette JSONL
-        |
-        v
-Importer -> Append Writer (assigns commit_index)
-        |
-        v
-Append-only EventLog + Blob Store  <-- canonical truth
-        |
-        v
-Reducer (pure) -> Projection (deterministic)
-        |
-        v
-ViewModel -> TUI lenses + Truth HUD
-        |
-        v
-Tour artifacts (metrics.json, viewmodel.hash, ansi.capture, timetravel.capture)
+```mermaid
+flowchart TD
+    A[Agent Cassette JSONL] --> B[Importer]
+    B --> C[Append Writer<br/>assigns commit_index]
+    C --> D[EventLog JSONL + Blob Store]
+    D --> E[Reducer]
+    E --> F[Projection]
+    F --> G[ViewModel]
+    G --> H[Incident Lens + Forensic Lens + Truth HUD]
+    D --> I[Tour stress harness]
+    I --> J[metrics.json]
+    I --> K[viewmodel.hash]
+    I --> L[ansi.capture]
+    I --> M[timetravel.capture]
 ```
 
 Workspace crates:
@@ -158,3 +159,9 @@ Reference captures and visuals live under `docs/assets/readme/`:
 - `docs/assets/readme/truth-hud-degraded.txt`
 - `docs/assets/readme/export-refusal.txt`
 - `docs/assets/readme/architecture.mmd`
+
+Refresh deterministically:
+
+```bash
+scripts/refresh_readme_assets.sh
+```

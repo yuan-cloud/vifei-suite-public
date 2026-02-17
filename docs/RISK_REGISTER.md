@@ -504,3 +504,11 @@ Context:
 3. Nondeterminism: Core asset generation remains deterministic; optional recording tools (`asciinema`, `vhs`) can include timing variance and are excluded from canonical proof claims.
 4. Security: Avoiding AI-generated or manually fabricated visuals reduces risk of misleading evidence presentation.
 5. Performance cliffs: Asset refresh runs Tour capture and may be moderately CPU-heavy; this is acceptable for docs update workflows.
+
+## bd-1w9.4 · README-IMPLEMENT: polished layout, badges, and verified examples · 2026-02-17
+
+1. Coupling: README now couples to CI workflow naming (`ci.yml`) for status badges and to release/tag surfaces for release badge rendering.
+2. Untested claims: Badge rendering and mermaid display are platform-dependent on GitHub UI behavior; functionality claims remain command-verifiable.
+3. Nondeterminism: No runtime nondeterminism introduced; documentation presentation changes only.
+4. Security: README still avoids unverified security claims and keeps trust language tied to reproducible commands.
+5. Performance cliffs: No product runtime impact; minor docs maintenance overhead when workflows/repo metadata change.
