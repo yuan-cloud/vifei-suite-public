@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: ["**"]
+    tags: ["v*"]
   pull_request:
     branches: ["**"]
 
@@ -38,3 +39,39 @@ jobs:
 
       - name: Test
         run: cargo test
+
+  release-trust:
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binaries
+        run: |
+          cargo build --release -p panopticon-tui
+          cargo build --release -p panopticon-tour
+
+      - name: Package release artifacts and checksums
+        run: |
+          mkdir -p dist
+          cp target/release/panopticon dist/
+          cp target/release/bench_tour dist/
+          sha256sum dist/* > dist/sha256sums.txt
+
+      - name: Upload release artifact bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle-${{ github.sha }}
+          path: dist/
+
+      - name: Attest release artifact provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/*"

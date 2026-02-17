@@ -376,3 +376,11 @@ Context:
 3. Nondeterminism: `OnceLock` introduces shared test-process cache state. Values are deterministic because inputs are deterministic and initialized once; there is no time/random input.
 4. Security: No new security surface. Cached data is synthetic fixture content and derived transition tuples.
 5. Performance cliffs: Memory footprint increases slightly by retaining parsed fixture and derived tuples for test process lifetime. Tradeoff is intentional for reduced repeated parse/replay work.
+
+## bd-2fp.3 · A1-5: Release trust hardening (attestations + verify docs) · 2026-02-17
+
+1. Coupling: CI now depends on GitHub-specific attestation action (`actions/attest-build-provenance@v1`) and artifact upload path conventions under `dist/`.
+2. Untested claims: Attestation verification is documented but not executed in local tests; it requires GitHub-hosted workflow context and repository attestation APIs.
+3. Nondeterminism: Build timestamps/environment in compiled binaries may vary, but this change does not alter Panopticon deterministic truth/projection artifacts.
+4. Security: Improves supply-chain posture by adding provenance metadata and checksum workflow. No new runtime secret surface added.
+5. Performance cliffs: Added release-trust CI job increases CI runtime on `main` and `v*` tags; impact is bounded to release-trust paths and does not affect local runtime performance.
