@@ -41,8 +41,7 @@ fn required_community_health_files_exist() {
 fn readme_links_to_community_and_settings_docs() {
     let root = workspace_root();
     let readme_path = root.join("README.md");
-    let readme = std::fs::read_to_string(&readme_path)
-        .unwrap_or_else(|e| panic!("cannot read {}: {e}", readme_path.display()));
+    let readme = std::fs::read_to_string(&readme_path).expect("cannot read README.md");
 
     let required_links = [
         "CONTRIBUTING.md",
@@ -56,6 +55,26 @@ fn readme_links_to_community_and_settings_docs() {
             readme.contains(link),
             "README.md must reference community health doc: {}",
             link
+        );
+    }
+}
+
+#[test]
+fn issue_template_contact_links_target_canonical_repo() {
+    let root = workspace_root();
+    let config_path = root.join(".github/ISSUE_TEMPLATE/config.yml");
+    let config = std::fs::read_to_string(&config_path).expect("cannot read issue template config");
+
+    let required_urls = [
+        "https://github.com/yuan-cloud/panopticon-suite/security/advisories/new",
+        "https://github.com/yuan-cloud/panopticon-suite/blob/main/SUPPORT.md",
+    ];
+
+    for url in required_urls {
+        assert!(
+            config.contains(url),
+            "issue template config must include canonical URL: {}",
+            url
         );
     }
 }

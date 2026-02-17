@@ -859,3 +859,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; config-only update.
 4. Security: Fix directly improves vulnerability-report routing by preventing misdirected links.
 5. Performance: No runtime impact.
+
+## bd-179 · COMM-7: guard canonical GitHub routing in issue template config · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Community config now encodes canonical GitHub slug in test expectations; if repository slug changes, test updates are required.
+2. Untested claims: We validate file content and links statically, not live GitHub UI behavior.
+3. Nondeterminism: No runtime nondeterminism introduced; deterministic file-content assertions only.
+4. Security: Reduces risk of misrouted private vulnerability reports by preventing accidental link drift.
+5. Performance: Negligible test overhead.
