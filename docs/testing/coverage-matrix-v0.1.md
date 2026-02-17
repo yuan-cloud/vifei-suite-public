@@ -161,3 +161,4 @@ Failure diagnostics minimums:
 - `bd-2yv.6` completed: CI publishes `fastlane` and `full-confidence` lanes with structured artifacts.
 - `bd-1un` completed: CI performs PTY preflight before interactive TUI E2E and publishes preflight status logs.
 - `bd-2fp.5` completed: Tour now avoids rereading EventLog by consuming append-result committed sequence; parity test added in `crates/panopticon-tour/src/lib.rs`.
+- `bd-1jr` in progress: expanding CLI contract topology coverage (global/subcommand ordering equivalence, unknown-argument deterministic guidance, human replay hints) and adding high-value envelope golden checks in `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`.

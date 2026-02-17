@@ -1041,3 +1041,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; docs-only change.
 4. Security: Clarifies share-safe and diagnostic coverage expectations, reducing blind spots in release confidence.
 5. Performance: No runtime impact; minor documentation maintenance overhead only.
+
+## bd-1jr · CLI contract matrix gap closure · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: deterministic robot envelope schema, stable exit-code semantics, bounded normalization and replayable operator guidance
+- Constitution touched: none
+
+1. Coupling: Golden envelope assertions now intentionally couple to current CLI contract wording and keys; contract changes must update tests and docs together.
+2. Untested claims: We cover high-value parse/error topologies (invalid subcommand, missing required args, unknown flag, human replay hints), but do not exhaust every clap parse-kind permutation.
+3. Nondeterminism: No runtime nondeterminism introduced; tests enforce stable JSON envelope fields/messages and deterministic guidance for targeted error paths.
+4. Security: No new secret or privilege surface added; improved deterministic guidance reduces operator ambiguity and accidental misuse loops.
+5. Performance: Runtime unchanged in production paths; added test cases marginally increase CI test time only.

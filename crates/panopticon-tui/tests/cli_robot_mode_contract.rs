@@ -19,6 +19,20 @@ fn parse_json(stdout: &str) -> Value {
     serde_json::from_str(stdout.trim()).expect("stdout must be valid JSON")
 }
 
+fn canonical_json(value: &Value) -> String {
+    serde_json::to_string(value).expect("json serialize")
+}
+
+fn assert_robot_envelope_shape(value: &Value) {
+    let obj = value.as_object().expect("root object");
+    assert!(obj.contains_key("schema_version"));
+    assert!(obj.contains_key("ok"));
+    assert!(obj.contains_key("code"));
+    assert!(obj.contains_key("message"));
+    assert!(obj.contains_key("suggestions"));
+    assert!(obj.contains_key("exit_code"));
+}
+
 fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -308,4 +322,69 @@ fn global_json_flag_ordering_before_or_after_subcommand_is_equivalent() {
     assert_eq!(b["code"], "NOT_FOUND");
     assert_eq!(a["message"], b["message"]);
     assert_eq!(a["exit_code"], b["exit_code"]);
+}
+
+#[test]
+fn invalid_subcommand_envelope_matches_golden_shape() {
+    let (_, stdout, _) = run_panopticon(&["bogus-subcommand"]);
+    let value = parse_json(&stdout);
+    let expected = serde_json::json!({
+        "schema_version": "panopticon-cli-robot-v1.1",
+        "ok": false,
+        "code": "INVALID_ARGS",
+        "message": "Unknown subcommand.",
+        "suggestions": [
+            "Use one of: `panopticon view`, `panopticon export`, or `panopticon tour`.",
+            "Run `panopticon --help` for full command syntax."
+        ],
+        "exit_code": 2
+    });
+    assert_eq!(canonical_json(&value), canonical_json(&expected));
+}
+
+#[test]
+fn missing_required_argument_envelope_matches_golden_shape() {
+    let (_, stdout, _) = run_panopticon(&["--json", "export"]);
+    let value = parse_json(&stdout);
+    let expected = serde_json::json!({
+        "schema_version": "panopticon-cli-robot-v1.1",
+        "ok": false,
+        "code": "INVALID_ARGS",
+        "message": "Missing required argument.",
+        "suggestions": [
+            "Example: `panopticon view <eventlog.jsonl>`.",
+            "Example: `panopticon export <eventlog.jsonl> --share-safe --output <bundle.tar.zst>`."
+        ],
+        "exit_code": 2
+    });
+    assert_eq!(canonical_json(&value), canonical_json(&expected));
+}
+
+#[test]
+fn unknown_argument_envelope_is_deterministic_and_actionable() {
+    let (_, stdout, _) = run_panopticon(&["--json", "--bogus-flag", "view", "x.jsonl"]);
+    let value = parse_json(&stdout);
+    assert_robot_envelope_shape(&value);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "INVALID_ARGS");
+    assert_eq!(value["message"], "Unknown flag or option.");
+    assert!(
+        value["suggestions"]
+            .as_array()
+            .expect("suggestions")
+            .iter()
+            .any(|s| s
+                .as_str()
+                .is_some_and(|line| line.contains("<command> --help"))),
+        "unknown-argument path should include command-specific help hint"
+    );
+}
+
+#[test]
+fn human_invalid_args_include_replay_hints() {
+    let (code, stdout, stderr) = run_panopticon(&["--human", "bogus-subcommand"]);
+    assert_eq!(code, 2);
+    assert!(stdout.trim().is_empty(), "human errors should be on stderr");
+    assert!(stderr.contains("Hint 1:"));
+    assert!(stderr.contains("panopticon view"));
 }
