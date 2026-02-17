@@ -568,3 +568,11 @@ Context:
 3. Nondeterminism: None introduced. Hint selection is pure deterministic branching from existing state and keyflow.
 4. Security and privacy: No new data surfaces; hints reference only existing event metadata and controls.
 5. Performance cliffs: Minimal. Added string formatting in render path is bounded and proportional to already-rendered state, with no new I/O or allocations of unbounded structures.
+
+## bd-gxd.6 · UX-VISUAL-TONE: cohesive color and copy style standard
+
+1. Coupling: Incident/Forensic lens styling now depends on shared `visual_tone` helpers, which centralizes semantics but requires coordinated updates if token meanings change.
+2. Untested claims: Unit/integration suites confirm behavior did not regress, but we have not yet run dedicated operator preference testing for perceived readability improvements.
+3. Nondeterminism: None introduced. Style tokenization and copy updates are static mappings with no time/random input.
+4. Security and privacy: No new data collection or output exposure; changes are presentation and documentation only.
+5. Performance cliffs: Negligible. Shared style helper calls are lightweight and replace equivalent inline style construction.

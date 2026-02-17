@@ -12,6 +12,7 @@
 //! See `PLANS.md` § D5: "Correctness target: Deep investigation."
 //! Events ordered by commit_index (NEVER by timestamp — D6).
 
+use crate::visual_tone;
 use panopticon_core::event::{CommittedEvent, EventPayload};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -63,7 +64,7 @@ pub fn render_forensic_lens(
     let block = Block::default()
         .title(" Forensic Lens (Tab to toggle) ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Yellow));
+        .border_style(visual_tone::warning());
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -71,7 +72,7 @@ pub fn render_forensic_lens(
     if events.is_empty() {
         let empty = Paragraph::new(Line::from(Span::styled(
             "  (no events)",
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         )));
         frame.render_widget(empty, inner);
         return;
@@ -97,7 +98,7 @@ fn render_timeline(
     let block = Block::default()
         .title(" Timeline ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(visual_tone::muted());
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -126,11 +127,8 @@ fn render_timeline(
 
         lines.push(Line::from(vec![
             Span::styled(prefix, line_style),
-            Span::styled(
-                format!("{:>4} ", ev.commit_index),
-                Style::default().fg(Color::DarkGray),
-            ),
-            Span::styled(synth_marker, Style::default().fg(Color::Magenta)),
+            Span::styled(format!("{:>4} ", ev.commit_index), visual_tone::muted()),
+            Span::styled(synth_marker, visual_tone::accent()),
             Span::styled(type_name, Style::default().fg(type_color)),
         ]));
     }
@@ -151,10 +149,7 @@ fn render_timeline(
         )
     };
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(
-        next_action,
-        Style::default().fg(Color::DarkGray),
-    )));
+    lines.push(Line::from(Span::styled(next_action, visual_tone::muted())));
 
     let paragraph = Paragraph::new(lines);
     frame.render_widget(paragraph, inner);
@@ -170,7 +165,7 @@ fn render_inspector(
     let block = Block::default()
         .title(" Inspector ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(visual_tone::muted());
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -187,9 +182,7 @@ fn render_inspector(
         Span::styled("Event #", Style::default().fg(Color::White)),
         Span::styled(
             format!("{}", ev.commit_index),
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
+            visual_tone::info().add_modifier(Modifier::BOLD),
         ),
         Span::raw("  "),
         Span::styled(
@@ -197,7 +190,7 @@ fn render_inspector(
             Style::default().fg(event_type_color(ev.payload.event_type_name())),
         ),
         if ev.synthesized {
-            Span::styled("  [SYNTHESIZED]", Style::default().fg(Color::Magenta))
+            Span::styled("  [SYNTHESIZED]", visual_tone::accent())
         } else {
             Span::raw("")
         },
@@ -206,21 +199,21 @@ fn render_inspector(
 
     // Metadata
     lines.push(Line::from(vec![
-        Span::styled("  run_id:   ", Style::default().fg(Color::DarkGray)),
+        Span::styled("  run_id:   ", visual_tone::muted()),
         Span::raw(&ev.run_id),
     ]));
     lines.push(Line::from(vec![
-        Span::styled("  event_id: ", Style::default().fg(Color::DarkGray)),
+        Span::styled("  event_id: ", visual_tone::muted()),
         Span::raw(&ev.event_id),
     ]));
     lines.push(Line::from(vec![
-        Span::styled("  tier:     ", Style::default().fg(Color::DarkGray)),
+        Span::styled("  tier:     ", visual_tone::muted()),
         Span::raw(format!("{}", ev.tier)),
     ]));
 
     if let Some(ref pr) = ev.payload_ref {
         lines.push(Line::from(vec![
-            Span::styled("  blob_ref: ", Style::default().fg(Color::DarkGray)),
+            Span::styled("  blob_ref: ", visual_tone::muted()),
             Span::styled(pr, Style::default().fg(Color::Blue)),
         ]));
     }
@@ -239,13 +232,13 @@ fn render_payload_details<'a>(
     payload: &'a EventPayload,
     expanded: bool,
 ) {
-    let label_style = Style::default().fg(Color::DarkGray);
+    let label_style = visual_tone::muted();
 
     match payload {
         EventPayload::RunStart { agent, args } => {
             lines.push(Line::from(vec![
                 Span::styled("  agent: ", label_style),
-                Span::styled(agent, Style::default().fg(Color::Cyan)),
+                Span::styled(agent, visual_tone::info()),
             ]));
             if let Some(a) = args {
                 lines.push(Line::from(vec![
@@ -258,9 +251,9 @@ fn render_payload_details<'a>(
         EventPayload::RunEnd { exit_code, reason } => {
             if let Some(code) = exit_code {
                 let code_style = if *code == 0 {
-                    Style::default().fg(Color::Green)
+                    visual_tone::success()
                 } else {
-                    Style::default().fg(Color::Red)
+                    visual_tone::error()
                 };
                 lines.push(Line::from(vec![
                     Span::styled("  exit_code: ", label_style),
@@ -278,7 +271,7 @@ fn render_payload_details<'a>(
         EventPayload::ToolCall { tool, args } => {
             lines.push(Line::from(vec![
                 Span::styled("  tool: ", label_style),
-                Span::styled(tool, Style::default().fg(Color::Cyan)),
+                Span::styled(tool, visual_tone::info()),
             ]));
             if let Some(a) = args {
                 lines.push(Line::from(vec![
@@ -295,13 +288,13 @@ fn render_payload_details<'a>(
         } => {
             lines.push(Line::from(vec![
                 Span::styled("  tool:   ", label_style),
-                Span::styled(tool, Style::default().fg(Color::Cyan)),
+                Span::styled(tool, visual_tone::info()),
             ]));
             if let Some(s) = status {
                 let status_style = if s == "success" || s == "ok" {
-                    Style::default().fg(Color::Green)
+                    visual_tone::success()
                 } else {
-                    Style::default().fg(Color::Yellow)
+                    visual_tone::warning()
                 };
                 lines.push(Line::from(vec![
                     Span::styled("  status: ", label_style),
@@ -324,9 +317,9 @@ fn render_payload_details<'a>(
         } => {
             lines.push(Line::from(vec![
                 Span::styled("  transition: ", label_style),
-                Span::styled(from_level, Style::default().fg(Color::Yellow)),
+                Span::styled(from_level, visual_tone::warning()),
                 Span::raw(" → "),
-                Span::styled(to_level, Style::default().fg(Color::Yellow)),
+                Span::styled(to_level, visual_tone::warning()),
             ]));
             lines.push(Line::from(vec![
                 Span::styled("  trigger:    ", label_style),
@@ -368,10 +361,7 @@ fn render_payload_details<'a>(
             ]));
             lines.push(Line::from(vec![
                 Span::styled("  message:  ", label_style),
-                Span::styled(
-                    truncate_or_full(message, expanded),
-                    Style::default().fg(Color::Red),
-                ),
+                Span::styled(truncate_or_full(message, expanded), visual_tone::error()),
             ]));
             if let Some(s) = severity {
                 lines.push(Line::from(vec![
@@ -398,7 +388,7 @@ fn render_payload_details<'a>(
                 Span::styled("  delta:    ", label_style),
                 Span::styled(
                     format!("{}ms backward", delta_ns / 1_000_000),
-                    Style::default().fg(Color::Yellow),
+                    visual_tone::warning(),
                 ),
             ]));
         }
@@ -428,7 +418,7 @@ fn render_payload_details<'a>(
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
             "  Press Enter to expand details",
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         )));
     }
 }

@@ -15,6 +15,9 @@ Constitutional behavior rules remain in:
 Modality-specific expectations are defined in:
 - `docs/UX_MODALITY_MATRIX.md`
 
+Visual/copy tone standards are defined in:
+- `docs/UX_VISUAL_TONE.md`
+
 ## Premium UX Principles for Panopticon
 1. Clarity first
 Critical state and next safe action must be obvious in the first screenful.

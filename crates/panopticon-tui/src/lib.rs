@@ -31,6 +31,7 @@
 mod forensic_lens;
 mod incident_lens;
 mod truth_hud;
+mod visual_tone;
 
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},

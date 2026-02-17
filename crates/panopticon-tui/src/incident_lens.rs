@@ -12,10 +12,11 @@
 //!
 //! See `PLANS.md` § D5: "Correctness target: Deep investigation. Entry behavior: Incident triage."
 
+use crate::visual_tone;
 use panopticon_core::reducer::State;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
@@ -36,7 +37,7 @@ pub fn render_incident_lens(
     let block = Block::default()
         .title(" Incident Lens (Tab to toggle) ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan));
+        .border_style(visual_tone::info());
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -77,13 +78,11 @@ fn render_onboarding_strip(frame: &mut Frame, area: Rect) {
     let lines = vec![
         Line::from(Span::styled(
             "First run: Tab switch lens | q quit",
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
+            visual_tone::warning().add_modifier(Modifier::BOLD),
         )),
         Line::from(Span::styled(
             "Forensic controls: j/k move, Enter expand",
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         )),
     ];
 
@@ -122,39 +121,34 @@ fn render_run_summary(
     total_events: usize,
 ) {
     let mut lines = vec![Line::from(vec![
-        Span::styled(
-            "Run Context",
-            Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
-        ),
+        Span::styled("Run Context", visual_tone::header()),
         Span::raw("  "),
         Span::styled(
             format!("{} ({} events)", eventlog_path, total_events),
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         ),
     ])];
 
     if state.run_metadata.is_empty() {
         lines.push(Line::from(Span::styled(
             "  (no runs)",
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         )));
     } else {
         for (run_id, info) in &state.run_metadata {
             let status_span = if info.ended {
                 match info.exit_code {
-                    Some(0) => Span::styled("OK", Style::default().fg(Color::Green)),
-                    Some(code) => {
-                        Span::styled(format!("exit {}", code), Style::default().fg(Color::Red))
-                    }
-                    None => Span::styled("ended", Style::default().fg(Color::Yellow)),
+                    Some(0) => Span::styled("OK", visual_tone::success()),
+                    Some(code) => Span::styled(format!("exit {}", code), visual_tone::error()),
+                    None => Span::styled("ended", visual_tone::warning()),
                 }
             } else {
-                Span::styled("running", Style::default().fg(Color::Yellow))
+                Span::styled("running", visual_tone::warning())
             };
 
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled(&info.agent, Style::default().fg(Color::Cyan)),
+                Span::styled(&info.agent, visual_tone::info()),
                 Span::raw(format!(" ({})", run_id)),
                 Span::raw(" ["),
                 status_span,
@@ -171,20 +165,20 @@ fn render_run_summary(
 fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
     let mut lines = vec![Line::from(Span::styled(
         "Event Breakdown (Context)",
-        Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+        visual_tone::header(),
     ))];
 
     if state.event_counts_by_type.is_empty() {
         lines.push(Line::from(Span::styled(
             "  (no events)",
-            Style::default().fg(Color::DarkGray),
+            visual_tone::muted(),
         )));
     } else {
         for (event_type, count) in &state.event_counts_by_type {
             let style = match event_type.as_str() {
-                "Error" => Style::default().fg(Color::Red),
-                "ClockSkewDetected" => Style::default().fg(Color::Yellow),
-                "PolicyDecision" | "RedactionApplied" => Style::default().fg(Color::Magenta),
+                "Error" => visual_tone::error(),
+                "ClockSkewDetected" => visual_tone::warning(),
+                "PolicyDecision" | "RedactionApplied" => visual_tone::accent(),
                 _ => Style::default(),
             };
 
@@ -204,7 +198,7 @@ fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
 fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     let mut lines = vec![Line::from(Span::styled(
         "Action Now (Anomalies)",
-        Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+        visual_tone::header(),
     ))];
 
     let has_anomalies = !state.error_log.is_empty()
@@ -224,16 +218,16 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     if !has_anomalies {
         lines.push(Line::from(Span::styled(
             "  (none detected)",
-            Style::default().fg(Color::Green),
+            visual_tone::success(),
         )));
     } else {
         // Errors
         for err in &state.error_log {
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled("ERR ", Style::default().fg(Color::Red)),
+                Span::styled("ERR ", visual_tone::error()),
                 Span::raw(format!("@{}: ", err.commit_index)),
-                Span::styled(&err.message, Style::default().fg(Color::Red)),
+                Span::styled(&err.message, visual_tone::error()),
             ]));
         }
 
@@ -242,7 +236,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
             let delta_ms = skew.delta_ns / 1_000_000;
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled("SKEW", Style::default().fg(Color::Yellow)),
+                Span::styled("SKEW", visual_tone::warning()),
                 Span::raw(format!(" @{}: {}ms backward", skew.commit_index, delta_ms)),
             ]));
         }
@@ -251,7 +245,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
         for pd in &state.policy_decisions {
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled("POLICY", Style::default().fg(Color::Magenta)),
+                Span::styled("POLICY", visual_tone::accent()),
                 Span::raw(format!(
                     " @{}: {} → {} ({})",
                     pd.commit_index, pd.from_level, pd.to_level, pd.trigger
@@ -269,7 +263,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     };
     lines.push(Line::from(Span::styled(
         format!("{next_action} Keys: Tab=toggle lens, q=quit"),
-        Style::default().fg(Color::DarkGray),
+        visual_tone::muted(),
     )));
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });

@@ -110,6 +110,9 @@ Workspace crates:
 
 - `docs/CAPACITY_ENVELOPE.md`
 - `docs/BACKPRESSURE_POLICY.md`
+- `docs/UX_SCOPE.md`
+- `docs/UX_MODALITY_MATRIX.md`
+- `docs/UX_VISUAL_TONE.md`
 - `PLANS.md`
 - `AGENTS.md`
 
