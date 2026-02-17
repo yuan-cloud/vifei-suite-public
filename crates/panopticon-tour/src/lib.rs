@@ -128,8 +128,8 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     let reader = BufReader::new(Cursor::new(&fixture_content));
     let events = parse_cassette(reader);
 
-    let event_count = events.len();
-    if event_count == 0 {
+    let imported_event_count = events.len();
+    if imported_event_count == 0 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "Fixture contains no events",
@@ -152,6 +152,8 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     // Stage 3: Reduce all events
     let mut state = State::new();
     let committed_events = panopticon_core::eventlog::read_eventlog(&eventlog_path)?;
+    let committed_event_count = committed_events.len();
+    let last_commit_index = committed_events.last().map_or(0, |e| e.commit_index);
     for event in &committed_events {
         state = reduce(&state, event);
     }
@@ -163,7 +165,7 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     // Stage 5: Build metrics
     let metrics = TourMetrics {
         projection_invariants_version: viewmodel.projection_invariants_version.clone(),
-        event_count_total: event_count,
+        event_count_total: committed_event_count,
         tier_a_drops: viewmodel.tier_a_drops,
         max_degradation_level: format!("{}", viewmodel.degradation_level),
         degradation_level_final: format!("{}", viewmodel.degradation_level),
@@ -202,7 +204,7 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     let timetravel = TimeTravelCapture {
         projection_invariants_version: viewmodel.projection_invariants_version.clone(),
         seek_points: vec![SeekPoint {
-            commit_index: event_count.saturating_sub(1) as u64,
+            commit_index: last_commit_index,
             state_hash: state_hash(&state),
             viewmodel_hash: vm_hash.clone(),
         }],
@@ -255,6 +257,18 @@ mod tests {
         let content = r#"{"type":"session_start","session_id":"test-1","timestamp":"2026-01-01T00:00:00Z","agent":"test"}
 {"type":"tool_use","session_id":"test-1","timestamp":"2026-01-01T00:00:01Z","tool":"Read","id":"t1","args":{}}
 {"type":"tool_result","session_id":"test-1","timestamp":"2026-01-01T00:00:02Z","tool":"Read","id":"t1","result":"ok"}
+{"type":"session_end","session_id":"test-1","timestamp":"2026-01-01T00:00:03Z"}"#;
+        fs::write(&fixture_path, content).unwrap();
+        fixture_path
+    }
+
+    fn create_clock_skew_fixture(dir: &Path) -> PathBuf {
+        let fixture_path = dir.join("clock-skew.jsonl");
+        // Third event timestamp moves backward by 1s (well above 50ms tolerance),
+        // so append writer should inject a ClockSkewDetected event.
+        let content = r#"{"type":"session_start","session_id":"test-1","timestamp":"2026-01-01T00:00:00Z","agent":"test"}
+{"type":"tool_use","session_id":"test-1","timestamp":"2026-01-01T00:00:02Z","tool":"Read","id":"t1","args":{}}
+{"type":"tool_result","session_id":"test-1","timestamp":"2026-01-01T00:00:01Z","tool":"Read","id":"t1","result":"ok"}
 {"type":"session_end","session_id":"test-1","timestamp":"2026-01-01T00:00:03Z"}"#;
         fs::write(&fixture_path, content).unwrap();
         fixture_path
@@ -373,5 +387,23 @@ mod tests {
         let point = &capture.seek_points[0];
         assert_eq!(point.state_hash.len(), 64);
         assert_eq!(point.viewmodel_hash.len(), 64);
+    }
+
+    #[test]
+    fn event_count_and_commit_index_use_committed_events() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_clock_skew_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        let result = run_tour(&config).unwrap();
+
+        // 4 imported events + 1 synthesized ClockSkewDetected event
+        assert_eq!(result.metrics.event_count_total, 5);
+
+        let timetravel_content = fs::read_to_string(output_dir.join("timetravel.capture")).unwrap();
+        let capture: TimeTravelCapture = serde_json::from_str(&timetravel_content).unwrap();
+        assert_eq!(capture.seek_points.len(), 1);
+        assert_eq!(capture.seek_points[0].commit_index, 4);
     }
 }
