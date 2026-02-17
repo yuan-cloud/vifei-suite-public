@@ -1,6 +1,5 @@
 //! CI-oriented invariant assertions for Tour artifacts (M7.4).
 
-use panopticon_core::event::EventPayload;
 use panopticon_core::eventlog::{read_eventlog, EventLogWriter};
 use panopticon_core::reducer::{reduce, State};
 use panopticon_import::cassette::parse_cassette;
@@ -8,6 +7,9 @@ use panopticon_tour::{DegradationTransition, TourConfig};
 use std::fs;
 use std::io::{BufReader, Cursor};
 use std::path::PathBuf;
+use std::sync::OnceLock;
+
+type TransitionTuple = (String, String, String, u64);
 
 fn fixture_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -16,6 +18,41 @@ fn fixture_path() -> PathBuf {
         .parent()
         .expect("workspace path")
         .join("fixtures/large-stress.jsonl")
+}
+
+fn expected_policy_transitions() -> &'static Vec<TransitionTuple> {
+    static EXPECTED: OnceLock<Vec<TransitionTuple>> = OnceLock::new();
+    EXPECTED.get_or_init(|| {
+        let fixture_content = fs::read_to_string(fixture_path()).expect("fixture");
+        let parsed = parse_cassette(BufReader::new(Cursor::new(fixture_content)));
+
+        let temp_dir = tempfile::tempdir().expect("tempdir");
+        let eventlog_path = temp_dir.path().join("eventlog.jsonl");
+        let mut writer = EventLogWriter::open(&eventlog_path).expect("open writer");
+        for event in parsed {
+            writer.append(event).expect("append");
+        }
+        drop(writer);
+
+        let committed = read_eventlog(&eventlog_path).expect("read eventlog");
+        let mut state = State::new();
+        for event in &committed {
+            state = reduce(&state, event);
+        }
+
+        state
+            .policy_decisions
+            .iter()
+            .map(|pd| {
+                (
+                    pd.from_level.clone(),
+                    pd.to_level.clone(),
+                    pd.trigger.clone(),
+                    pd.queue_pressure_micro,
+                )
+            })
+            .collect()
+    })
 }
 
 fn level_rank(level: &str) -> Option<u8> {
@@ -130,39 +167,11 @@ fn metrics_transitions_are_derivable_from_policy_decisions() {
     let config = TourConfig::new(fixture_path()).with_output_dir(&output_dir);
     let result = panopticon_tour::run_tour(&config).expect("tour run");
 
-    // Independently rebuild committed events from fixture through append writer,
-    // then replay reducer and derive expected transitions from policy decisions.
-    let fixture_content = fs::read_to_string(fixture_path()).expect("fixture");
-    let parsed = parse_cassette(BufReader::new(Cursor::new(fixture_content)));
+    // Reuse cached expected transitions derived from fixture replay to avoid
+    // redoing parse+append+replay in each assertion path.
+    let expected: Vec<TransitionTuple> = expected_policy_transitions().clone();
 
-    let temp_dir = tempfile::tempdir().expect("tempdir");
-    let eventlog_path = temp_dir.path().join("eventlog.jsonl");
-    let mut writer = EventLogWriter::open(&eventlog_path).expect("open writer");
-    for event in parsed {
-        writer.append(event).expect("append");
-    }
-    drop(writer);
-
-    let committed = read_eventlog(&eventlog_path).expect("read eventlog");
-    let mut state = State::new();
-    for event in &committed {
-        state = reduce(&state, event);
-    }
-
-    let expected: Vec<(String, String, String, u64)> = state
-        .policy_decisions
-        .iter()
-        .map(|pd| {
-            (
-                pd.from_level.clone(),
-                pd.to_level.clone(),
-                pd.trigger.clone(),
-                pd.queue_pressure_micro,
-            )
-        })
-        .collect();
-
-    let actual: Vec<(String, String, String, u64)> = result
+    let actual: Vec<TransitionTuple> = result
         .metrics
         .degradation_transitions
         .iter()
@@ -181,26 +190,17 @@ fn metrics_transitions_are_derivable_from_policy_decisions() {
         "metrics.degradation_transitions must be derivable from PolicyDecision events"
     );
 
-    // Explicit correspondence check from metrics transitions back to PolicyDecision events.
+    // Explicit correspondence check from metrics transitions to the expected set.
     for tr in &result.metrics.degradation_transitions {
         let tr_qp = (tr.queue_pressure * 1_000_000.0).round() as u64;
-        let has_match = committed.iter().any(|event| {
-            if let EventPayload::PolicyDecision {
-                from_level,
-                to_level,
-                trigger,
-                queue_pressure,
-            } = &event.payload
-            {
-                let qp_micro = (queue_pressure.clamp(0.0, 1.0) * 1_000_000.0).round() as u64;
+        let has_match = expected
+            .iter()
+            .any(|(from_level, to_level, trigger, qp_micro)| {
                 from_level == &tr.from_level
                     && to_level == &tr.to_level
                     && trigger == &tr.trigger
-                    && qp_micro == tr_qp
-            } else {
-                false
-            }
-        });
+                    && *qp_micro == tr_qp
+            });
         assert!(
             has_match,
             "Transition {:?} has no matching PolicyDecision event",

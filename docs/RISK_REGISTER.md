@@ -368,3 +368,11 @@ Context:
 3. Nondeterminism: The benchmark computes wall-time percentiles, which are expected to vary by host load. This does not affect truth artifacts because benchmark output is separate from canonical run artifacts.
 4. Security: No new secret handling surface. Benchmark consumes existing synthetic fixture and emits only timing metrics.
 5. Performance cliffs: Running benchmark in `--release` over large fixture is CPU-heavy by design; if run with high iteration count it can consume local resources. Guardrail is configurable iteration count via `PANOPTICON_TOUR_BENCH_ITERS`.
+
+## bd-2fp.2 · A1-2: Remove duplicated parse/replay in Tour invariant tests · 2026-02-17
+
+1. Coupling: Test helpers now cache parsed fixtures and derived policy-transition tuples via `OnceLock`. If fixture-generation semantics change, cached expectations will still reflect current fixture content per process start, but test assumptions remain coupled to fixture shape.
+2. Untested claims: This bead optimizes test-path execution only; it does not claim runtime improvements. No new product-path assertions were added.
+3. Nondeterminism: `OnceLock` introduces shared test-process cache state. Values are deterministic because inputs are deterministic and initialized once; there is no time/random input.
+4. Security: No new security surface. Cached data is synthetic fixture content and derived transition tuples.
+5. Performance cliffs: Memory footprint increases slightly by retaining parsed fixture and derived tuples for test process lifetime. Tradeoff is intentional for reduced repeated parse/replay work.

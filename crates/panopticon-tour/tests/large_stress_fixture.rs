@@ -7,6 +7,7 @@ use panopticon_tour::{TourConfig, TourMetrics};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 /// Path to the large stress fixture.
 fn fixture_path() -> PathBuf {
@@ -19,20 +20,23 @@ fn fixture_path() -> PathBuf {
 }
 
 /// Parse fixture JSONL into a vec of serde_json::Value.
-fn parse_fixture() -> Vec<serde_json::Value> {
-    let content = fs::read_to_string(fixture_path()).expect("fixture must exist");
-    content
-        .lines()
-        .filter(|l| !l.is_empty())
-        .map(|l| serde_json::from_str(l).expect("each line must be valid JSON"))
-        .collect()
+fn parsed_fixture() -> &'static Vec<serde_json::Value> {
+    static PARSED_FIXTURE: OnceLock<Vec<serde_json::Value>> = OnceLock::new();
+    PARSED_FIXTURE.get_or_init(|| {
+        let content = fs::read_to_string(fixture_path()).expect("fixture must exist");
+        content
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(|l| serde_json::from_str(l).expect("each line must be valid JSON"))
+            .collect()
+    })
 }
 
 // --- Fixture characteristic tests ---
 
 #[test]
 fn fixture_has_at_least_10k_events() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     assert!(
         events.len() >= 10_000,
         "CAPACITY_ENVELOPE requires >= 10,000 events, got {}",
@@ -42,9 +46,9 @@ fn fixture_has_at_least_10k_events() {
 
 #[test]
 fn fixture_has_representative_event_mix() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     let mut type_counts: HashMap<String, usize> = HashMap::new();
-    for event in &events {
+    for event in events {
         let t = event["type"].as_str().unwrap().to_string();
         *type_counts.entry(t).or_default() += 1;
     }
@@ -74,7 +78,7 @@ fn fixture_has_representative_event_mix() {
 
 #[test]
 fn fixture_has_multiple_runs() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     let sessions: HashSet<String> = events
         .iter()
         .filter_map(|e| e["session_id"].as_str().map(|s| s.to_string()))
@@ -89,7 +93,7 @@ fn fixture_has_multiple_runs() {
 
 #[test]
 fn fixture_has_multiple_agents() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     let agents: HashSet<String> = events
         .iter()
         .filter(|e| e["type"] == "session_start")
@@ -105,12 +109,12 @@ fn fixture_has_multiple_agents() {
 
 #[test]
 fn fixture_has_backward_timestamps() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     let mut backward_count = 0;
     let mut prev_ts = String::new();
     let mut prev_session = String::new();
 
-    for event in &events {
+    for event in events {
         let ts = event["timestamp"].as_str().unwrap_or("").to_string();
         let session = event["session_id"].as_str().unwrap_or("").to_string();
 
@@ -130,7 +134,7 @@ fn fixture_has_backward_timestamps() {
 
 #[test]
 fn fixture_has_varying_payload_sizes() {
-    let events = parse_fixture();
+    let events = parsed_fixture();
     let mut sizes: Vec<usize> = events
         .iter()
         .filter(|e| e["type"] == "tool_result")
