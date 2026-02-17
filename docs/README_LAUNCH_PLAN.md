@@ -1,96 +1,207 @@
-# README Launch Plan (Post-Stabilization)
+# Panopticon v0.1 Launch + Distribution Plan (Post-Stabilization)
 
-This plan defines how Panopticon's GitHub presentation will be made launch-ready without drifting from core engineering priorities.
+Status: planning artifact. Do not execute this track while core milestone beads are still unstable.
 
-Status: planned, not active implementation.
+## Scope
 
-## Goal
+This plan answers four questions for v0.1:
 
-Make the repository instantly understandable and trustworthy for new users, hiring reviewers, and contributors by optimizing for:
+1. How Panopticon should be shipped (distribution, not cloud deployment)
+2. What launch is likely to look like
+3. How to add personality/"wow" moments without breaking trust posture
+4. How to sequence implementation and comms work with bead-driven execution
 
-1. See it (high-quality screenshots/visuals)
-2. Run it (copy-paste quickstart)
-3. Verify it (determinism and safety checks)
+## Critical Insight Check (Current Repo State)
 
-## Why This Matters
+- Root `README.md` is currently missing, so "launch-quality docs" starts with creating a top-level README.
+- Existing launch track (`bd-x7q.*`) already covers README and assets, but not full release-channel operations.
+- Core M6/M7 work has been active; launch execution should remain gated on stabilization and review completion.
 
-- For this project, docs quality is part of product correctness signaling, not marketing polish.
-- Panopticon claims deterministic behavior and truthful degradation; README must show executable proof.
-- High-signal docs increase adoption and strongly improve senior-level evaluation of architecture and judgment.
+## Do We Need "Deployment" for v0.1?
 
-## Activation Timing
+For v0.1, Panopticon does not need a hosted runtime deployment.
 
-Do not run this track while core behavior is still changing quickly.
+Recommended interpretation:
 
-Activate this plan only after:
+- **No SaaS deployment yet**
+- **Yes to distribution deployment**:
+  - GitHub Releases (signed checksums + binaries)
+  - crates.io publish for applicable crates
+  - optional package manager channels (Homebrew, winget)
 
-1. Current core open beads are complete and reviewed.
-2. One optimization/refinement round is complete (so screenshots and wording do not churn).
-3. Main branch is stable enough for docs freeze pass.
+Rationale: Panopticon is local-first and deterministic. Trust is built by reproducible local execution and artifact verification, not by uptime metrics.
 
-## Deliverables
+## Release Surfaces (Priority Order)
 
-1. Top-level README rewrite with proof-first structure.
-2. Curated screenshots and one architecture diagram in `docs/assets/readme/`.
-3. Reproducible "Trust Challenge" command sequence (determinism + export refusal).
-4. Docs verification pass confirming every command and claim.
+1. **GitHub Release (must-have)**
+- Linux/macOS/Windows artifacts
+- SHA256/BLAKE3 checksums
+- release notes: what changed, what was verified, known limits
 
-## README Structure Contract
+2. **crates.io publish (must-have for Rust audience)**
+- publish only stable crates
+- run `cargo publish --dry-run` before final publish
+- include docs.rs-friendly crate docs and minimal examples
 
-The README should contain these sections in this order:
+3. **Homebrew tap (high-value convenience)**
+- one-line install path for macOS/Linux developers
+- formula update automation can come after first manual release
 
-1. Title + 2-sentence value proposition.
-2. "See It Working" (screenshots/GIFs).
-3. "60-Second Quickstart" (exact commands).
-4. "Why Trust This" (I1..I5 in plain language, link to docs).
-5. "Verify In 3 Steps (Trust Challenge)".
-6. Architecture overview diagram (truth vs projection).
-7. Proof artifacts (`metrics.json`, `viewmodel.hash`, `ansi.capture`, `timetravel.capture`).
-8. Current status + non-goals + roadmap.
-9. Contributing + troubleshooting.
+4. **winget (optional but strong reach)**
+- useful if Windows adoption becomes visible after first launch
 
-## Quality Bar (Must Pass)
+5. **Container image (optional / low priority)**
+- only if users request a disposable sandbox for quick trials
+- not a substitute for native binary distribution
 
-1. Every command block is copy-paste tested.
-2. Every claim has a reproducible check or source link.
-3. Screenshots reflect current UI behavior and lens states.
-4. Markdown is readable/scannable (short sections, descriptive headings).
-5. No constitution duplication from guarded snippets.
-6. Dark/light readability considered for images.
+## Product-Market Positioning (for Launch Messaging)
 
-## Coordination Model
+Panopticon should position as:
 
-Roles:
+- deterministic local-first run evidence cockpit
+- replayable truth model under overload (truth preserved, projection degrades)
+- share-safe export with refusal reports
 
-- Implementer: writes README and captures assets.
-- Reviewer: independent docs QA (findings-first, PASS/FAIL).
-- Coordinator: enforces scope, timing, and final quality gate.
+Avoid positioning as:
 
-Workflow:
+- generic chat UI shell
+- cloud observability replacement for hosted LLM platforms
 
-1. Claim bead and confirm ID.
-2. Reserve narrow files (`README.md`, `docs/assets/readme/*`, `docs/README_LAUNCH_PLAN.md` as needed).
-3. Implement minimal focused diff.
-4. Run required checks (`cargo test` minimum for docs-only changes).
-5. Send handoff with SHA + verification notes.
-6. Independent review (PASS/FAIL).
-7. Fix-forward if needed.
+## Competitor/Comparable Landscape (2026 snapshot)
 
-## Suggested Bead Sequence
+These are adjacent, not identical:
 
-1. README-PLAN: finalize launch plan and acceptance checklist.
-2. README-CORE: rewrite README text structure and trust narrative.
-3. README-ASSETS: produce screenshots/diagram assets.
-4. README-VERIFY: validate commands and trust challenge end-to-end.
-5. README-REVIEW: independent polish/reliability review and final edits.
+1. **Langfuse**
+- strategy: open-source observability + managed cloud, strong docs, broad integrations
+- lesson: invest in integration docs and eval workflow examples
 
-Dependencies should ensure this sequence runs only after stabilization milestones are complete.
+2. **Arize Phoenix**
+- strategy: open-source tracing/eval with notebook-first and framework-first workflows
+- lesson: make "time-to-first-insight" very short
 
-## Reference Standards
+3. **Helicone**
+- strategy: API gateway + observability controls with hosted/on-prem story
+- lesson: users value clear control points and clear pricing/usage framing
 
-- GitHub docs writing best practices.
-- Diataxis documentation framework.
-- Rust API guidelines (clarity, correctness).
-- OpenSSF/NIST secure software lifecycle guidance for verifiable claims.
+4. **Comet Opik**
+- strategy: OSS LLM eval/observability with explicit enterprise option
+- lesson: side-by-side OSS + practical production paths reduce adoption friction
 
-These references guide style and rigor; repository constitution docs remain normative for Panopticon behavior.
+Panopticon differentiation to emphasize:
+
+- canonical local event truth + deterministic replay hash surfaces
+- explicit overload honesty model
+- evidence-bundle workflow for audit/share
+
+## FrankenTUI Reference Pattern (What to Borrow)
+
+FrankenTUI's visible go-to-market choices worth copying:
+
+1. Demo-first onboarding (`cargo run ...` immediately)
+2. Strong README narrative with architecture explanation
+3. Public releases + crate publishing progression
+4. Visual proof artifacts (screenshots/showcase demos)
+
+Adaptation for Panopticon:
+
+- keep a demo/tour command as first-run path
+- show proof artifacts (`metrics.json`, `viewmodel.hash`, capture files) early in README
+- keep mathematical/technical depth in docs, but prioritize runnable commands at top
+
+## "Pretty / Personality / Viral" Without Breaking Trust
+
+Allowed and recommended:
+
+- a dedicated "demo profile" for aesthetically rich terminal moments
+- curated capture scenarios for sharing clips/images
+- consistent visual identity for screenshots and release assets
+
+Not allowed in core truth path:
+
+- randomness in deterministic proof paths
+- aesthetics that alter canonical truth semantics
+- hidden behavior that weakens auditability
+
+Rule of thumb: personality belongs in presentation mode and docs assets, not in deterministic core invariants.
+
+## Launch Outcome Forecast (Realistic)
+
+Likely phase-1 outcome:
+
+- strong traction in Rust/CLI/TUI/agent-tooling communities
+- low-friction adoption by technical users if install + demo is under 2 minutes
+- moderate social spread unless clips and narrative are tightly packaged
+
+Higher-variance "viral" upside requires:
+
+- one unmistakable demo sequence people want to repost
+- clear "why this is different" framing in first 15 seconds
+- copy-paste install that always works
+
+## Content Formats to Ship Together
+
+1. GitHub README (primary canonical entry)
+2. GitHub Release notes (technical changelog + verification checklist)
+3. Short launch post (blog/Medium/dev.to)
+4. X/LinkedIn thread with terminal clip and concrete claims
+5. 60-90 second walkthrough video (or asciinema embed)
+
+## Timing: When to Research vs Execute
+
+1. **Now**: finalize release/distribution plan and launch message architecture
+2. **After stabilization gate passes**: produce README, assets, and reproducibility checks
+3. **Release week**: execute publish/distribute + social assets
+4. **Post-release week**: synthesize feedback into next bead batch
+
+## Execution Workflow (Agent-Safe)
+
+1. Planning pass
+- finalize this plan doc
+- create beads and dependencies
+
+2. Stabilization gate
+- ensure open core beads are complete and independently reviewed
+
+3. Packaging gate
+- release artifacts pipeline implemented and tested
+
+4. Docs gate
+- README + screenshots + trust challenge verified line-by-line
+
+5. Launch gate
+- release publish + communication bundle shipped in one coordinated window
+
+6. Post-launch learning gate
+- capture feedback and convert into prioritized beads
+
+## Proposed Bead Families (new)
+
+- `RELEASE-OPS`: binary packaging, checksums, release checklist, publish flow
+- `LAUNCH-MESSAGE`: README narrative, positioning, comparison framing
+- `LAUNCH-MEDIA`: screenshots/clips/demo script
+- `LAUNCH-DISTRIBUTION`: GitHub release + crates publish + package-manager follow-through
+- `POST-LAUNCH-LEARN`: issue triage rubric and feedback ingestion loop
+
+## Sources
+
+- Cargo publishing reference: https://doc.rust-lang.org/cargo/reference/publishing.html
+- Cargo publish command: https://doc.rust-lang.org/cargo/commands/cargo-publish.html
+- crates.io updates (trusted publishing context):
+  - https://blog.rust-lang.org/2025/07/11/crates-io-development-update-2025-07/
+  - https://blog.rust-lang.org/2026/01/21/crates-io-development-update/
+- GitHub Releases docs: https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
+- GitHub Pages publish source docs: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+- Homebrew tap guide: https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap
+- winget packaging docs: https://learn.microsoft.com/en-us/windows/package-manager/package/
+- cargo-dist docs: https://opensource.axo.dev/cargo-dist/
+- ASTRAL-inspired release automation pattern (cargo-dist, release examples): https://github.com/astral-sh/uv
+- Langfuse docs: https://langfuse.com/docs
+- Arize Phoenix docs: https://arize.com/docs/phoenix
+- Helicone docs: https://docs.helicone.ai/
+- Opik docs: https://www.comet.com/docs/opik/
+- FrankenTUI site and repo:
+  - https://frankentui.com/
+  - https://github.com/Dicklesworthstone/frankentui
+- Terminal capture tooling:
+  - https://asciinema.org/
+  - https://github.com/charmbracelet/vhs
