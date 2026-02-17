@@ -1262,3 +1262,28 @@ Context:
 3. Nondeterminism: No runtime behavior changes introduced; evidence-only bead.
 4. Security: No new security surface; profiling outputs contain only performance counters and deterministic stage metrics.
 5. Performance: C2 appears beneficial; next optimization decision should avoid overfitting to single workload signature.
+
+## bd-3ufi · A3-3 C3 decision gate · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4 (avoid risky optimization without clear ROI)
+- Constitution touched: none
+
+1. Coupling: Decision policy now explicitly ties C3 execution to hotspot dominance and proof-cost thresholds.
+2. Untested claims: No implementation changes were made; only decision rationale captured from current evidence.
+3. Nondeterminism: No runtime behavior changes; no new nondeterminism risk introduced.
+4. Security: No new security surface; no code-path changes in append writer.
+5. Performance: Potential append-path gains deferred; chosen to avoid complexity without clear dominant-hotspot justification.
+
+## bd-3vv0 · A3-4 C3 implementation bead closure (skipped) · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Result: closed without code changes per A3 decision gate
+
+1. Coupling: Avoided adding new append durability-mode coupling in this round.
+2. Untested claims: C3 behavior remains unimplemented in A3; no new claims introduced.
+3. Nondeterminism: No changes; existing deterministic append semantics remain intact.
+4. Security: No changes; no new surface introduced.
+5. Performance: Potential append-path optimization deferred; parse remains next likely target.
