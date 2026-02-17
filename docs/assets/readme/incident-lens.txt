@@ -1,33 +1,33 @@
 ┌ Incident Lens (Tab to toggle) ───────────────────────────────────────────────────────────────────────────────────────┐
-│Run Summary  /data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-eventlog.jsonl (18 events)                 │
-│  codex (run-readme-1) [OK] 18 events                                                                                 │
+│Run Summary  /data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-eventlog.jsonl (28 events)                 │
+│  codex (run-readme-1) [OK] 28 events                                                                                 │
 │                                                                                                                      │
 │Event Breakdown                                                                                                       │
-│  ClockSkewDetected          4                                                                                        │
-│  Error                      2                                                                                        │
-│  PolicyDecision             2                                                                                        │
-│  RedactionApplied           2                                                                                        │
-│  RunEnd                     2                                                                                        │
-│  RunStart                   2                                                                                        │
-│  ToolCall                   2                                                                                        │
-│  ToolResult                 2                                                                                        │
+│  ClockSkewDetected          7                                                                                        │
+│  Error                      3                                                                                        │
+│  PolicyDecision             3                                                                                        │
+│  RedactionApplied           3                                                                                        │
+│  RunEnd                     3                                                                                        │
+│  RunStart                   3                                                                                        │
+│  ToolCall                   3                                                                                        │
+│  ToolResult                 3                                                                                        │
 │                                                                                                                      │
 │Anomalies                                                                                                             │
 │  ERR @4: transient write stall                                                                                       │
 │  ERR @14: transient write stall                                                                                      │
+│  ERR @24: transient write stall                                                                                      │
 │  SKEW @5: 0ms backward                                                                                               │
 │  SKEW @8: 70ms backward                                                                                              │
 │  SKEW @10: 60ms backward                                                                                             │
 │  SKEW @15: 0ms backward                                                                                              │
+│  SKEW @18: 70ms backward                                                                                             │
+│  SKEW @20: 60ms backward                                                                                             │
+│  SKEW @25: 0ms backward                                                                                              │
 │  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │
 │  POLICY @13: L0 → L2 (QueuePressure)                                                                                 │
+│  POLICY @23: L0 → L2 (QueuePressure)                                                                                 │
 │                                                                                                                      │
 │Keys: Tab=toggle lens, q=quit                                                                                         │
-│                                                                                                                      │
-│                                                                                                                      │
-│                                                                                                                      │
-│                                                                                                                      │
-│                                                                                                                      │
 │                                                                                                                      │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌ Truth HUD ───────────────────────────────────────────────────────────────────────────────────────────────────────────┐

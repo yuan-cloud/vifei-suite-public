@@ -424,3 +424,11 @@ Context:
 3. Nondeterminism: Captures are deterministic for provided sample EventLog and fixture inputs. `artifacts-view.txt` includes Tour hash for `fixtures/large-stress.jsonl` and can change only if deterministic core behavior changes.
 4. Security: Export-refusal asset intentionally includes redacted secret matches from synthetic input only. No real credentials introduced.
 5. Performance cliffs: Running `capture_readme_assets` executes a full Tour run on `large-stress.jsonl`, which is intentionally non-trivial CPU work. This is acceptable for docs asset refresh cadence.
+
+## bd-x7q.4 · README-VERIFY: command and trust-step reproducibility validation · 2026-02-17
+
+1. Coupling: README examples are now explicitly coupled to generated sample assets under `docs/assets/readme/` and to current CLI contract (`panopticon` binary flags/subcommands).
+2. Untested claims: `view` cannot be fully exercised in this non-interactive sandbox due TTY constraints; verification records this explicitly rather than claiming a full pass.
+3. Nondeterminism: Determinism checks were rerun (`tour` twice) and hashes matched; no new nondeterministic behavior introduced.
+4. Security: Verification surfaced conservative scanner false positives on numeric-heavy sample data and led to a dedicated clean export sample; this reduces confusion without weakening share-safe behavior.
+5. Performance cliffs: Verification path runs full stress Tour twice; this is expected for trust-challenge validation and documented as a heavyweight check.

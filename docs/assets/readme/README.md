@@ -12,6 +12,7 @@ Files:
 - truth-hud-degraded.txt
 - export-refusal.txt
 - refusal-report.json
+- sample-export-clean-eventlog.jsonl
 - artifacts-view.txt
 - architecture.mmd
 - tour-artifacts/

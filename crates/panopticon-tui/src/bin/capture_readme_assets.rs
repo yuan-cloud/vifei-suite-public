@@ -17,6 +17,7 @@ fn main() -> io::Result<()> {
 
     let eventlog_path = out_dir.join("sample-eventlog.jsonl");
     write_sample_eventlog(&eventlog_path)?;
+    write_sample_export_clean_eventlog(&out_dir.join("sample-export-clean-eventlog.jsonl"))?;
 
     let incident = render_incident_multiline(&eventlog_path, 120, 36)?;
     fs::write(out_dir.join("incident-lens.txt"), incident)?;
@@ -171,6 +172,59 @@ fn sample_events() -> Vec<ImportEvent> {
     ]
 }
 
+fn write_sample_export_clean_eventlog(path: &Path) -> io::Result<()> {
+    let mut writer = EventLogWriter::open(path)?;
+    let events = vec![
+        ImportEvent {
+            run_id: "run-export-clean".into(),
+            event_id: "clean-1".into(),
+            source_id: "readme-capture".into(),
+            source_seq: Some(1),
+            timestamp_ns: 1000,
+            tier: Tier::A,
+            payload: EventPayload::RunStart {
+                agent: "demo".into(),
+                args: Some("check".into()),
+            },
+            payload_ref: None,
+            synthesized: false,
+        },
+        ImportEvent {
+            run_id: "run-export-clean".into(),
+            event_id: "clean-2".into(),
+            source_id: "readme-capture".into(),
+            source_seq: Some(2),
+            timestamp_ns: 2000,
+            tier: Tier::A,
+            payload: EventPayload::ToolResult {
+                tool: "verify".into(),
+                result: Some("ok".into()),
+                status: Some("success".into()),
+            },
+            payload_ref: None,
+            synthesized: false,
+        },
+        ImportEvent {
+            run_id: "run-export-clean".into(),
+            event_id: "clean-3".into(),
+            source_id: "readme-capture".into(),
+            source_seq: Some(3),
+            timestamp_ns: 3000,
+            tier: Tier::A,
+            payload: EventPayload::RunEnd {
+                exit_code: Some(0),
+                reason: Some("done".into()),
+            },
+            payload_ref: None,
+            synthesized: false,
+        },
+    ];
+    for event in events {
+        writer.append(event)?;
+    }
+    Ok(())
+}
+
 fn generate_export_refusal(out_dir: &Path) -> io::Result<String> {
     let refused_eventlog = out_dir.join("sample-refusal-eventlog.jsonl");
     let mut writer = EventLogWriter::open(&refused_eventlog)?;
@@ -253,6 +307,7 @@ fn asset_index_markdown() -> String {
         "- truth-hud-degraded.txt",
         "- export-refusal.txt",
         "- refusal-report.json",
+        "- sample-export-clean-eventlog.jsonl",
         "- artifacts-view.txt",
         "- architecture.mmd",
         "- tour-artifacts/",

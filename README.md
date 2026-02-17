@@ -66,16 +66,18 @@ cat tour-output-rerun/viewmodel.hash
 
 Expected result: both hash files match.
 
-### 4) View an EventLog (when you have one)
+### 4) View an EventLog
 
 ```bash
-cargo run -p panopticon-tui -- view /path/to/eventlog.jsonl
+cargo run -p panopticon-tui -- view docs/assets/readme/sample-eventlog.jsonl
 ```
+
+Run this in a real interactive terminal (TTY). Non-interactive runners will fail to initialize terminal mode.
 
 ### 5) Export an EventLog with share-safe checks
 
 ```bash
-cargo run -p panopticon-tui -- export /path/to/eventlog.jsonl --share-safe --output out/bundle.tar.zst --refusal-report out/refusal-report.json
+cargo run -p panopticon-tui -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output out/bundle.tar.zst --refusal-report out/refusal-report.json
 ```
 
 ## Why Trust This
