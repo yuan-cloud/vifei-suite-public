@@ -168,6 +168,7 @@ Failure diagnostics minimums:
 - `bd-qra` completed: full-confidence now treats PTY as capability-gated, runs interactive PTY only on passing preflight, and enforces deterministic PTY assertion/flake budget contracts via `scripts/testing/check_pty_flake_contract.sh`.
 - `bd-22i` completed: fastlane now records PTY preflight capability status explicitly and gates interactive PTY smoke deterministically, while CI validates `tui_pty_preflight` stage presence and preflight artifact output.
 - `bd-2gs` completed: PTY flake checker now emits explicit lane-scope diagnostics for wrong-directory usage (fastlane vs full-confidence), preserving strict failures while reducing first-use operator confusion.
+- `bd-qhk` completed: baseline refresh pack captured fastlane/cli-e2e results, 12-run Tour latency distribution, release bench percentiles, and resource snapshots to drive profiler-first candidate selection.
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 

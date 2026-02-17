@@ -1145,3 +1145,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism added; this change improves deterministic error interpretation for manual operator invocations.
 4. Security: No new secret surface introduced; messaging changes only.
 5. Performance: Negligible script overhead (single `rg` check on run log).
+
+## bd-qhk · A2-1 baseline refresh pack for representative workloads · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (determinism evidence in CI/proof loops)
+- Constitution touched: none
+
+1. Coupling: Baseline evidence now couples optimization decisions to current fixture/workload mix (`fastlane`, `cli_e2e`, `tour --stress`, `bench_tour`).
+2. Untested claims: Baseline is local-environment evidence; it does not independently prove cross-host equivalence of wall-clock numbers.
+3. Nondeterminism: No runtime behavior changes introduced; this bead records measurements only.
+4. Security: No new secret-bearing data introduced; artifacts contain timing/resource metadata and existing deterministic evidence paths.
+5. Performance: No product runtime impact; enables tighter optimization prioritization by replacing stale assumptions with fresh measurements.
