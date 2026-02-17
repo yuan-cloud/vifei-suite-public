@@ -22,12 +22,14 @@ pub(crate) struct Cli {
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// View an EventLog in the TUI.
+    #[command(alias = "viewer")]
     View {
         /// Path to the EventLog JSONL file.
         eventlog: PathBuf,
     },
 
     /// Export an EventLog as a share-safe bundle.
+    #[command(alias = "exports")]
     Export {
         /// Path to the EventLog JSONL file.
         eventlog: PathBuf,
@@ -46,6 +48,7 @@ pub(crate) enum Commands {
     },
 
     /// Run the Tour stress harness to generate proof artifacts.
+    #[command(alias = "tours")]
     Tour {
         /// Path to the fixture file (Agent Cassette JSONL).
         fixture: PathBuf,
@@ -93,3 +96,36 @@ Tips:
   panopticon <command> --help";
 
 pub(crate) const ROBOT_SCHEMA_VERSION: &str = "panopticon-cli-robot-v1.1";
+
+#[cfg(test)]
+mod tests {
+    use super::{Cli, Commands};
+    use clap::Parser;
+
+    #[test]
+    fn clap_alias_viewer_maps_to_view() {
+        let cli = Cli::try_parse_from(["panopticon", "viewer", "e.jsonl"]).expect("parse");
+        assert!(matches!(cli.command, Commands::View { .. }));
+    }
+
+    #[test]
+    fn clap_alias_exports_maps_to_export() {
+        let cli = Cli::try_parse_from([
+            "panopticon",
+            "exports",
+            "e.jsonl",
+            "--share-safe",
+            "--output",
+            "bundle.tar.zst",
+        ])
+        .expect("parse");
+        assert!(matches!(cli.command, Commands::Export { .. }));
+    }
+
+    #[test]
+    fn clap_alias_tours_maps_to_tour() {
+        let cli =
+            Cli::try_parse_from(["panopticon", "tours", "f.jsonl", "--stress"]).expect("parse");
+        assert!(matches!(cli.command, Commands::Tour { .. }));
+    }
+}

@@ -138,3 +138,80 @@ fn tour_success_emits_structured_json_contract() {
     assert!(value["data"]["viewmodel_hash"].is_string());
     assert!(value["data"]["artifacts"].is_array());
 }
+
+#[test]
+fn alias_viewer_matches_view_contract_for_missing_file() {
+    let (code, stdout, _stderr) = run_panopticon(&["--json", "viewer", "does-not-exist.jsonl"]);
+    assert_eq!(code, 1, "viewer alias should route through view handler");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "NOT_FOUND");
+    assert_eq!(value["exit_code"], 1);
+}
+
+#[test]
+fn normalization_repairs_flag_spelling_and_reports_note() {
+    let dir = tempdir().expect("tempdir");
+    let output_dir = dir.path().join("tour-output");
+    let fixture = workspace_root()
+        .join("fixtures")
+        .join("small-session.jsonl");
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "tour",
+        &fixture.display().to_string(),
+        "--stress",
+        "--output_dir",
+        &output_dir.display().to_string(),
+    ]);
+    assert_eq!(
+        code, 0,
+        "flag-shape repair should preserve successful execution"
+    );
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["code"], "OK");
+    let notes = value["notes"].as_array().expect("notes array");
+    assert!(
+        notes
+            .iter()
+            .any(|v| v.as_str() == Some("normalized `--output_dir` -> `--output-dir`")),
+        "expected normalization note in response"
+    );
+}
+
+#[test]
+fn normalization_never_mutates_positionals_after_double_dash() {
+    let (code, stdout, _stderr) = run_panopticon(&["--json", "view", "--", "--output_dir"]);
+    assert_eq!(
+        code, 1,
+        "path after -- should remain positional and fail as not found"
+    );
+    let value = parse_json(&stdout);
+    assert_eq!(value["code"], "NOT_FOUND");
+    assert!(
+        value["message"]
+            .as_str()
+            .map(|m| m.contains("--output_dir"))
+            .unwrap_or(false),
+        "error message should preserve original positional value"
+    );
+}
+
+#[test]
+fn human_flag_overrides_auto_json_when_stdout_is_not_tty() {
+    let (code, stdout, _stderr) = run_panopticon(&["--human", "view", "does-not-exist.jsonl"]);
+    assert_eq!(
+        code, 1,
+        "--human view on missing file should return not-found exit code"
+    );
+    assert!(
+        !stdout.trim_start().starts_with('{'),
+        "--human should force text output in non-tty mode"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "human errors should be emitted on stderr, not stdout"
+    );
+}

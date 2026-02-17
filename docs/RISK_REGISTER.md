@@ -976,3 +976,16 @@ Context:
 3. Nondeterminism: No nondeterministic logic introduced because no truth-path code changed.
 4. Security: No new security surface; plan reinforces fail-closed and deterministic validation requirements for future core work.
 5. Performance: No runtime impact in this bead; performance risk is deferred and explicitly called out for future split beads.
+
+## bd-7cy · CLI parser contract hardening matrix · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: deterministic CLI envelope semantics, bounded normalization, stable exit-code mapping
+- Constitution touched: none
+
+1. Coupling: Clap aliases now own subcommand synonym handling while `normalize_args` owns only option-shape repairs; future CLI changes must preserve this ownership boundary to avoid parser drift.
+2. Untested claims: We assert no user-visible regression for canonical commands and alias forms covered by tests; untested edge cases remain for exotic shell quoting combinations outside current argv corpus.
+3. Nondeterminism: No new nondeterministic sources introduced. Parsing and normalization remain deterministic and now have stricter mutation boundaries (no positional rewrites, no mutation after `--`).
+4. Security: No new secret or privilege surface added. Structured error behavior remains explicit and deterministic; reduced silent rewrites lowers risk of hidden operator error in automation.
+5. Performance: Runtime overhead is neutral to improved; fewer normalization branches and clap-native alias handling avoid extra heuristic passes.

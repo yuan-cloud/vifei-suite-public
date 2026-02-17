@@ -152,9 +152,9 @@ mod tests {
             "--output_dir".to_string(),
             "out".to_string(),
         ]);
-        assert_eq!(repaired[1], "view");
+        assert_eq!(repaired[1], "viewer");
         assert!(repaired.contains(&"--share-safe".to_string()));
         assert!(repaired.contains(&"--output-dir".to_string()));
-        assert_eq!(notes.len(), 3);
+        assert_eq!(notes.len(), 2);
     }
 }

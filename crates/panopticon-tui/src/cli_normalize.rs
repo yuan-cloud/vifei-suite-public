@@ -82,34 +82,6 @@ pub(crate) fn normalize_args(args: Vec<String>) -> (Vec<String>, Vec<String>) {
         }
     }
 
-    // Normalize common subcommand variants on the first non-flag token.
-    // This supports forms like `panopticon --json viewer ...` while still
-    // avoiding mutation of positional values after subcommand parsing begins.
-    let mut passthrough_positionals = false;
-    for arg in repaired.iter_mut().skip(1) {
-        if arg == "--" {
-            break;
-        }
-        if arg.starts_with('-') {
-            continue;
-        }
-        if passthrough_positionals {
-            continue;
-        }
-
-        let replacement = match arg.as_str() {
-            "viewer" => Some("view"),
-            "exports" => Some("export"),
-            "tours" => Some("tour"),
-            _ => None,
-        };
-        if let Some(new) = replacement {
-            notes.push(format!("normalized `{}` -> `{}`", arg, new));
-            *arg = new.to_string();
-        }
-        passthrough_positionals = true;
-    }
-
     (repaired, notes)
 }
 
@@ -118,14 +90,10 @@ mod tests {
     use super::normalize_args;
 
     #[test]
-    fn normalize_only_rewrites_subcommand_slot() {
-        let (repaired, notes) = normalize_args(vec![
-            "panopticon".to_string(),
-            "view".to_string(),
-            "viewer".to_string(),
-        ]);
-        assert_eq!(repaired[1], "view");
-        assert_eq!(repaired[2], "viewer");
+    fn normalize_does_not_rewrite_positional_subcommand_aliases() {
+        let (repaired, notes) =
+            normalize_args(vec!["panopticon".to_string(), "viewer".to_string()]);
+        assert_eq!(repaired[1], "viewer");
         assert!(notes.is_empty());
     }
 
@@ -143,15 +111,17 @@ mod tests {
     }
 
     #[test]
-    fn normalize_rewrites_alias_after_global_flag_prefix() {
+    fn normalize_is_idempotent_for_known_repairs() {
         let (repaired, notes) = normalize_args(vec![
             "panopticon".to_string(),
-            "--json".to_string(),
-            "viewer".to_string(),
-            "fixture.jsonl".to_string(),
+            "export".to_string(),
+            "in.jsonl".to_string(),
+            "--share_safe".to_string(),
+            "--output_dir".to_string(),
         ]);
-        assert_eq!(repaired[2], "view");
-        assert_eq!(repaired[3], "fixture.jsonl");
-        assert_eq!(notes, vec!["normalized `viewer` -> `view`".to_string()]);
+        let (repaired_2, notes_2) = normalize_args(repaired.clone());
+        assert_eq!(repaired, repaired_2);
+        assert!(notes.len() >= 2);
+        assert!(notes_2.is_empty());
     }
 }
