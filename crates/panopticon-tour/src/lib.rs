@@ -144,8 +144,8 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     let eventlog_path = temp_dir.path().join("eventlog.jsonl");
     let mut writer = EventLogWriter::open(&eventlog_path)?;
 
-    for event in &events {
-        writer.append(event.clone())?;
+    for event in events {
+        writer.append(event)?;
     }
     drop(writer);
 

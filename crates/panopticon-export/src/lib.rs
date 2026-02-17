@@ -151,7 +151,7 @@ impl ExportConfig {
 
 /// Discovered content from an EventLog ready for export.
 #[derive(Debug)]
-pub struct DiscoveredContent {
+pub(crate) struct DiscoveredContent {
     /// Path to the EventLog file.
     pub eventlog_path: PathBuf,
     /// The events in the EventLog.
@@ -170,7 +170,7 @@ impl DiscoveredContent {
 /// Discover all content referenced by an EventLog.
 ///
 /// Reads the EventLog and identifies all blob references.
-pub fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
+pub(crate) fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
     let events = read_eventlog(eventlog_path)?;
     let mut blob_refs = HashSet::new();
 
@@ -191,7 +191,7 @@ pub fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
 ///
 /// Scans all event payloads and blob contents for secret patterns.
 /// Returns a list of findings. Empty list means clean.
-pub fn scan_for_secrets(
+pub(crate) fn scan_for_secrets(
     content: &DiscoveredContent,
     blob_store: Option<&BlobStore>,
 ) -> io::Result<Vec<SecretFinding>> {
@@ -261,7 +261,7 @@ fn scan_blob(patterns: &SecretPatterns, blob_ref: &str, data: &[u8]) -> Vec<Secr
 /// Bundle discovered content into a deterministic archive.
 ///
 /// NOTE: Full implementation in M8.4. This is a pipeline stub.
-pub fn create_bundle(
+pub(crate) fn create_bundle(
     content: &DiscoveredContent,
     _blob_store: Option<&BlobStore>,
     output_path: &Path,
