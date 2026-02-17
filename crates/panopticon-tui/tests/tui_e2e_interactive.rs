@@ -1,5 +1,6 @@
 use panopticon_core::event::{EventPayload, ImportEvent, Tier};
 use panopticon_core::eventlog::EventLogWriter;
+use serde_json::json;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,6 +15,12 @@ struct SessionRun {
     transcript_path: PathBuf,
     transcript: String,
     stderr: String,
+}
+
+#[derive(Debug)]
+struct PreflightFailure {
+    reason_code: &'static str,
+    message: String,
 }
 
 fn workspace_root() -> PathBuf {
@@ -57,9 +64,12 @@ fn script_available() -> bool {
         .unwrap_or(false)
 }
 
-fn preflight_pty_support() -> Result<(), String> {
+fn preflight_pty_support() -> Result<(), PreflightFailure> {
     if !script_available() {
-        return Err("util-linux `script` command is unavailable".to_string());
+        return Err(PreflightFailure {
+            reason_code: "PTY_SCRIPT_UNAVAILABLE",
+            message: "util-linux `script` command is unavailable".to_string(),
+        });
     }
 
     let out_dir = test_out_dir();
@@ -69,7 +79,10 @@ fn preflight_pty_support() -> Result<(), String> {
         .arg("true")
         .arg(&probe_path)
         .output()
-        .map_err(|e| format!("failed to execute `script`: {e}"))?;
+        .map_err(|e| PreflightFailure {
+            reason_code: "PTY_SCRIPT_EXEC_FAILED",
+            message: format!("failed to execute `script`: {e}"),
+        })?;
 
     if output.status.success() {
         let _ = fs::remove_file(probe_path);
@@ -78,12 +91,15 @@ fn preflight_pty_support() -> Result<(), String> {
 
     let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    Err(format!(
-        "PTY preflight failed (exit={:?}) stderr={} stdout={}",
-        output.status.code(),
-        stderr,
-        stdout
-    ))
+    Err(PreflightFailure {
+        reason_code: "PTY_ALLOCATION_DENIED",
+        message: format!(
+            "PTY preflight failed (exit={:?}) stderr={} stdout={}",
+            output.status.code(),
+            stderr,
+            stdout
+        ),
+    })
 }
 
 fn shell_escape(arg: &str) -> String {
@@ -200,66 +216,105 @@ fn run_with_retry(
     let first = run_once(test_name, 1, fixture, columns, lines, &input_path);
     let first_validation = validate(&first);
     if first.status.success() && first_validation.is_ok() {
-        fs::write(
-            assertions_log,
-            format!(
-                "status=pass attempt=1 transcript={}\n",
-                first.transcript_path.display()
-            ),
-        )
-        .expect("write assertion log");
+        write_assertions_log(
+            &assertions_log,
+            &json!({
+                "schema_version": "panopticon-tui-e2e-assert-v1",
+                "test_name": test_name,
+                "status": "pass",
+                "attempt": 1,
+                "first_failure_transcript": serde_json::Value::Null,
+                "retry_transcript": serde_json::Value::Null,
+                "final_transcript": first.transcript_path.display().to_string(),
+                "exit_code": first.status.code(),
+                "validation": "ok"
+            }),
+        );
         return first;
     }
 
-    fs::write(
-        &assertions_log,
-        format!(
-            "status=fail attempt=1 transcript={}\nexit={:?}\nstderr={}\nvalidation={}\n",
-            first.transcript_path.display(),
-            first.status.code(),
-            first.stderr.trim(),
-            first_validation
-                .as_ref()
-                .err()
-                .map(String::as_str)
-                .unwrap_or("ok"),
-        ),
-    )
-    .expect("write first-failure assertion log");
+    let first_validation_error = first_validation
+        .as_ref()
+        .err()
+        .map(String::as_str)
+        .unwrap_or("ok");
 
     if MAX_RETRIES == 0 {
+        write_assertions_log(
+            &assertions_log,
+            &json!({
+                "schema_version": "panopticon-tui-e2e-assert-v1",
+                "test_name": test_name,
+                "status": "fail",
+                "attempt": 1,
+                "first_failure_transcript": first.transcript_path.display().to_string(),
+                "retry_transcript": serde_json::Value::Null,
+                "final_transcript": first.transcript_path.display().to_string(),
+                "first_failure_exit_code": first.status.code(),
+                "first_failure_validation": first_validation_error,
+                "first_failure_stderr": first.stderr.trim()
+            }),
+        );
         return first;
     }
 
     let second = run_once(test_name, 2, fixture, columns, lines, &input_path);
     let second_validation = validate(&second);
-    let summary = format!(
-        "status={} attempt=2 transcript={}\nexit={:?}\nstderr={}\nvalidation={}\n",
-        if second.status.success() && second_validation.is_ok() {
-            "pass"
-        } else {
-            "fail"
-        },
-        second.transcript_path.display(),
-        second.status.code(),
-        second.stderr.trim(),
-        second_validation
-            .as_ref()
-            .err()
-            .map(String::as_str)
-            .unwrap_or("ok"),
+    write_assertions_log(
+        &assertions_log,
+        &json!({
+            "schema_version": "panopticon-tui-e2e-assert-v1",
+            "test_name": test_name,
+            "status": if second.status.success() && second_validation.is_ok() {
+                "pass"
+            } else {
+                "fail"
+            },
+            "attempt": 2,
+            "first_failure_transcript": first.transcript_path.display().to_string(),
+            "retry_transcript": second.transcript_path.display().to_string(),
+            "final_transcript": second.transcript_path.display().to_string(),
+            "first_failure_exit_code": first.status.code(),
+            "first_failure_validation": first_validation_error,
+            "first_failure_stderr": first.stderr.trim(),
+            "retry_exit_code": second.status.code(),
+            "retry_validation": second_validation
+                .as_ref()
+                .err()
+                .map(String::as_str)
+                .unwrap_or("ok"),
+            "retry_stderr": second.stderr.trim()
+        }),
     );
-    fs::write(assertions_log, summary).expect("write retry assertion log");
     second
+}
+
+fn write_assertions_log(path: &Path, payload: &serde_json::Value) {
+    let body = serde_json::to_string(payload).expect("serialize assertion payload");
+    fs::write(path, body).expect("write assertion log");
+}
+
+fn write_skip_assertions_log(test_name: &str, failure: &PreflightFailure) {
+    let out_dir = test_out_dir();
+    let log = out_dir.join(format!("{test_name}.assertions.log"));
+    write_assertions_log(
+        &log,
+        &json!({
+            "schema_version": "panopticon-tui-e2e-assert-v1",
+            "test_name": test_name,
+            "status": "skip",
+            "attempt": 0,
+            "reason_code": failure.reason_code,
+            "reason": failure.message
+        }),
+    );
 }
 
 #[test]
 fn interactive_tui_flow_lens_toggle_nav_and_quit() {
-    if let Err(reason) = preflight_pty_support() {
-        let out_dir = test_out_dir();
-        let log = out_dir.join("interactive_tui_flow_lens_toggle_nav_and_quit.assertions.log");
-        let _ = fs::write(&log, format!("status=skip reason={reason}\n"));
-        eprintln!("SKIP: {reason}");
+    if let Err(failure) = preflight_pty_support() {
+        write_skip_assertions_log("interactive_tui_flow_lens_toggle_nav_and_quit", &failure);
+        eprintln!("SKIP [{}]: {}", failure.reason_code, failure.message);
         return;
     }
 
@@ -313,12 +368,12 @@ fn interactive_tui_flow_lens_toggle_nav_and_quit() {
 
 #[test]
 fn interactive_tui_narrow_terminal_profile_stays_healthy() {
-    if let Err(reason) = preflight_pty_support() {
-        let out_dir = test_out_dir();
-        let log =
-            out_dir.join("interactive_tui_narrow_terminal_profile_stays_healthy.assertions.log");
-        let _ = fs::write(&log, format!("status=skip reason={reason}\n"));
-        eprintln!("SKIP: {reason}");
+    if let Err(failure) = preflight_pty_support() {
+        write_skip_assertions_log(
+            "interactive_tui_narrow_terminal_profile_stays_healthy",
+            &failure,
+        );
+        eprintln!("SKIP [{}]: {}", failure.reason_code, failure.message);
         return;
     }
 

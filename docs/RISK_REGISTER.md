@@ -1054,3 +1054,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; tests enforce stable JSON envelope fields/messages and deterministic guidance for targeted error paths.
 4. Security: No new secret or privilege surface added; improved deterministic guidance reduces operator ambiguity and accidental misuse loops.
 5. Performance: Runtime unchanged in production paths; added test cases marginally increase CI test time only.
+
+## bd-15z · PTY interactive e2e reliability and diagnostics hardening · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: deterministic test diagnostics, Truth HUD visibility checks, lens transition evidence under PTY runs
+- Constitution touched: none
+
+1. Coupling: PTY diagnostics now couple CI assertions to explicit JSON schema keys in preflight and assertion logs; schema edits must be coordinated across tests, scripts, and workflow checks.
+2. Untested claims: We validate schema presence and deterministic fields via full test suite and script parse checks, but cannot assert PTY pass behavior in every CI/container runtime with restricted pseudo-terminal allocation.
+3. Nondeterminism: Runtime product behavior unchanged; diagnostics now reduce ambiguity with fixed reason-code taxonomy and stable transcript-pointer fields.
+4. Security: No new secret surface; logs remain local artifact outputs. Replay hints are command-only and do not expose credentials.
+5. Performance: Production runtime unaffected; CI gains a small extra shell validation step and JSON log serialization overhead only in test/preflight paths.

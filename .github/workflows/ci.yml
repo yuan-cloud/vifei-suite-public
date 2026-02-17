@@ -109,6 +109,26 @@ jobs:
           set -e
           exit "$rc"
 
+      - name: Validate PTY diagnostics artifacts
+        if: always()
+        run: |
+          test -f .tmp/full-confidence/pty-preflight.log
+          grep -q '"schema_version":"panopticon-pty-preflight-v1"' .tmp/full-confidence/pty-preflight.log
+          grep -q '"status":"' .tmp/full-confidence/pty-preflight.log
+
+          shopt -s nullglob
+          logs=(.tmp/full-confidence/tui-e2e/*.assertions.log)
+          if [ "${#logs[@]}" -eq 0 ]; then
+            echo "No TUI assertion logs produced under .tmp/full-confidence/tui-e2e/"
+            exit 1
+          fi
+
+          for log in "${logs[@]}"; do
+            grep -q '"schema_version":"panopticon-tui-e2e-assert-v1"' "$log"
+            grep -q '"status":"' "$log"
+            grep -q '"attempt":' "$log"
+          done
+
       - name: Upload full-confidence evidence
         if: always()
         uses: actions/upload-artifact@v4

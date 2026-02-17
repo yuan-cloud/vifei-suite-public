@@ -9,13 +9,15 @@ PROBE_PATH="$OUT_DIR/pty-preflight.typescript"
 mkdir -p "$OUT_DIR"
 
 fail() {
-  local message="$1"
-  printf 'status=fail\nreason=%s\n' "$message" | tee "$REPORT_PATH" >&2
+  local reason_code="$1"
+  local message="$2"
+  printf '{"schema_version":"panopticon-pty-preflight-v1","status":"fail","reason_code":"%s","reason":"%s","probe":"%s","replay":"script -qefc true %s"}\n' \
+    "$reason_code" "$message" "$PROBE_PATH" "$PROBE_PATH" | tee "$REPORT_PATH" >&2
   exit 1
 }
 
 if ! command -v script >/dev/null 2>&1; then
-  fail "util-linux 'script' command is unavailable; install util-linux and re-run"
+  fail "PTY_SCRIPT_UNAVAILABLE" "util-linux 'script' command is unavailable; install util-linux and re-run"
 fi
 
 set +e
@@ -24,8 +26,9 @@ rc=$?
 set -e
 
 if [[ "$rc" -ne 0 ]]; then
-  fail "PTY preflight failed (script exit=$rc). Ensure pseudo-terminal allocation is permitted in this environment."
+  fail "PTY_ALLOCATION_DENIED" "PTY preflight failed (script exit=$rc). Ensure pseudo-terminal allocation is permitted in this environment."
 fi
 
-printf 'status=pass\nprobe=%s\n' "$PROBE_PATH" | tee "$REPORT_PATH"
+printf '{"schema_version":"panopticon-pty-preflight-v1","status":"pass","reason_code":"PTY_OK","reason":"PTY allocation probe succeeded","probe":"%s","replay":"script -qefc true %s"}\n' \
+  "$PROBE_PATH" "$PROBE_PATH" | tee "$REPORT_PATH"
 exit 0

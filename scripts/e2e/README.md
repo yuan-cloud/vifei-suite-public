@@ -46,8 +46,8 @@ The script writes:
 The interactive TUI test writes:
 
 - `<workspace-root>/.tmp/e2e/tui/*.typescript`: PTY transcripts (first failure and retry attempt transcripts preserved).
-- `<workspace-root>/.tmp/e2e/tui/*.assertions.log`: pass/fail summary with transcript pointers.
-- `<workspace-root>/.tmp/e2e/tui/pty-preflight.log`: explicit PTY capability pass/fail status.
+- `<workspace-root>/.tmp/e2e/tui/*.assertions.log`: one-line JSON assertion summary with schema `panopticon-tui-e2e-assert-v1`, status (`pass`/`fail`/`skip`), attempt count, transcript pointers (`first_failure_transcript`, `retry_transcript`, `final_transcript`), and validation details.
+- `<workspace-root>/.tmp/e2e/tui/pty-preflight.log`: one-line JSON preflight status with schema `panopticon-pty-preflight-v1`, deterministic `reason_code`, and replay command.
 
 ## Failure Triage
 
