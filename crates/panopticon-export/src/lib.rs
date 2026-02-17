@@ -30,8 +30,12 @@
 //!   the default when any doubt exists.
 //! - **I5 (Loud failure):** Errors are returned, never silently swallowed.
 
+mod scanner;
+
 use panopticon_core::blob_store::BlobStore;
+use panopticon_core::event::CommittedEvent;
 use panopticon_core::eventlog::read_eventlog;
+use scanner::{redact_match, scan_bytes, scan_text, SecretPatterns};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::io;
@@ -72,7 +76,7 @@ pub struct RefusalReport {
 
 impl RefusalReport {
     /// Create a new refusal report with the given findings.
-    pub(crate) fn new(findings: Vec<SecretFinding>) -> Self {
+    pub fn new(findings: Vec<SecretFinding>) -> Self {
         let summary = format!(
             "Export refused: {} secret(s) detected in {} location(s)",
             findings.len(),
@@ -90,7 +94,7 @@ impl RefusalReport {
     }
 
     /// Write the refusal report to a JSON file.
-    pub(crate) fn write_to(&self, path: &Path) -> io::Result<()> {
+    pub fn write_to(&self, path: &Path) -> io::Result<()> {
         let json = serde_json::to_string_pretty(self).map_err(|e| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -147,54 +151,117 @@ impl ExportConfig {
 
 /// Discovered content from an EventLog ready for export.
 #[derive(Debug)]
-pub(crate) struct DiscoveredContent {
+pub struct DiscoveredContent {
     /// Path to the EventLog file.
     pub eventlog_path: PathBuf,
+    /// The events in the EventLog.
+    pub events: Vec<CommittedEvent>,
     /// Set of blob payload_refs referenced by events.
     pub blob_refs: HashSet<String>,
+}
+
+impl DiscoveredContent {
     /// Total number of events.
-    pub event_count: usize,
+    pub fn event_count(&self) -> usize {
+        self.events.len()
+    }
 }
 
 /// Discover all content referenced by an EventLog.
 ///
 /// Reads the EventLog and identifies all blob references.
-pub(crate) fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
+pub fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
     let events = read_eventlog(eventlog_path)?;
-    let event_count = events.len();
     let mut blob_refs = HashSet::new();
 
-    for event in events {
-        if let Some(payload_ref) = event.payload_ref {
-            blob_refs.insert(payload_ref);
+    for event in &events {
+        if let Some(ref payload_ref) = event.payload_ref {
+            blob_refs.insert(payload_ref.clone());
         }
     }
 
     Ok(DiscoveredContent {
         eventlog_path: eventlog_path.to_path_buf(),
+        events,
         blob_refs,
-        event_count,
     })
 }
 
 /// Scan discovered content for secrets.
 ///
+/// Scans all event payloads and blob contents for secret patterns.
 /// Returns a list of findings. Empty list means clean.
-///
-/// NOTE: Full implementation in M8.2. This is a pipeline stub.
-pub(crate) fn scan_for_secrets(
-    _content: &DiscoveredContent,
-    _blob_store: Option<&BlobStore>,
+pub fn scan_for_secrets(
+    content: &DiscoveredContent,
+    blob_store: Option<&BlobStore>,
 ) -> io::Result<Vec<SecretFinding>> {
-    // M8.2 will implement actual secret scanning patterns.
-    // For now, return empty (clean) to allow pipeline testing.
-    Ok(Vec::new())
+    let patterns = SecretPatterns::new();
+    let mut findings = Vec::new();
+
+    // Scan event payloads
+    for event in &content.events {
+        let event_findings = scan_event(&patterns, event);
+        findings.extend(event_findings);
+    }
+
+    // Scan blob contents
+    if let Some(store) = blob_store {
+        for blob_ref in &content.blob_refs {
+            if let Some(blob_data) = store.read_blob(blob_ref)? {
+                let blob_findings = scan_blob(&patterns, blob_ref, &blob_data);
+                findings.extend(blob_findings);
+            }
+        }
+    }
+
+    Ok(findings)
+}
+
+/// Scan a single event for secrets.
+fn scan_event(patterns: &SecretPatterns, event: &CommittedEvent) -> Vec<SecretFinding> {
+    let mut findings = Vec::new();
+    let location = format!("event:{}", event.event_id);
+
+    // Serialize the payload to JSON for scanning
+    let payload_json = match serde_json::to_string(&event.payload) {
+        Ok(json) => json,
+        Err(_) => return findings,
+    };
+
+    // Scan the payload JSON
+    for m in scan_text(patterns, &payload_json) {
+        findings.push(SecretFinding {
+            location: location.clone(),
+            field_path: "payload".into(),
+            pattern: m.pattern_name,
+            redacted_match: redact_match(&m.matched_text),
+        });
+    }
+
+    findings
+}
+
+/// Scan a blob for secrets.
+fn scan_blob(patterns: &SecretPatterns, blob_ref: &str, data: &[u8]) -> Vec<SecretFinding> {
+    let mut findings = Vec::new();
+    let location = format!("blob:{}", blob_ref);
+
+    for m in scan_bytes(patterns, data) {
+        findings.push(SecretFinding {
+            location: location.clone(),
+            field_path: "content".into(),
+            pattern: m.pattern_name,
+            redacted_match: redact_match(&m.matched_text),
+        });
+    }
+
+    findings
 }
 
 /// Bundle discovered content into a deterministic archive.
 ///
 /// NOTE: Full implementation in M8.4. This is a pipeline stub.
-pub(crate) fn create_bundle(
+pub fn create_bundle(
     content: &DiscoveredContent,
     _blob_store: Option<&BlobStore>,
     output_path: &Path,
@@ -210,7 +277,7 @@ pub(crate) fn create_bundle(
          event_count: {}\n\
          blob_count: {}\n",
         content.eventlog_path.display(),
-        content.event_count,
+        content.event_count(),
         content.blob_refs.len()
     );
 
@@ -222,7 +289,7 @@ pub(crate) fn create_bundle(
     Ok(ExportSuccess {
         bundle_path: output_path.to_path_buf(),
         bundle_hash,
-        event_count: content.event_count,
+        event_count: content.event_count(),
         blob_count: content.blob_refs.len(),
     })
 }
@@ -278,7 +345,7 @@ mod tests {
     use panopticon_core::eventlog::EventLogWriter;
     use tempfile::tempdir;
 
-    fn make_event(id: &str, ts: u64) -> ImportEvent {
+    fn make_event(id: &str, ts: u64, args: &str) -> ImportEvent {
         ImportEvent {
             run_id: "test-run".into(),
             event_id: id.into(),
@@ -288,7 +355,7 @@ mod tests {
             tier: Tier::A,
             payload: EventPayload::ToolCall {
                 tool: "test".into(),
-                args: Some("hello".into()),
+                args: Some(args.into()),
             },
             payload_ref: None,
             synthesized: false,
@@ -302,12 +369,16 @@ mod tests {
 
         // Create a small EventLog
         let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
-        writer.append(make_event("e1", 1_000_000_000)).unwrap();
-        writer.append(make_event("e2", 2_000_000_000)).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "hello"))
+            .unwrap();
+        writer
+            .append(make_event("e2", 2_000_000_000, "world"))
+            .unwrap();
         drop(writer);
 
         let content = discover_content(&eventlog_path).unwrap();
-        assert_eq!(content.event_count, 2);
+        assert_eq!(content.event_count(), 2);
         assert!(content.blob_refs.is_empty());
     }
 
@@ -319,18 +390,18 @@ mod tests {
         // Create EventLog with blob refs
         let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
 
-        let mut event = make_event("e1", 1_000_000_000);
+        let mut event = make_event("e1", 1_000_000_000, "test");
         event.payload_ref = Some("abcd".repeat(16)); // 64 hex chars
         writer.append(event).unwrap();
 
-        let mut event2 = make_event("e2", 2_000_000_000);
+        let mut event2 = make_event("e2", 2_000_000_000, "test");
         event2.payload_ref = Some("1234".repeat(16));
         writer.append(event2).unwrap();
 
         drop(writer);
 
         let content = discover_content(&eventlog_path).unwrap();
-        assert_eq!(content.event_count, 2);
+        assert_eq!(content.event_count(), 2);
         assert_eq!(content.blob_refs.len(), 2);
     }
 
@@ -353,9 +424,11 @@ mod tests {
         let dir = tempdir().unwrap();
         let eventlog_path = dir.path().join("eventlog.jsonl");
 
-        // Create clean EventLog
+        // Create clean EventLog (no secrets)
         let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
-        writer.append(make_event("e1", 1_000_000_000)).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "hello world"))
+            .unwrap();
         drop(writer);
 
         let output_path = dir.path().join("bundle.tar.zst");
@@ -370,6 +443,118 @@ mod tests {
                 assert_eq!(success.bundle_hash.len(), 64);
             }
             ExportResult::Refused(_) => panic!("expected success, got refused"),
+        }
+    }
+
+    #[test]
+    fn export_with_aws_key_refused() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        // Create EventLog with an AWS key
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event(
+                "e1",
+                1_000_000_000,
+                "my key is AKIAIOSFODNN7EXAMPLE",
+            ))
+            .unwrap();
+        drop(writer);
+
+        let output_path = dir.path().join("bundle.tar.zst");
+        let config = ExportConfig::new(&eventlog_path, &output_path);
+
+        let result = run_export(&config).unwrap();
+        match result {
+            ExportResult::Success(_) => panic!("expected refused, got success"),
+            ExportResult::Refused(report) => {
+                assert!(!report.findings.is_empty());
+                assert!(report
+                    .findings
+                    .iter()
+                    .any(|f| f.pattern == "aws_access_key"));
+            }
+        }
+    }
+
+    #[test]
+    fn export_with_password_refused() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        // Create EventLog with a password
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "password=supersecret123"))
+            .unwrap();
+        drop(writer);
+
+        let output_path = dir.path().join("bundle.tar.zst");
+        let config = ExportConfig::new(&eventlog_path, &output_path);
+
+        let result = run_export(&config).unwrap();
+        match result {
+            ExportResult::Success(_) => panic!("expected refused, got success"),
+            ExportResult::Refused(report) => {
+                assert!(!report.findings.is_empty());
+                assert!(report.findings.iter().any(|f| f.pattern == "password"));
+            }
+        }
+    }
+
+    #[test]
+    fn export_with_jwt_refused() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        // Create EventLog with a JWT
+        let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, &format!("token: {}", jwt)))
+            .unwrap();
+        drop(writer);
+
+        let output_path = dir.path().join("bundle.tar.zst");
+        let config = ExportConfig::new(&eventlog_path, &output_path);
+
+        let result = run_export(&config).unwrap();
+        match result {
+            ExportResult::Success(_) => panic!("expected refused, got success"),
+            ExportResult::Refused(report) => {
+                assert!(!report.findings.is_empty());
+                assert!(report.findings.iter().any(|f| f.pattern == "jwt_token"));
+            }
+        }
+    }
+
+    #[test]
+    fn export_with_private_key_refused() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+
+        // Create EventLog with a private key header
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event(
+                "e1",
+                1_000_000_000,
+                "-----BEGIN RSA PRIVATE KEY-----",
+            ))
+            .unwrap();
+        drop(writer);
+
+        let output_path = dir.path().join("bundle.tar.zst");
+        let config = ExportConfig::new(&eventlog_path, &output_path);
+
+        let result = run_export(&config).unwrap();
+        match result {
+            ExportResult::Success(_) => panic!("expected refused, got success"),
+            ExportResult::Refused(report) => {
+                assert!(!report.findings.is_empty());
+                assert!(report.findings.iter().any(|f| f.pattern == "private_key"));
+            }
         }
     }
 
@@ -405,5 +590,31 @@ mod tests {
             Some(PathBuf::from("refusal.json"))
         );
         assert!(config.share_safe);
+    }
+
+    #[test]
+    fn refusal_report_written_to_file() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+        let report_path = dir.path().join("refusal.json");
+
+        // Create EventLog with a secret
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        writer
+            .append(make_event("e1", 1_000_000_000, "AKIAIOSFODNN7EXAMPLE"))
+            .unwrap();
+        drop(writer);
+
+        let output_path = dir.path().join("bundle.tar.zst");
+        let config =
+            ExportConfig::new(&eventlog_path, &output_path).with_refusal_report(&report_path);
+
+        let result = run_export(&config).unwrap();
+        assert!(matches!(result, ExportResult::Refused(_)));
+
+        // Check report was written
+        assert!(report_path.exists());
+        let report_content = std::fs::read_to_string(&report_path).unwrap();
+        assert!(report_content.contains("aws_access_key"));
     }
 }
