@@ -384,3 +384,11 @@ Context:
 3. Nondeterminism: Build timestamps/environment in compiled binaries may vary, but this change does not alter Panopticon deterministic truth/projection artifacts.
 4. Security: Improves supply-chain posture by adding provenance metadata and checksum workflow. No new runtime secret surface added.
 5. Performance cliffs: Added release-trust CI job increases CI runtime on `main` and `v*` tags; impact is bounded to release-trust paths and does not affect local runtime performance.
+
+## bd-2fp.4 · A1-3: Deterministic artifact serialization policy decision · 2026-02-17
+
+1. Coupling: Added explicit policy coupling between Tour artifact writers and documented byte-shape expectations (`docs/ARTIFACT_SERIALIZATION_POLICY.md` + Tour tests).
+2. Untested claims: Policy is currently enforced for pretty JSON shape and hash newline behavior in Tour tests; cross-tool consumers are not auto-validated yet.
+3. Nondeterminism: None introduced. Policy reinforces existing deterministic artifact modes and adds tests to prevent accidental serializer mode drift.
+4. Security: No new secret surface. This is documentation + deterministic test enforcement.
+5. Performance cliffs: Pretty JSON remains slightly larger than compact JSON; this is an intentional readability/stability tradeoff and unchanged from prior behavior.

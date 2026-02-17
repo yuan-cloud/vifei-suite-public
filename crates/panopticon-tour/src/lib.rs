@@ -514,6 +514,29 @@ mod tests {
     }
 
     #[test]
+    fn artifact_serialization_policy_pretty_json_surfaces() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_fixture(dir.path());
+        let output_dir = dir.path().join("output");
+
+        let config = TourConfig::new(&fixture_path).with_output_dir(&output_dir);
+        run_tour(&config).unwrap();
+
+        let metrics_json = fs::read_to_string(output_dir.join("metrics.json")).unwrap();
+        let timetravel_json = fs::read_to_string(output_dir.join("timetravel.capture")).unwrap();
+
+        // Policy: these JSON artifacts are pretty-serialized and newline-indented.
+        assert!(
+            metrics_json.starts_with("{\n  \""),
+            "metrics.json must be pretty JSON with two-space indentation"
+        );
+        assert!(
+            timetravel_json.starts_with("{\n  \""),
+            "timetravel.capture must be pretty JSON with two-space indentation"
+        );
+    }
+
+    #[test]
     fn run_tour_determinism() {
         let dir = tempdir().unwrap();
         let fixture_path = create_fixture(dir.path());
