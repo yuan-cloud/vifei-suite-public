@@ -1171,3 +1171,16 @@ Context:
 3. Nondeterminism: Runtime behavior for normal commands unchanged; profiling output is deterministic for a fixed fixture and iteration count.
 4. Security: No new secret surface; outputs include only timing/resource metadata and existing artifact paths.
 5. Performance: No production-path regression expected; profiling helper is opt-in and used only for measurement workflows.
+
+## bd-14f · A2-3 opportunity matrix and candidate selection · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I2 (deterministic projection), I4 (testable determinism)
+- Constitution touched: none
+
+1. Coupling: Candidate ranking is now coupled to current fixture/workload evidence and stage-profile methodology; future workload shifts require matrix refresh.
+2. Untested claims: Matrix includes proof and test plans but does not itself execute the selected optimization; empirical gain remains to be validated in `bd-qx4`.
+3. Nondeterminism: No runtime behavior changes introduced; this bead is planning/evidence documentation only.
+4. Security: No new security surface; explicit rollback/guardrail definitions reduce risk of unsafe optimization rollout.
+5. Performance: No direct runtime impact; narrows implementation to one high-value lever to avoid attribution noise.

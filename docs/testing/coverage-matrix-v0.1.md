@@ -170,6 +170,7 @@ Failure diagnostics minimums:
 - `bd-2gs` completed: PTY flake checker now emits explicit lane-scope diagnostics for wrong-directory usage (fastlane vs full-confidence), preserving strict failures while reducing first-use operator confusion.
 - `bd-qhk` completed: baseline refresh pack captured fastlane/cli-e2e results, 12-run Tour latency distribution, release bench percentiles, and resource snapshots to drive profiler-first candidate selection.
 - `bd-2jw` completed: hotspot evidence captured with non-privileged stage profiling fallback (`profile_tour`) plus memory/I-O envelope counters; privileged profiler blocker and repro recipe documented in `docs/testing/perf-hotspots-a2-2026-02-17.md`.
+- `bd-14f` completed: opportunity matrix established with evidence-linked scoring, explicit equivalence oracles, isomorphism proof sketches, regression guardrails, rollback plans, and a single-lever next implementation pick (C1 in-place reducer path).
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 
