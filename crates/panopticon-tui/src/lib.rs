@@ -20,6 +20,8 @@
 //! - **I2 (Deterministic projection):** ViewModel is deterministic.
 //! - Truth HUD is always visible and confesses system state.
 
+mod truth_hud;
+
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -202,8 +204,8 @@ fn render(frame: &mut Frame, app: &App) {
         ActiveLens::Forensic => render_forensic_lens(frame, main_area, app),
     }
 
-    // Render Truth HUD (always visible)
-    render_truth_hud(frame, hud_area, app);
+    // Render Truth HUD (always visible, in both lenses)
+    truth_hud::render_truth_hud(frame, hud_area, &app.viewmodel);
 }
 
 /// Render the Incident Lens (default view).
@@ -290,94 +292,6 @@ fn render_forensic_lens(frame: &mut Frame, area: Rect, app: &App) {
     ];
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
-    frame.render_widget(paragraph, inner);
-}
-
-/// Render the Truth HUD strip (always visible).
-///
-/// The Truth HUD must confess at minimum (from BACKPRESSURE_POLICY):
-/// - Current ladder level
-/// - Aggregation mode and bin size
-/// - Queue pressure indicator
-/// - Tier A drops counter
-/// - Export safety state
-/// - projection_invariants_version
-fn render_truth_hud(frame: &mut Frame, area: Rect, app: &App) {
-    let vm = &app.viewmodel;
-
-    // Build HUD content
-    let level_style = match vm.degradation_level {
-        LadderLevel::L0 => Style::default().fg(Color::Green),
-        LadderLevel::L1 | LadderLevel::L2 => Style::default().fg(Color::Yellow),
-        LadderLevel::L3 | LadderLevel::L4 => Style::default().fg(Color::Red),
-        LadderLevel::L5 => Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-    };
-
-    let drops_style = if vm.tier_a_drops > 0 {
-        Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
-    } else {
-        Style::default().fg(Color::Green)
-    };
-
-    let export_style = match vm.export_safety_state {
-        panopticon_core::projection::ExportSafetyState::Unknown => Style::default().fg(Color::Gray),
-        panopticon_core::projection::ExportSafetyState::Clean => Style::default().fg(Color::Green),
-        panopticon_core::projection::ExportSafetyState::Dirty => Style::default().fg(Color::Red),
-        panopticon_core::projection::ExportSafetyState::Refused => {
-            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
-        }
-    };
-
-    let aggregation = vm
-        .aggregation_bin_size
-        .map(|bin| format!("{} (bin={bin})", vm.aggregation_mode));
-
-    let queue_pressure_pct = (vm.queue_pressure() * 100.0) as u32;
-    let pressure_style = if queue_pressure_pct >= 80 {
-        Style::default().fg(Color::Red)
-    } else if queue_pressure_pct >= 50 {
-        Style::default().fg(Color::Yellow)
-    } else {
-        Style::default().fg(Color::Green)
-    };
-
-    let hud_line = Line::from(vec![
-        Span::styled(" Level: ", Style::default().fg(Color::White)),
-        Span::styled(format!("{}", vm.degradation_level), level_style),
-        Span::raw(" | "),
-        Span::styled("Agg: ", Style::default().fg(Color::White)),
-        match &aggregation {
-            Some(text) => Span::raw(text.as_str()),
-            None => Span::raw(vm.aggregation_mode.as_str()),
-        },
-        Span::raw(" | "),
-        Span::styled("Pressure: ", Style::default().fg(Color::White)),
-        Span::styled(format!("{}%", queue_pressure_pct), pressure_style),
-        Span::raw(" | "),
-        Span::styled("Drops: ", Style::default().fg(Color::White)),
-        Span::styled(format!("{}", vm.tier_a_drops), drops_style),
-        Span::raw(" | "),
-        Span::styled("Export: ", Style::default().fg(Color::White)),
-        Span::styled(format!("{}", vm.export_safety_state), export_style),
-    ]);
-
-    let version_line = Line::from(vec![
-        Span::styled(" Version: ", Style::default().fg(Color::DarkGray)),
-        Span::styled(
-            &vm.projection_invariants_version,
-            Style::default().fg(Color::DarkGray),
-        ),
-    ]);
-
-    let block = Block::default()
-        .title(" Truth HUD ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Magenta));
-
-    let inner = block.inner(area);
-    frame.render_widget(block, area);
-
-    let paragraph = Paragraph::new(vec![hud_line, version_line]);
     frame.render_widget(paragraph, inner);
 }
 
