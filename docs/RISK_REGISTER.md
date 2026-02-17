@@ -432,3 +432,11 @@ Context:
 3. Nondeterminism: Determinism checks were rerun (`tour` twice) and hashes matched; no new nondeterministic behavior introduced.
 4. Security: Verification surfaced conservative scanner false positives on numeric-heavy sample data and led to a dedicated clean export sample; this reduces confusion without weakening share-safe behavior.
 5. Performance cliffs: Verification path runs full stress Tour twice; this is expected for trust-challenge validation and documented as a heavyweight check.
+
+## bd-x7q.5 · README-REVIEW: independent QA/polish gate · 2026-02-17
+
+1. Coupling: Review uncovered command-coupling drift after adding a second binary in `panopticon-tui`; README commands now explicitly pin `--bin panopticon` to remain unambiguous.
+2. Untested claims: No new product claims added. Remaining caveat is TUI `view` requires interactive TTY, documented in README and verification log.
+3. Nondeterminism: None introduced; documentation fixes only.
+4. Security: No new security surface. Review retained conservative share-safe posture and explicit refusal-path validation.
+5. Performance cliffs: None. QA/polish documentation updates only.

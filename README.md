@@ -16,7 +16,7 @@ It records canonical run evidence as an append-only EventLog and produces replay
 Run a full stress tour on the bundled fixture:
 
 ```bash
-cargo run -p panopticon-tui -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
+cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
 ```
 
 You should see output confirming artifact creation:
@@ -47,20 +47,20 @@ Reference captures and visuals for this README are in `docs/assets/readme/`:
 ### 1) Build and check CLI surface
 
 ```bash
-cargo run -p panopticon-tui -- --help
+cargo run -p panopticon-tui --bin panopticon -- --help
 ```
 
 ### 2) Run deterministic stress tour
 
 ```bash
-cargo run -p panopticon-tui -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
+cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
 ```
 
 ### 3) Verify determinism quickly
 
 ```bash
 cat tour-output/viewmodel.hash
-cargo run -p panopticon-tui -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output-rerun
+cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output-rerun
 cat tour-output-rerun/viewmodel.hash
 ```
 
@@ -69,7 +69,7 @@ Expected result: both hash files match.
 ### 4) View an EventLog
 
 ```bash
-cargo run -p panopticon-tui -- view docs/assets/readme/sample-eventlog.jsonl
+cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-eventlog.jsonl
 ```
 
 Run this in a real interactive terminal (TTY). Non-interactive runners will fail to initialize terminal mode.
@@ -77,7 +77,7 @@ Run this in a real interactive terminal (TTY). Non-interactive runners will fail
 ### 5) Export an EventLog with share-safe checks
 
 ```bash
-cargo run -p panopticon-tui -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output out/bundle.tar.zst --refusal-report out/refusal-report.json
+cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output out/bundle.tar.zst --refusal-report out/refusal-report.json
 ```
 
 ## Why Trust This
