@@ -7,3 +7,7 @@
 .ntm/
 .beads/.br_history/
 .tmp/
+
+# Python cache
+__pycache__/
+*.pyc
