@@ -846,3 +846,16 @@ Context:
 3. Nondeterminism: No product-path nondeterminism introduced.
 4. Security: Improves policy clarity and private-report routing; no new credential or data-handling surfaces added.
 5. Performance: Negligible overhead from the added guard test and docs references.
+
+## bd-2n8 · COMM-6: fix issue-template contact links to canonical repository · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Issue-template contact links are coupled to repository origin/slug; repo transfer/rename requires updating this config.
+2. Untested claims: We validated file content and local guard tests, but did not verify GitHub UI rendering in this session.
+3. Nondeterminism: No runtime nondeterminism introduced; config-only update.
+4. Security: Fix directly improves vulnerability-report routing by preventing misdirected links.
+5. Performance: No runtime impact.
