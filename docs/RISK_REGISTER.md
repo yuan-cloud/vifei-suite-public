@@ -752,3 +752,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; this bead is documentation and planning evidence only.
 4. Security and privacy: No new secret-bearing data introduced; baseline references command outputs and existing local test inventory only.
 5. Performance cliffs: None in product runtime; only potential process cost is maintaining matrix freshness as test suite size grows.
+
+## bd-1z3.2 · COV-2: close high-risk uncovered paths with tests
+
+1. Coupling: CLI contract integration tests now couple to fixture locations under `docs/assets/readme/` and `fixtures/`; moving those paths requires synchronized test updates.
+2. Untested claims: We expanded success-path contract coverage for `export` and `tour`, but we still do not have exhaustive golden snapshots for every command payload permutation.
+3. Nondeterminism: No runtime nondeterminism introduced; tests assert deterministic JSON envelope keys for fixed inputs.
+4. Security and privacy: New tests use curated non-secret fixtures and temp output directories; no real credential material added.
+5. Performance cliffs: Additional integration tests slightly increase `panopticon-tui` test runtime, but impact is modest and bounded.
