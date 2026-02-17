@@ -9,6 +9,7 @@
 │  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │
 │                                                                                                                      │
 │Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │
+│                                                                                                                      │
 │Run Context  /data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-eventlog.jsonl (8 events)                  │
 │  codex (run-readme-1) [OK] 8 events                                                                                  │
 │                                                                                                                      │
@@ -21,7 +22,6 @@
 │  RunStart                   1                                                                                        │
 │  ToolCall                   1                                                                                        │
 │  ToolResult                 1                                                                                        │
-│                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │

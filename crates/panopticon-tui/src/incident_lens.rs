@@ -47,7 +47,7 @@ pub fn render_incident_lens(
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3),
-                Constraint::Length(anomalies_height(state)),
+                Constraint::Length(anomalies_height(state, inner.width)),
                 Constraint::Length(run_summary_height(state)),
                 Constraint::Length(event_breakdown_height(state)),
             ])
@@ -62,7 +62,7 @@ pub fn render_incident_lens(
         let sections = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(anomalies_height(state)),
+                Constraint::Length(anomalies_height(state, inner.width)),
                 Constraint::Length(run_summary_height(state)),
                 Constraint::Length(event_breakdown_height(state)),
             ])
@@ -105,11 +105,37 @@ fn event_breakdown_height(state: &State) -> u16 {
 }
 
 /// Height needed for anomalies section.
-fn anomalies_height(state: &State) -> u16 {
+fn anomalies_height(state: &State, width: u16) -> u16 {
     let count =
         state.error_log.len() + state.clock_skew_events.len() + state.policy_decisions.len();
-    // Header + priority line + anomaly lines + help line + blank separator
-    (4 + count as u16).max(6)
+    let anomaly_lines = (count as u16).max(1);
+    let hint = next_action_line(count > 0, width);
+    let hint_lines = wrapped_line_count(&hint, width);
+    // Header + priority + anomalies + blank + next-action hint (possibly wrapped)
+    (3 + anomaly_lines + 1 + hint_lines).max(6)
+}
+
+fn wrapped_line_count(text: &str, width: u16) -> u16 {
+    let safe_width = width.max(1) as usize;
+    let chars = text.chars().count();
+    ((chars.saturating_sub(1) / safe_width) + 1) as u16
+}
+
+fn next_action_line(has_anomalies: bool, width: u16) -> String {
+    let narrow = width <= 72;
+    if has_anomalies {
+        if narrow {
+            "Next action: Tab->Forensic, j/k move, Enter expand. Keys: Tab=toggle, q=quit"
+                .to_string()
+        } else {
+            "Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit".to_string()
+        }
+    } else if narrow {
+        "Next action: monitor Run Context; Tab->Forensic for event audit. Keys: Tab=toggle, q=quit"
+            .to_string()
+    } else {
+        "Next action: monitor Run Context; Tab to Forensic for event-level audit. Keys: Tab=toggle lens, q=quit".to_string()
+    }
 }
 
 /// Render the run summary section.
@@ -256,15 +282,8 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
 
     // Help line at the bottom
     lines.push(Line::from(""));
-    let next_action = if has_anomalies {
-        "Next action: Tab to Forensic, then j/k + Enter on anomaly events."
-    } else {
-        "Next action: monitor Run Context; Tab to Forensic for event-level audit."
-    };
-    lines.push(Line::from(Span::styled(
-        format!("{next_action} Keys: Tab=toggle lens, q=quit"),
-        visual_tone::muted(),
-    )));
+    let next_action = next_action_line(has_anomalies, area.width);
+    lines.push(Line::from(Span::styled(next_action, visual_tone::muted())));
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
     frame.render_widget(paragraph, area);
@@ -571,6 +590,32 @@ mod tests {
         assert!(
             anomaly_text.contains("j/k + Enter on anomaly events"),
             "Expected anomaly next action"
+        );
+    }
+
+    #[test]
+    fn incident_lens_narrow_keeps_next_action_hint_visible() {
+        let backend = TestBackend::new(72, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut state = empty_state();
+        state.error_log.push(ErrorEntry {
+            commit_index: 7,
+            kind: "runtime".into(),
+            message: "boom".into(),
+            severity: Some("high".into()),
+        });
+
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 72, 24);
+                render_incident_lens(frame, area, &state, "test.jsonl", 1, false);
+            })
+            .unwrap();
+
+        let text = buffer_text(&terminal, Rect::new(0, 0, 72, 24));
+        assert!(
+            text.contains("Next action: Tab->Forensic"),
+            "Expected compact narrow next-action hint"
         );
     }
 

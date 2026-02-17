@@ -1210,3 +1210,16 @@ Context:
 3. Nondeterminism: No runtime behavior change; audit only uses deterministic artifacts and scripted logs.
 4. Security: No new security surface introduced; refusal-path review reinforces operator clarity around blocked-secret recovery flow.
 5. Performance: No runtime impact; improved guidance is expected to reduce operator interaction overhead, not compute cost.
+
+## bd-hov · A2-6 narrow-safe incident guidance UX improvement · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: D5 (Incident default and Forensic navigation), I4 (deterministic evidence)
+- Constitution touched: none
+
+1. Coupling: Incident Lens layout now couples anomalies section height to width-aware hint wrapping, so future copy changes should preserve wrap-aware budgeting.
+2. Untested claims: We validated narrow marker visibility and modality contracts, but did not yet measure user task-time reduction with human usability trials.
+3. Nondeterminism: No truth-path changes; rendering remains deterministic for same state and dimensions.
+4. Security: No new security surface introduced; this is presentation-only guidance refinement.
+5. Performance: Minimal rendering overhead (small string/line calculations); no meaningful compute or memory risk.
