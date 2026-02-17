@@ -898,3 +898,29 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; docs-only changes.
 4. Security: Security guidance is clearer and points directly to private advisory flow; no new secret-bearing surface.
 5. Performance: No runtime impact.
+
+## bd-18u · STRUCT-1: plan-only code/file reorganization audit · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Plan introduces a phased internal-module split strategy that depends on preserving public crate APIs via re-exports during refactors.
+2. Untested claims: Reorganization recommendations are planning guidance only; no runtime behavior changes or proof executions were performed in this bead.
+3. Nondeterminism: No runtime nondeterminism introduced. This bead adds documentation only.
+4. Security: No new secret-bearing or privacy surfaces introduced.
+5. Performance: No runtime impact; future phase execution should validate compile/test runtime after each split.
+
+## bd-1de · COMM-10: lightweight public-doc local-link guard · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Public docs now couple to explicit required local links and assets through guard tests; doc/path renames require synchronized test updates.
+2. Untested claims: Guard checks presence/reference only, not semantic correctness of linked content.
+3. Nondeterminism: No runtime nondeterminism introduced; deterministic file existence/string checks only.
+4. Security: Improves operator trust posture by reducing stale/broken public guidance risk.
+5. Performance: Negligible test-time overhead from small file reads.

@@ -100,3 +100,57 @@ fn readme_badges_target_canonical_repo() {
         );
     }
 }
+
+#[test]
+fn key_public_doc_local_links_resolve_to_existing_paths() {
+    let root = workspace_root();
+    let checks: &[(&str, &[&str])] = &[
+        (
+            "README.md",
+            &[
+                "CONTRIBUTING.md",
+                "SECURITY.md",
+                "SUPPORT.md",
+                "docs/COMMUNITY_TRIAGE_PLAYBOOK.md",
+                "docs/PUBLIC_REPO_SETTINGS_CHECKLIST.md",
+                "docs/CAPACITY_ENVELOPE.md",
+                "docs/BACKPRESSURE_POLICY.md",
+                "docs/assets/readme/incident-lens.txt",
+                "docs/assets/readme/forensic-lens.txt",
+                "docs/assets/readme/truth-hud-degraded.txt",
+                "docs/assets/readme/export-refusal.txt",
+                "docs/assets/readme/architecture.mmd",
+            ],
+        ),
+        (
+            "CONTRIBUTING.md",
+            &["SECURITY.md", ".github/pull_request_template.md"],
+        ),
+        (
+            "SUPPORT.md",
+            &["SECURITY.md", "docs/COMMUNITY_TRIAGE_PLAYBOOK.md"],
+        ),
+        ("SECURITY.md", &[]),
+    ];
+
+    for (doc_rel, required_paths) in checks {
+        let doc_path = root.join(doc_rel);
+        assert!(
+            doc_path.is_file(),
+            "required public doc is missing: {doc_rel}"
+        );
+        let doc_text = std::fs::read_to_string(&doc_path).expect("cannot read public doc");
+
+        for rel in *required_paths {
+            assert!(
+                doc_text.contains(rel),
+                "{doc_rel} must reference required local path: {rel}"
+            );
+            let target = root.join(rel);
+            assert!(
+                target.exists(),
+                "{doc_rel} references missing local path: {rel}"
+            );
+        }
+    }
+}
