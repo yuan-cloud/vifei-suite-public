@@ -42,4 +42,4 @@ If you still open a PR, include:
 - Reproduction steps
 - Minimal input fixture
 - Logs or error output
-- Why this matters (correctness, safety, UX, performance)
+- Impact category (correctness, safety, UX, performance)

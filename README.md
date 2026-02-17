@@ -10,7 +10,7 @@ Panopticon records canonical run truth as an append-only EventLog, then projects
 
 ## Why This Exists
 
-Most agent workflows have logs but weak replay guarantees under stress. Panopticon is built to keep truth auditable when pressure rises.
+Most agent workflows have logs but weak replay guarantees under stress. Panopticon keeps truth auditable when pressure rises.
 
 - Canonical ordering uses `commit_index` from one append writer.
 - Truth stays intact under overload; only projection quality degrades.
@@ -101,6 +101,13 @@ Behavior contract:
 - Error payloads include `code`, `message`, and `suggestions`.
 - Minor syntax variants may be auto-normalized when intent is clear.
 
+Force human-readable output even when piping:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- \
+  --human --help
+```
+
 Robot JSON contract keys (`schema_version=panopticon-cli-robot-v1.1`):
 
 | Key | Type | Notes |
@@ -165,10 +172,12 @@ Workspace crates:
 - `SUPPORT.md`: support channels and triage priorities
 - `SECURITY.md`: private vulnerability reporting policy
 - `docs/COMMUNITY_TRIAGE_PLAYBOOK.md`: maintainer triage and severity flow
+- `.github/ISSUE_TEMPLATE/`: issue intake forms for bug and determinism reports
+- `.github/pull_request_template.md`: PR evidence and risk template
 
 ## Status
 
-Panopticon v0.1 is implementation-complete for core truth pipeline and launch docs are in active polish.
+Panopticon v0.1 implements the core truth pipeline. Release and public-facing documentation tracks continue in parallel.
 
 Track current work:
 

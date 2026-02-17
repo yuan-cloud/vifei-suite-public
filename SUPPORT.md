@@ -5,6 +5,7 @@
 - Use GitHub Issues for bugs, reproducibility failures, and docs gaps.
 - Use Discussions if/when enabled for broader design questions.
 - Maintainers triage using `docs/COMMUNITY_TRIAGE_PLAYBOOK.md`.
+- Use the issue forms under `.github/ISSUE_TEMPLATE/` for bug and determinism reports.
 
 ## What to include
 

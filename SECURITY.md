@@ -16,6 +16,10 @@ Use one of these channels:
 - GitHub Security Advisories (preferred)
 - private maintainer contact if advisory tooling is unavailable
 
+Preferred advisory URL:
+
+- `https://github.com/yuan-cloud/panopticon-suite/security/advisories/new`
+
 ## Scope
 
 High-priority security areas for this project:

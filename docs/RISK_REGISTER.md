@@ -885,3 +885,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; deterministic string checks only.
 4. Security: Indirectly reduces trust-surface confusion by ensuring users land on canonical CI/release endpoints.
 5. Performance: Negligible test overhead.
+
+## bd-1xi · COMM-9: public docs current-state refresh and anti-slop editorial pass · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Public guidance now couples to current CLI and community workflow semantics; future command/contract changes must update these docs promptly.
+2. Untested claims: Editorial pass improves wording clarity but does not prove external platform rendering behavior.
+3. Nondeterminism: No runtime nondeterminism introduced; docs-only changes.
+4. Security: Security guidance is clearer and points directly to private advisory flow; no new secret-bearing surface.
+5. Performance: No runtime impact.
