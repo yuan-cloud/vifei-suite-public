@@ -950,3 +950,16 @@ Context:
 3. Nondeterminism: No new nondeterministic sources introduced; hashing, sequencing, and artifact rendering logic were moved intact.
 4. Security: No new input or secret-handling paths added; artifact emission and fixture parsing behavior are unchanged.
 5. Performance: Runtime behavior should be equivalent; module split adds negligible compile-time overhead only.
+
+## bd-3lr · STRUCT-2.3: split panopticon-tui CLI internals by contract and command execution · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: CLI robot-mode contract, exit-code mapping, command behavior parity
+- Constitution touched: none
+
+1. Coupling: CLI behavior is now split across `cli_contract`, `cli_normalize`, and `cli_handlers`, so changes to command fields/flags must remain synchronized across module boundaries.
+2. Untested claims: We assert no behavioral drift in parsing and command execution; this is covered by existing CLI contract/unit tests but not by an external black-box snapshot for every stderr wording variant.
+3. Nondeterminism: No new nondeterministic paths introduced; normalization, output-mode selection, and handler flow are deterministic and unchanged in semantics.
+4. Security: No new network/process execution surface was introduced; validation and refusal paths remain fail-closed with structured errors.
+5. Performance: Runtime overhead is unchanged in practice; the split mainly affects compile unit organization and maintainability.
