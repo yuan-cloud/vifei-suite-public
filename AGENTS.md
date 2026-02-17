@@ -72,6 +72,18 @@ The EventLog is truth. The UI is a projection. Under overload, truth never degra
 
 Do not add dependencies without checking that they do not introduce nondeterminism (for example HashMap iteration in serialized output, thread-local RNG seeding). Document any new dependency in your handoff note.
 
+## CLI ROBOT MODE (v1 policy for agent users)
+
+The `panopticon` CLI supports a robot-oriented mode for AI agents and automation:
+
+- `--json` emits machine-readable output envelopes.
+- If stdout is not a TTY, output auto-switches to JSON unless `--human` is set.
+- Error envelopes include `code`, `message`, and actionable `suggestions`.
+- Minor syntax variants may be normalized when intent is unambiguous (for example underscore flag variants).
+- Ambiguous or invalid syntax must fail with clear structured guidance, not silent guessing.
+
+Use this mode for scripted checks, bead automation, and CI diagnostics where token efficiency and determinism matter.
+
 ---
 
 ## MULTI-AGENT REALITY

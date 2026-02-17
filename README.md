@@ -84,6 +84,31 @@ cargo run -p panopticon-tui --bin panopticon -- export \
   --refusal-report out/refusal-report.json
 ```
 
+### Robot mode for AI agents
+
+Use machine-readable mode for automation:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- \
+  --json tour fixtures/large-stress.jsonl \
+  --stress --output-dir tour-output
+```
+
+Behavior contract:
+
+- `--json` returns compact structured output for success and errors.
+- When stdout is piped, CLI auto-switches to JSON (unless `--human` is set).
+- Error payloads include `code`, `message`, and `suggestions`.
+- Minor syntax variants may be auto-normalized when intent is clear.
+
+Exit codes:
+
+- `0`: success
+- `1`: not found
+- `2`: invalid args
+- `3`: export refused (share-safe scanner refusal)
+- `4`: runtime error
+
 ## Architecture Snapshot
 
 ```mermaid

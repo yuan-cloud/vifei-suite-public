@@ -17,6 +17,12 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(name = "panopticon", version, about = "Terminal cockpit for AI agent runs")]
 struct Cli {
+    /// Emit machine-readable JSON output
+    #[arg(long, global = true, conflicts_with = "human")]
+    json: bool,
+    /// Force human-readable output
+    #[arg(long, global = true)]
+    human: bool,
     #[command(subcommand)]
     command: Commands,
 }
@@ -86,9 +92,10 @@ Each step maps to one `Commands` variant.
 | Code | Meaning | When |
 |------|---------|------|
 | 0 | Success | Normal completion |
-| 1 | General error | IO errors, parse failures, runtime errors |
-| 2 | Usage error | Invalid arguments (clap handles automatically) |
+| 1 | Not found | Required input path missing |
+| 2 | Usage error | Invalid arguments / parse failure |
 | 3 | Export refused | Secrets detected during share-safe export |
+| 4 | Runtime error | IO errors, parse failures after parse stage, runtime failures |
 
 ```rust
 use std::process::ExitCode;
@@ -116,6 +123,10 @@ fn main() -> ExitCode {
 
 - **Structured output for machines:** Tour artifacts are JSON, hashes are
   plain text. Parseable by CI.
+- **Robot mode for agents:** `--json` emits compact envelopes with
+  `ok`, `code`, `message`, and `suggestions`.
+- **TTY-aware default:** if stdout is not a TTY, auto-switch to JSON
+  unless `--human` is explicitly set.
 - **Human-readable stderr for operators:** Progress, warnings, and errors
   go to stderr.
 - **Minimal stdout:** Only the primary output (e.g., bundle path, hash).
@@ -139,6 +150,35 @@ Error: EventLog line exceeds 1048576 bytes at commit_index 4221
   Event payload is too large for inline storage.
   Store large payloads as blobs using payload_ref.
 ```
+
+Robot-mode error envelope (JSON):
+
+```json
+{
+  "ok": false,
+  "code": "INVALID_ARGS",
+  "message": "Invalid command syntax.",
+  "suggestions": [
+    "Run `panopticon --help` for command syntax.",
+    "Run `panopticon <command> --help` for command-specific args."
+  ],
+  "exit_code": 2
+}
+```
+
+### Intent-repair policy
+
+Allowed:
+
+- unambiguous command aliases (for example `viewer` -> `view`)
+- underscore-to-hyphen flag variants (`--output_dir` -> `--output-dir`)
+
+Not allowed:
+
+- guessing between multiple possible commands
+- silently changing mutating command intent
+
+If intent is not unambiguous, fail with structured guidance and examples.
 
 ---
 

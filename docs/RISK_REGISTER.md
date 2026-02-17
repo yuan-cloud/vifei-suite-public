@@ -712,3 +712,11 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; edits were test-logic refactors only, with deterministic assertions and no ordering/time/randomness changes.
 4. Security and privacy: Secret-scanner fixtures were rewritten to avoid obvious literal credential forms while preserving refusal-path coverage, reducing accidental “hardcoded secret” noise without weakening checks.
 5. Performance cliffs: No product-path performance impact; only test code changed and full quality gates remained green.
+
+## bd-3fw · ROBOT-MODE-CLI-V1: agent-optimized deterministic CLI contract
+
+1. Coupling: CLI behavior now couples to an explicit output-mode contract (`--json`, `--human`, non-TTY auto-JSON) and structured error envelope fields; downstream automation should treat those keys as the stable interface.
+2. Untested claims: We validated output-mode selection, quick-help compactness, and normalization helpers with unit tests, but did not yet add full integration snapshots for every command/error combination in JSON mode.
+3. Nondeterminism: No truth-path nondeterminism introduced; robot-mode output is deterministic for identical inputs, and intent-repair is limited to unambiguous alias/flag normalization.
+4. Security and privacy: Structured errors can now surface path strings and scanner refusal metadata in JSON output, which improves agent triage but should still be treated as operational output not intended for secret-bearing logs.
+5. Performance cliffs: JSON envelope serialization adds negligible overhead compared with command execution; the main future risk is contract bloat increasing token usage if response fields grow without discipline.
