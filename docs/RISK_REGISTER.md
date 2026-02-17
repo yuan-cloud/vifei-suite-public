@@ -963,3 +963,16 @@ Context:
 3. Nondeterminism: No new nondeterministic paths introduced; normalization, output-mode selection, and handler flow are deterministic and unchanged in semantics.
 4. Security: No new network/process execution surface was introduced; validation and refusal paths remain fail-closed with structured errors.
 5. Performance: Runtime overhead is unchanged in practice; the split mainly affects compile unit organization and maintainability.
+
+## bd-3vv · STRUCT-2.4: core truth-path split preflight plan (plan-only) · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: canonical `commit_index` ordering, `state_hash`, `viewmodel.hash`, tour artifact contracts
+- Constitution touched: referenced only (no constitutional text duplication)
+
+1. Coupling: The preflight explicitly couples future core split sequencing to downstream crate compatibility (`import`, `export`, `tour`, `tui`) and to temporary re-export shims during migration.
+2. Untested claims: This bead is plan-only; no runtime behavior changes were made or required, so claims are procedural and will be validated in future implementation beads.
+3. Nondeterminism: No nondeterministic logic introduced because no truth-path code changed.
+4. Security: No new security surface; plan reinforces fail-closed and deterministic validation requirements for future core work.
+5. Performance: No runtime impact in this bead; performance risk is deferred and explicitly called out for future split beads.
