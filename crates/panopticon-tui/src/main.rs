@@ -7,6 +7,7 @@ use clap::{Parser, Subcommand};
 use panopticon_export::{ExportConfig, ExportResult};
 use panopticon_tour::TourConfig;
 use panopticon_tui::run_viewer;
+use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -60,13 +61,49 @@ enum Commands {
     },
 }
 
+fn format_cli_failure(
+    what_failed: &str,
+    likely_cause: &str,
+    next_commands: &[String],
+    evidence_paths: &[String],
+) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "Error: {what_failed}");
+    let _ = writeln!(out, "Likely cause: {likely_cause}");
+
+    if !next_commands.is_empty() {
+        let _ = writeln!(out, "Next command(s):");
+        for (i, cmd) in next_commands.iter().enumerate() {
+            let _ = writeln!(out, "  {}. {}", i + 1, cmd);
+        }
+    }
+
+    if !evidence_paths.is_empty() {
+        let _ = writeln!(out, "Evidence:");
+        for path in evidence_paths {
+            let _ = writeln!(out, "  - {path}");
+        }
+    }
+
+    out.trim_end().to_string()
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
     match cli.command {
         Commands::View { eventlog } => {
             if let Err(e) = run_viewer(&eventlog) {
-                eprintln!("Error: {}", e);
+                let msg = format_cli_failure(
+                    &format!("view failed: {e}"),
+                    "EventLog path is invalid or input is not canonical EventLog JSONL.",
+                    &[
+                        format!("panopticon view {}", eventlog.display()),
+                        "panopticon --help".to_string(),
+                    ],
+                    &[eventlog.display().to_string()],
+                );
+                eprintln!("{msg}");
                 return ExitCode::FAILURE;
             }
         }
@@ -79,11 +116,24 @@ fn main() -> ExitCode {
         } => {
             // Require --share-safe flag
             if !share_safe {
-                eprintln!(
-                    "Error: --share-safe flag is required in v0.1.\n\
-                     Export without secret scanning is not supported.\n\n\
-                     Usage: panopticon export --share-safe -o <output> <eventlog>"
+                let msg = format_cli_failure(
+                    "--share-safe flag is required in v0.1.",
+                    "Export without secret scanning is disabled for share-safe posture.",
+                    &[
+                        format!(
+                            "panopticon export {} --share-safe --output {}",
+                            eventlog.display(),
+                            output.display()
+                        ),
+                        format!(
+                            "panopticon export {} --share-safe --output {} --refusal-report out/refusal-report.json",
+                            eventlog.display(),
+                            output.display()
+                        ),
+                    ],
+                    &[eventlog.display().to_string()],
                 );
+                eprintln!("{msg}");
                 return ExitCode::FAILURE;
             }
 
@@ -102,7 +152,26 @@ fn main() -> ExitCode {
                     println!("  Blobs:  {}", success.blob_count);
                 }
                 Ok(ExportResult::Refused(report)) => {
-                    eprintln!("Export REFUSED: {}", report.summary);
+                    let mut evidence = vec![eventlog.display().to_string()];
+                    if let Some(ref report_path) = config.refusal_report_path {
+                        evidence.push(report_path.display().to_string());
+                    }
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("export refused: {}", report.summary),
+                            "Secret scanner found sensitive content and blocked bundle creation.",
+                            &[
+                                "Inspect refusal-report.json for exact blocked fields.".to_string(),
+                                format!(
+                                    "panopticon export {} --share-safe --output {} --refusal-report out/refusal-report.json",
+                                    eventlog.display(),
+                                    output.display()
+                                ),
+                            ],
+                            &evidence,
+                        )
+                    );
                     for item in &report.blocked_items {
                         let loc = item
                             .blob_ref
@@ -114,13 +183,25 @@ fn main() -> ExitCode {
                             loc, item.field_path, item.matched_pattern, item.redacted_match
                         );
                     }
-                    if let Some(ref report_path) = config.refusal_report_path {
-                        eprintln!("Refusal report written to: {}", report_path.display());
-                    }
                     return ExitCode::FAILURE;
                 }
                 Err(e) => {
-                    eprintln!("Export error: {}", e);
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("export failed: {e}"),
+                            "File path, permissions, or bundle write step failed.",
+                            &[
+                                format!(
+                                    "panopticon export {} --share-safe --output {} --refusal-report out/refusal-report.json",
+                                    eventlog.display(),
+                                    output.display()
+                                ),
+                                "panopticon --help".to_string(),
+                            ],
+                            &[eventlog.display().to_string(), output.display().to_string()],
+                        )
+                    );
                     return ExitCode::FAILURE;
                 }
             }
@@ -133,11 +214,17 @@ fn main() -> ExitCode {
         } => {
             // Require --stress flag
             if !stress {
-                eprintln!(
-                    "Error: --stress flag is required in v0.1.\n\
-                     Tour without stress mode is not supported.\n\n\
-                     Usage: panopticon tour --stress <fixture>"
+                let msg = format_cli_failure(
+                    "--stress flag is required in v0.1.",
+                    "Tour is a stress harness and must run with explicit stress intent.",
+                    &[format!(
+                        "panopticon tour {} --stress --output-dir {}",
+                        fixture.display(),
+                        output_dir.display()
+                    )],
+                    &[fixture.display().to_string()],
                 );
+                eprintln!("{msg}");
                 return ExitCode::FAILURE;
             }
 
@@ -159,7 +246,22 @@ fn main() -> ExitCode {
                     println!("  - timetravel.capture");
                 }
                 Err(e) => {
-                    eprintln!("Tour error: {}", e);
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("tour failed: {e}"),
+                            "Fixture path is invalid or tour artifact generation failed.",
+                            &[format!(
+                                "panopticon tour {} --stress --output-dir {}",
+                                fixture.display(),
+                                output_dir.display()
+                            )],
+                            &[
+                                fixture.display().to_string(),
+                                output_dir.display().to_string()
+                            ],
+                        )
+                    );
                     return ExitCode::FAILURE;
                 }
             }
@@ -167,4 +269,42 @@ fn main() -> ExitCode {
     }
 
     ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_cli_failure;
+
+    #[test]
+    fn cli_failure_template_has_required_sections() {
+        let msg = format_cli_failure(
+            "export failed: permission denied",
+            "Output path is not writable.",
+            &[String::from(
+                "panopticon export in.jsonl --share-safe --output out.tar.zst",
+            )],
+            &[String::from("in.jsonl"), String::from("out.tar.zst")],
+        );
+
+        assert!(msg.contains("Error: export failed: permission denied"));
+        assert!(msg.contains("Likely cause: Output path is not writable."));
+        assert!(msg.contains("Next command(s):"));
+        assert!(msg.contains("Evidence:"));
+    }
+
+    #[test]
+    fn cli_failure_template_numbers_next_commands() {
+        let msg = format_cli_failure(
+            "tour failed",
+            "Fixture path invalid.",
+            &[
+                String::from("panopticon tour fixtures/large-stress.jsonl --stress"),
+                String::from("panopticon --help"),
+            ],
+            &[String::from("fixtures/large-stress.jsonl")],
+        );
+
+        assert!(msg.contains("  1. panopticon tour fixtures/large-stress.jsonl --stress"));
+        assert!(msg.contains("  2. panopticon --help"));
+    }
 }

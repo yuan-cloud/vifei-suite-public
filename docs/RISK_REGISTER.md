@@ -536,3 +536,11 @@ Context:
 3. Nondeterminism: None introduced. Documentation-only update; no runtime ordering, hashing, or projection logic changed.
 4. Security and privacy: No new data handling or exposure risk.
 5. Performance cliffs: None in runtime. Process risk is over-constraining layout decisions; mitigated by explicit required/optional/deferred tiers per width bucket.
+
+## bd-gxd.2 · UX-CLI-RECOVERY: actionable error and refusal guidance
+
+1. Coupling: Centralized CLI failure formatting in `format_cli_failure` inside `crates/panopticon-tui/src/main.rs`; view/tour/export failures now share one message contract, improving consistency but coupling copy style to this helper.
+2. Untested claims: Added unit tests for section structure and numbered commands, but did not add subprocess integration tests for every runtime error branch; this remains partially covered by existing end-to-end suites.
+3. Nondeterminism: None introduced. Message formatting is deterministic string assembly from explicit inputs; no time/random/source-order behavior added.
+4. Security and privacy: Recovery output may include file paths supplied by user arguments; no secret content is introduced by this bead.
+5. Performance cliffs: Negligible. Additional string formatting on error paths only; no steady-state impact.
