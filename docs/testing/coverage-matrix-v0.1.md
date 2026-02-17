@@ -172,6 +172,7 @@ Failure diagnostics minimums:
 - `bd-2jw` completed: hotspot evidence captured with non-privileged stage profiling fallback (`profile_tour`) plus memory/I-O envelope counters; privileged profiler blocker and repro recipe documented in `docs/testing/perf-hotspots-a2-2026-02-17.md`.
 - `bd-14f` completed: opportunity matrix established with evidence-linked scoring, explicit equivalence oracles, isomorphism proof sketches, regression guardrails, rollback plans, and a single-lever next implementation pick (C1 in-place reducer path).
 - `bd-qx4` completed: implemented C1 (in-place reducer fold) with replay parity proof test and measured before/after latency evidence in `docs/testing/perf-c1-inplace-reducer-a2-2026-02-17.md`.
+- `bd-18m` completed: investigation-flow UX audit captured desktop+narrow evidence, ranked top operator friction, and defined a single deterministic UX lever for implementation (`docs/testing/ux-audit-a2-2026-02-17.md`).
 
 ## Coverage initiative closeout snapshot (TEST-4.6)
 

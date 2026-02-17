@@ -1197,3 +1197,16 @@ Context:
 3. Nondeterminism: Transition semantics remain deterministic; no new randomness/time ordering dependencies introduced.
 4. Security: No new secret or trust-boundary surface introduced; this is internal state-transition performance work.
 5. Performance: Large observed gains in current baseline; new dominant stages are parse/append, which become next optimization targets if needed.
+
+## bd-18m · A2-4 investigation-flow UX audit (desktop + narrow) · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (deterministic evidence); D5 (Incident default / Forensic toggle)
+- Constitution touched: none
+
+1. Coupling: UX conclusions are tied to current deterministic fixture captures and may require refresh when layout/content density evolves.
+2. Untested claims: Audit identifies friction and proposes a narrow-safe action-hint fix; it does not itself validate post-fix operator time-to-answer metrics.
+3. Nondeterminism: No runtime behavior change; audit only uses deterministic artifacts and scripted logs.
+4. Security: No new security surface introduced; refusal-path review reinforces operator clarity around blocked-secret recovery flow.
+5. Performance: No runtime impact; improved guidance is expected to reduce operator interaction overhead, not compute cost.
