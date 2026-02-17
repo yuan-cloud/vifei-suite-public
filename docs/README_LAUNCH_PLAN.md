@@ -7,7 +7,7 @@ Status: planning artifact. Do not execute this track while core milestone beads 
 This plan answers four questions for v0.1:
 
 1. How Panopticon should be shipped (distribution, not cloud deployment)
-2. What launch is likely to look like
+2. What the launch package should include
 3. How to add personality/"wow" moments without breaking trust posture
 4. How to sequence implementation and comms work with bead-driven execution
 
@@ -54,7 +54,7 @@ Rationale: Panopticon is local-first and deterministic. Trust is built by reprod
 - only if users request a disposable sandbox for quick trials
 - not a substitute for native binary distribution
 
-## Product-Market Positioning (for Launch Messaging)
+## Positioning (Launch Messaging)
 
 Panopticon should position as:
 
@@ -126,7 +126,7 @@ Rule of thumb: personality belongs in presentation mode and docs assets, not in 
 
 ## Launch Outcome Forecast (Realistic)
 
-Likely phase-1 outcome:
+Expected phase-1 outcomes:
 
 - strong traction in Rust/CLI/TUI/agent-tooling communities
 - low-friction adoption by technical users if install + demo is under 2 minutes

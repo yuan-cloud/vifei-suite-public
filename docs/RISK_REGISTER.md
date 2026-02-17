@@ -696,3 +696,11 @@ Context:
 3. Nondeterminism: No product-path nondeterminism introduced; preflight is a deterministic capability probe with explicit pass/fail report.
 4. Security and privacy: Preflight logs include only capability diagnostics (no sensitive payloads), improving visibility without adding secret-bearing outputs.
 5. Performance cliffs: Minimal overhead (single `script -qefc true` probe) relative to interactive TUI test runtime.
+
+## bd-10s · FRESH-EYE-AUDIT: random deep code traversal and launch-doc wording pass
+
+1. Coupling: Export manifest generation is now explicitly coupled to min/max commit index semantics instead of first/last ordering assumptions, which improves robustness for externally produced or malformed event orderings.
+2. Untested claims: We validated the unordered commit-index range path with a focused regression test, but we did not add a broader malformed-eventlog recovery suite in this bead.
+3. Nondeterminism: No new nondeterminism introduced. The export range computation is pure and deterministic, and launch-doc wording edits do not affect runtime behavior.
+4. Security and privacy: No new secret surfaces introduced. The code change is metadata-range logic only; doc changes are wording and scope clarifications.
+5. Performance cliffs: No material performance impact; the range fold is linear over already loaded events and replaces an O(1) first/last read with an O(n) scan, which is acceptable at current v0.1 scale and export path frequency.

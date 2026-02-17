@@ -430,13 +430,13 @@ pub(crate) fn create_bundle(
         .collect();
 
     // Compute commit_index range from events
-    let commit_index_range = if content.events.is_empty() {
-        None
-    } else {
-        let first = content.events.first().unwrap().commit_index;
-        let last = content.events.last().unwrap().commit_index;
-        Some([first, last])
-    };
+    let commit_index_range = content.events.iter().map(|event| event.commit_index).fold(
+        None,
+        |acc: Option<[u64; 2]>, idx| match acc {
+            Some([min_idx, max_idx]) => Some([min_idx.min(idx), max_idx.max(idx)]),
+            None => Some([idx, idx]),
+        },
+    );
 
     // Build the manifest
     let manifest = BundleManifest {
@@ -561,7 +561,7 @@ pub fn run_export(config: &ExportConfig) -> io::Result<ExportResult> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use panopticon_core::event::{EventPayload, ImportEvent, Tier};
+    use panopticon_core::event::{CommittedEvent, EventPayload, ImportEvent, Tier};
     use panopticon_core::eventlog::EventLogWriter;
     use tempfile::tempdir;
 
@@ -1231,6 +1231,46 @@ mod tests {
                     .expect("commit_index_range must be present");
                 assert_eq!(range[0], 0, "first commit_index");
                 assert_eq!(range[1], 2, "last commit_index");
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn manifest_commit_index_range_uses_min_max_for_unordered_inputs() {
+        let dir = tempdir().unwrap();
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+        std::fs::write(&eventlog_path, "").unwrap();
+
+        let content = DiscoveredContent {
+            eventlog_path,
+            events: vec![
+                CommittedEvent::commit(make_event("e-high", 3_000_000_000, "a"), 42),
+                CommittedEvent::commit(make_event("e-low", 1_000_000_000, "b"), 7),
+                CommittedEvent::commit(make_event("e-mid", 2_000_000_000, "c"), 15),
+            ],
+            blob_refs: HashSet::new(),
+        };
+
+        let bundle_path = dir.path().join("bundle.tar.zst");
+        create_bundle(&content, None, &bundle_path).unwrap();
+
+        let compressed = std::fs::read(&bundle_path).unwrap();
+        let decompressed = zstd::decode_all(compressed.as_slice()).unwrap();
+        let mut archive = tar::Archive::new(decompressed.as_slice());
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            if entry.path().unwrap().to_string_lossy() == "manifest.json" {
+                let mut json = String::new();
+                std::io::Read::read_to_string(&mut entry, &mut json).unwrap();
+                let manifest: BundleManifest = serde_json::from_str(&json).unwrap();
+
+                let range = manifest
+                    .commit_index_range
+                    .expect("commit_index_range must be present");
+                assert_eq!(range[0], 7, "minimum commit_index");
+                assert_eq!(range[1], 42, "maximum commit_index");
                 break;
             }
         }
