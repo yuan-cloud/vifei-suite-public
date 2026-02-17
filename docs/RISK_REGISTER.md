@@ -544,3 +544,11 @@ Context:
 3. Nondeterminism: None introduced. Message formatting is deterministic string assembly from explicit inputs; no time/random/source-order behavior added.
 4. Security and privacy: Recovery output may include file paths supplied by user arguments; no secret content is introduced by this bead.
 5. Performance cliffs: Negligible. Additional string formatting on error paths only; no steady-state impact.
+
+## bd-gxd.3 · UX-ONBOARDING: first-run guidance strip and progressive hints
+
+1. Coupling: Incident Lens now accepts a `show_onboarding` flag from `App`; onboarding visibility state is managed in TUI app logic, coupling first-run guidance to key-event handling.
+2. Untested claims: Added unit tests for default visibility, hide-after-interaction behavior, and onboarding rendering, but no external PTY interaction test yet for full session behavior.
+3. Nondeterminism: None introduced. Onboarding visibility is deterministic state transition based on explicit key input; no wall-clock or randomness.
+4. Security and privacy: No new data surfaces beyond static guidance text.
+5. Performance cliffs: Minimal. One additional short render block and boolean check per frame in Incident Lens.

@@ -31,6 +31,7 @@ pub fn render_incident_lens(
     state: &State,
     eventlog_path: &str,
     total_events: usize,
+    show_onboarding: bool,
 ) {
     let block = Block::default()
         .title(" Incident Lens (Tab to toggle) ")
@@ -40,19 +41,54 @@ pub fn render_incident_lens(
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    // Split inner area into three sections: run summary, event breakdown, anomalies
-    let sections = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(run_summary_height(state)),
-            Constraint::Length(event_breakdown_height(state)),
-            Constraint::Min(3),
-        ])
-        .split(inner);
+    if show_onboarding {
+        let sections = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Length(run_summary_height(state)),
+                Constraint::Length(event_breakdown_height(state)),
+                Constraint::Min(3),
+            ])
+            .split(inner);
 
-    render_run_summary(frame, sections[0], state, eventlog_path, total_events);
-    render_event_breakdown(frame, sections[1], state);
-    render_anomalies(frame, sections[2], state);
+        render_onboarding_strip(frame, sections[0]);
+        render_run_summary(frame, sections[1], state, eventlog_path, total_events);
+        render_event_breakdown(frame, sections[2], state);
+        render_anomalies(frame, sections[3], state);
+    } else {
+        // Split inner area into three sections: run summary, event breakdown, anomalies
+        let sections = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(run_summary_height(state)),
+                Constraint::Length(event_breakdown_height(state)),
+                Constraint::Min(3),
+            ])
+            .split(inner);
+
+        render_run_summary(frame, sections[0], state, eventlog_path, total_events);
+        render_event_breakdown(frame, sections[1], state);
+        render_anomalies(frame, sections[2], state);
+    }
+}
+
+fn render_onboarding_strip(frame: &mut Frame, area: Rect) {
+    let lines = vec![
+        Line::from(Span::styled(
+            "First run: Tab switch lens | q quit",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(Span::styled(
+            "Forensic controls: j/k move, Enter expand",
+            Style::default().fg(Color::DarkGray),
+        )),
+    ];
+
+    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
+    frame.render_widget(paragraph, area);
 }
 
 /// Height needed for the run summary section.
@@ -271,7 +307,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 12);
+                render_incident_lens(frame, area, &state, "test.jsonl", 12, false);
             })
             .unwrap();
 
@@ -295,7 +331,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 12);
+                render_incident_lens(frame, area, &state, "test.jsonl", 12, false);
             })
             .unwrap();
 
@@ -317,7 +353,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 0);
+                render_incident_lens(frame, area, &state, "test.jsonl", 0, false);
             })
             .unwrap();
 
@@ -344,7 +380,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 50);
+                render_incident_lens(frame, area, &state, "test.jsonl", 50, false);
             })
             .unwrap();
 
@@ -369,7 +405,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 20);
+                render_incident_lens(frame, area, &state, "test.jsonl", 20, false);
             })
             .unwrap();
 
@@ -395,7 +431,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 200);
+                render_incident_lens(frame, area, &state, "test.jsonl", 200, false);
             })
             .unwrap();
 
@@ -425,7 +461,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 5);
+                render_incident_lens(frame, area, &state, "test.jsonl", 5, false);
             })
             .unwrap();
 
@@ -453,7 +489,7 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 3);
+                render_incident_lens(frame, area, &state, "test.jsonl", 3, false);
             })
             .unwrap();
 
@@ -470,12 +506,33 @@ mod tests {
         terminal
             .draw(|frame| {
                 let area = Rect::new(0, 0, 100, 30);
-                render_incident_lens(frame, area, &state, "test.jsonl", 0);
+                render_incident_lens(frame, area, &state, "test.jsonl", 0, false);
             })
             .unwrap();
 
         let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
         assert!(text.contains("Tab=toggle lens"), "Missing keybindings help");
         assert!(text.contains("q=quit"), "Missing quit keybinding");
+    }
+
+    #[test]
+    fn incident_lens_shows_onboarding_strip_when_enabled() {
+        let backend = TestBackend::new(100, 30);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let state = empty_state();
+
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 100, 30);
+                render_incident_lens(frame, area, &state, "test.jsonl", 0, true);
+            })
+            .unwrap();
+
+        let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
+        assert!(text.contains("First run:"), "Missing onboarding title");
+        assert!(
+            text.contains("Forensic controls"),
+            "Missing onboarding control hints"
+        );
     }
 }

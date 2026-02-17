@@ -100,6 +100,8 @@ struct App {
     events: Vec<CommittedEvent>,
     /// Forensic Lens navigation state.
     forensic_state: forensic_lens::ForensicState,
+    /// Whether first-run onboarding hints are visible in Incident Lens.
+    show_onboarding: bool,
 }
 
 impl App {
@@ -128,11 +130,15 @@ impl App {
             total_events,
             events,
             forensic_state: forensic_lens::ForensicState::new(),
+            show_onboarding: true,
         })
     }
 
     /// Handle a key event. Accepts the full KeyEvent to support modifier keys (Ctrl-C).
     fn handle_key(&mut self, key: KeyEvent) {
+        // Progressive hint behavior: hide onboarding after first interaction.
+        self.show_onboarding = false;
+
         // Ctrl-C: clean exit (raw mode captures Ctrl-C as key event, not SIGINT)
         if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
             self.should_quit = true;
@@ -310,6 +316,7 @@ fn render(frame: &mut Frame, app: &App) {
             &app.state,
             &app.eventlog_path,
             app.total_events,
+            app.show_onboarding,
         ),
         ActiveLens::Forensic => {
             forensic_lens::render_forensic_lens(frame, main_area, &app.events, &app.forensic_state)
@@ -428,6 +435,26 @@ mod tests {
         assert_eq!(app.active_lens, ActiveLens::Forensic);
         app.handle_key(key(KeyCode::Tab));
         assert_eq!(app.active_lens, ActiveLens::Incident);
+    }
+
+    #[test]
+    fn onboarding_visible_on_first_render() {
+        let (app, _dir) = test_app();
+        assert!(
+            app.show_onboarding,
+            "Onboarding should be visible by default"
+        );
+    }
+
+    #[test]
+    fn onboarding_hides_after_first_interaction() {
+        let (mut app, _dir) = test_app();
+        assert!(app.show_onboarding);
+        app.handle_key(key(KeyCode::Tab));
+        assert!(
+            !app.show_onboarding,
+            "Onboarding should hide after first key interaction"
+        );
     }
 
     #[test]
