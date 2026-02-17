@@ -360,3 +360,11 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced. Tests run deterministic pipelines and compare stable artifact outputs and derived transition tuples.
 4. Security: No new security risk. Tests use synthetic fixture data and do not handle secrets or credentials.
 5. Performance: Added integration tests rerun Tour and replay EventLog, increasing test time by several seconds. This is acceptable for CI given the value of invariant enforcement.
+
+## bd-2fp.1 · A1-1: Tour benchmark harness + baseline capture · 2026-02-17
+
+1. Coupling: New benchmark entrypoint (`crates/panopticon-tour/src/bin/bench_tour.rs`) depends on current Tour CLI pipeline and fixture location (`fixtures/large-stress.jsonl`). If fixture path or run_tour contract changes, the benchmark tool must be updated.
+2. Untested claims: Benchmark numbers are single-host samples and are not cross-machine comparable. They are suitable for relative trend checks, not absolute SLO commitments.
+3. Nondeterminism: The benchmark computes wall-time percentiles, which are expected to vary by host load. This does not affect truth artifacts because benchmark output is separate from canonical run artifacts.
+4. Security: No new secret handling surface. Benchmark consumes existing synthetic fixture and emits only timing metrics.
+5. Performance cliffs: Running benchmark in `--release` over large fixture is CPU-heavy by design; if run with high iteration count it can consume local resources. Guardrail is configurable iteration count via `PANOPTICON_TOUR_BENCH_ITERS`.

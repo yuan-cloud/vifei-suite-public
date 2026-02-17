@@ -26,6 +26,14 @@
 //! - No wall-clock-dependent behavior in artifact content
 //! - No platform-dependent formatting
 //! - Same fixture → identical artifacts
+//!
+//! # Benchmarking
+//!
+//! For local stage-level latency baselines without external crates:
+//!
+//! ```text
+//! PANOPTICON_TOUR_BENCH_ITERS=10 cargo run -p panopticon-tour --bin bench_tour --release
+//! ```
 
 use panopticon_core::eventlog::EventLogWriter;
 use panopticon_core::projection::{

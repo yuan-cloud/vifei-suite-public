@@ -50,6 +50,16 @@ Results:
 - min = 3.170s
 - max = 3.730s
 
+### 2.1.1 Benchmark harness sample (`bench_tour`, release)
+
+Command:
+- `PANOPTICON_TOUR_BENCH_ITERS=5 cargo run -p panopticon-tour --bin bench_tour --release`
+
+Observed sample:
+- p50 = 828.34 ms
+- p95 = 855.87 ms
+- p99 = 855.87 ms
+
 ### 2.2 Resource snapshot (`/usr/bin/time -v`)
 
 Tour run:
