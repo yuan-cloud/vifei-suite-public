@@ -266,3 +266,46 @@ fn human_flag_overrides_auto_json_when_stdout_is_not_tty() {
         "human errors should be emitted on stderr, not stdout"
     );
 }
+
+#[test]
+fn alias_and_repaired_flag_work_together_with_global_flag_prefix() {
+    let dir = tempdir().expect("tempdir");
+    let output_dir = dir.path().join("tour-output");
+    let fixture = workspace_root()
+        .join("fixtures")
+        .join("small-session.jsonl");
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "tours",
+        &fixture.display().to_string(),
+        "--stress",
+        "--output_dir",
+        &output_dir.display().to_string(),
+    ]);
+    assert_eq!(code, 0, "alias + repair path should succeed");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["code"], "OK");
+    assert_eq!(value["command"], "tour");
+    assert!(value["notes"]
+        .as_array()
+        .expect("notes")
+        .iter()
+        .any(|v| v.as_str() == Some("normalized `--output_dir` -> `--output-dir`")));
+}
+
+#[test]
+fn global_json_flag_ordering_before_or_after_subcommand_is_equivalent() {
+    let (code_a, stdout_a, _stderr_a) = run_panopticon(&["--json", "view", "does-not-exist.jsonl"]);
+    let (code_b, stdout_b, _stderr_b) = run_panopticon(&["view", "does-not-exist.jsonl", "--json"]);
+    assert_eq!(code_a, 1);
+    assert_eq!(code_b, 1);
+
+    let a = parse_json(&stdout_a);
+    let b = parse_json(&stdout_b);
+    assert_eq!(a["code"], "NOT_FOUND");
+    assert_eq!(b["code"], "NOT_FOUND");
+    assert_eq!(a["message"], b["message"]);
+    assert_eq!(a["exit_code"], b["exit_code"]);
+}

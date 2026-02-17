@@ -1015,3 +1015,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; messages/suggestions are deterministic and kind-based.
 4. Security: Better guidance reduces operator mis-invocation loops; no new secret or privilege surface added.
 5. Performance: Negligible runtime overhead (small match and static suggestions in parse-failure path only).
+
+## bd-3vs · CLI argv contract corpus hardening · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: parser determinism, bounded normalization, stable machine envelope semantics
+- Constitution touched: none
+
+1. Coupling: Additional integration tests couple CLI behavior more tightly to current clap global-arg ordering semantics and alias mappings.
+2. Untested claims: We still do not exhaust every argv permutation; this bead expands high-risk edge paths but does not constitute full formal proof.
+3. Nondeterminism: No runtime nondeterminism introduced; tests assert deterministic behavior across edge argv topologies.
+4. Security: No new security surface; better invariant coverage lowers risk of ambiguous parse handling in automation.
+5. Performance: Test-only increase in CI/runtime cost is small and acceptable; production runtime unchanged.
