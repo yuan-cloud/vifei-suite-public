@@ -250,7 +250,15 @@ pub struct Checkpoint {
 /// identically to non-synthesized events.
 pub fn reduce(state: &State, event: &CommittedEvent) -> State {
     let mut s = state.clone();
+    reduce_in_place(&mut s, event);
+    s
+}
 
+/// In-place reducer variant used by replay-heavy call sites.
+///
+/// This applies the exact same state transition as [`reduce`] without cloning
+/// the full state per event.
+pub fn reduce_in_place(s: &mut State, event: &CommittedEvent) {
     // Update last_commit_index.
     s.last_commit_index = event.commit_index;
 
@@ -375,8 +383,6 @@ pub fn reduce(state: &State, event: &CommittedEvent) -> State {
                 .or_insert(0) += 1;
         }
     }
-
-    s
 }
 
 /// Replay a sequence of committed events from an initial state.
@@ -393,7 +399,7 @@ pub fn replay_from(initial: State, events: &[CommittedEvent]) -> (State, Vec<u64
     let mut checkpoint_indices = Vec::new();
 
     for event in events {
-        state = reduce(&state, event);
+        reduce_in_place(&mut state, event);
 
         // Check if we should checkpoint. Checkpoint at every CHECKPOINT_INTERVAL
         // boundary. commit_index is 0-based, so checkpoint after index 4999, 9999, etc.
@@ -864,6 +870,69 @@ mod tests {
         assert_eq!(state.event_counts_by_type["ToolCall"], 1000);
         assert_eq!(state.tool_summaries["Bash"].call_count, 1000);
         assert!(checkpoints.is_empty()); // 1000 < 5000
+    }
+
+    #[test]
+    fn replay_matches_clone_based_reduce_path() {
+        let events = vec![
+            make_committed(
+                0,
+                EventPayload::RunStart {
+                    agent: "agent-a".into(),
+                    args: Some("--mode test".into()),
+                },
+            ),
+            make_committed(
+                1,
+                EventPayload::ToolCall {
+                    tool: "Read".into(),
+                    args: Some("file.txt".into()),
+                },
+            ),
+            make_committed(
+                2,
+                EventPayload::ToolResult {
+                    tool: "Read".into(),
+                    status: Some("success".into()),
+                    result: Some("ok".into()),
+                },
+            ),
+            make_committed(
+                3,
+                EventPayload::PolicyDecision {
+                    from_level: "L0".into(),
+                    to_level: "L1".into(),
+                    trigger: "queue pressure".into(),
+                    queue_pressure: 0.551_234,
+                },
+            ),
+            make_committed(
+                4,
+                EventPayload::Error {
+                    kind: "tool".into(),
+                    message: "failed".into(),
+                    severity: Some("warn".into()),
+                },
+            ),
+            make_committed(
+                5,
+                EventPayload::RunEnd {
+                    exit_code: Some(0),
+                    reason: Some("done".into()),
+                },
+            ),
+        ];
+
+        let (replay_state, replay_checkpoints) = replay(&events);
+
+        let mut clone_path_state = State::new();
+        for event in &events {
+            clone_path_state = reduce(&clone_path_state, event);
+        }
+
+        assert_eq!(replay_state, clone_path_state);
+        assert_eq!(state_hash(&replay_state), state_hash(&clone_path_state));
+        assert!(replay_checkpoints.is_empty());
     }
 
     // -----------------------------------------------------------------------

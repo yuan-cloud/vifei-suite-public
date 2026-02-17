@@ -44,7 +44,7 @@ use metrics::build_metrics;
 pub use metrics::{DegradationTransition, TourMetrics};
 use panopticon_core::eventlog::EventLogWriter;
 use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants};
-use panopticon_core::reducer::{reduce, state_hash, State};
+use panopticon_core::reducer::{reduce_in_place, state_hash, State};
 use panopticon_import::cassette::parse_cassette;
 use std::fs;
 use std::io::{self, BufReader, Cursor};
@@ -163,7 +163,7 @@ pub fn run_tour_with_profile(config: &TourConfig) -> io::Result<(TourResult, Tou
     let mut seek_points = Vec::new();
 
     for (i, event) in committed_events.iter().enumerate() {
-        state = reduce(&state, event);
+        reduce_in_place(&mut state, event);
 
         let is_interval = (i + 1) % seek_interval == 0;
         let is_last = i == committed_event_count - 1;

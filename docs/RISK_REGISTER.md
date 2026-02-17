@@ -1184,3 +1184,16 @@ Context:
 3. Nondeterminism: No runtime behavior changes introduced; this bead is planning/evidence documentation only.
 4. Security: No new security surface; explicit rollback/guardrail definitions reduce risk of unsafe optimization rollout.
 5. Performance: No direct runtime impact; narrows implementation to one high-value lever to avoid attribution noise.
+
+## bd-qx4 · A2-5 implement one-lever performance optimization (C1 in-place reducer) · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1 (truth ordering), I2 (deterministic projection), I4 (determinism testability)
+- Constitution touched: none
+
+1. Coupling: Replay-heavy paths now share mutable reducer transition logic; accidental divergence between `reduce` and `reduce_in_place` would be a future maintenance risk.
+2. Untested claims: Improvement evidence is currently fixture-focused (`large-stress`); additional production-shaped inputs may still shift stage distribution.
+3. Nondeterminism: Transition semantics remain deterministic; no new randomness/time ordering dependencies introduced.
+4. Security: No new secret or trust-boundary surface introduced; this is internal state-transition performance work.
+5. Performance: Large observed gains in current baseline; new dominant stages are parse/append, which become next optimization targets if needed.
