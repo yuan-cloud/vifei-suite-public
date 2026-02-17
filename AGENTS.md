@@ -116,7 +116,7 @@ ensure_project(project_key="<PROJECT_KEY>")
 register_agent(
   project_key="<PROJECT_KEY>",
   program="claude-code",       # or "codex-cli", "gemini-cli"
-  model="opus-4.5",            # your model
+  model="<your-model>",        # e.g. "opus-4.6"
   name="SchemaBuilder",        # AdjectiveNoun format
   task_description="Implementing M1 event schema"
 )
@@ -191,6 +191,15 @@ resource://thread/PS-M1?project=<PROJECT_KEY>&include_bodies=true
 Prefer macros for speed: `macro_start_session`, `macro_prepare_thread`, `macro_file_reservation_cycle`.
 
 Use granular tools when you need precise control: `register_agent`, `file_reservation_paths`, `send_message`, `fetch_inbox`, `acknowledge_message`.
+
+### Troubleshooting Agent Mail
+
+- The `model` string in `register_agent` is metadata only. It does not gate authentication.
+- If Agent Mail seems unavailable, verify:
+  1. `ensure_project(project_key="<PROJECT_KEY>")` succeeds.
+  2. `register_agent(...)` succeeds with your current CLI model string (for example `opus-4.6`).
+  3. `fetch_inbox(...)` returns data without transport/tool errors.
+- If calls fail before reaching Agent Mail (tool missing or transport failure), this is an MCP client configuration issue in that agent session, not a repo code issue.
 
 ### Thread naming conventions
 

@@ -2,3 +2,7 @@
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# local agent/runtime artifacts
+.ntm/
+.beads/.br_history/
