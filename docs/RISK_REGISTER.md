@@ -320,3 +320,11 @@ Context:
 3. Nondeterminism: None. render_to_buffer is deterministic (same EventLog → same output). TestBackend produces deterministic buffer content.
 4. Security: No security implications. Test-only code, read-only rendering.
 5. Performance: 4 integration tests add ~0.02s. render_to_buffer creates a TestBackend per call — acceptable for test use only.
+
+## bd-d7c.7 · Export tests: empty EventLog integration test
+
+1. Coupling: Tests added to existing integration test file. No new dependencies or coupling.
+2. Untested claims: None. Empty EventLog export path fully covered: success semantics, manifest shape (commit_index_range absent), bundle contents (eventlog + manifest only), determinism across reruns.
+3. Nondeterminism: None. Tests verify determinism explicitly (same hash, same bytes across runs).
+4. Security: No security implications. Test-only additions.
+5. Performance: 4 integration tests add ~0.01s. Minimal I/O (empty eventlog files).

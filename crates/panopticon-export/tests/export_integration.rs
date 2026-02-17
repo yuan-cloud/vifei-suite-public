@@ -449,6 +449,132 @@ fn bundle_hash_matches_file_bytes() {
     assert_eq!(result.bundle_hash, computed_hash);
 }
 
+// ---- Empty EventLog export tests (bd-d7c.7) ----
+
+/// Empty EventLog export must succeed (no secrets to find, clean by definition).
+#[test]
+fn export_empty_eventlog_succeeds() {
+    let dir = tempdir().unwrap();
+    let eventlog_path = dir.path().join("eventlog.jsonl");
+
+    // Create an empty EventLog (open + close, zero events)
+    let writer = EventLogWriter::open(&eventlog_path).unwrap();
+    drop(writer);
+
+    let bundle_path = dir.path().join("bundle.tar.zst");
+    let config = ExportConfig::new(&eventlog_path, &bundle_path);
+    let result = run_export_success(&config);
+
+    assert_eq!(result.event_count, 0, "empty eventlog has 0 events");
+    assert_eq!(result.blob_count, 0, "empty eventlog has 0 blobs");
+    assert!(bundle_path.exists(), "bundle file must be created");
+    assert_eq!(result.bundle_hash.len(), 64, "bundle_hash is BLAKE3 hex");
+}
+
+/// Empty EventLog manifest: commit_index_range must be absent (None).
+#[test]
+fn export_empty_eventlog_manifest_shape() {
+    let dir = tempdir().unwrap();
+    let eventlog_path = dir.path().join("eventlog.jsonl");
+    let writer = EventLogWriter::open(&eventlog_path).unwrap();
+    drop(writer);
+
+    let bundle_path = dir.path().join("bundle.tar.zst");
+    let config = ExportConfig::new(&eventlog_path, &bundle_path);
+    run_export_success(&config);
+
+    // Extract and verify manifest
+    let manifest = extract_manifest(&bundle_path);
+    assert_eq!(manifest.manifest_version, "manifest-v0.1");
+
+    // commit_index_range must be None for empty EventLog
+    assert!(
+        manifest.commit_index_range.is_none(),
+        "commit_index_range must be None for empty EventLog"
+    );
+
+    // Verify it's actually absent from JSON (skip_serializing_if)
+    let entries = extract_bundle(&bundle_path);
+    let manifest_json = String::from_utf8(entries.get("manifest.json").unwrap().clone()).unwrap();
+    assert!(
+        !manifest_json.contains("commit_index_range"),
+        "commit_index_range must not appear in JSON for empty EventLog"
+    );
+
+    // projection_invariants_version must still be present
+    assert!(
+        !manifest.projection_invariants_version.is_empty(),
+        "projection_invariants_version must be set even for empty EventLog"
+    );
+
+    // Files list: only eventlog.jsonl (no blobs)
+    assert_eq!(manifest.files.len(), 1, "only eventlog.jsonl in manifest");
+    assert_eq!(manifest.files[0].path, "eventlog.jsonl");
+}
+
+/// Empty EventLog bundle contents: eventlog.jsonl + manifest.json only.
+#[test]
+fn export_empty_eventlog_bundle_contents() {
+    let dir = tempdir().unwrap();
+    let eventlog_path = dir.path().join("eventlog.jsonl");
+    let writer = EventLogWriter::open(&eventlog_path).unwrap();
+    drop(writer);
+
+    let bundle_path = dir.path().join("bundle.tar.zst");
+    let config = ExportConfig::new(&eventlog_path, &bundle_path);
+    run_export_success(&config);
+
+    let entries = extract_bundle(&bundle_path);
+    assert_eq!(entries.len(), 2, "bundle has eventlog + manifest");
+    assert!(entries.contains_key("eventlog.jsonl"));
+    assert!(entries.contains_key("manifest.json"));
+
+    // eventlog.jsonl should be empty (0 bytes of event data)
+    let eventlog_bytes = entries.get("eventlog.jsonl").unwrap();
+    assert!(
+        eventlog_bytes.is_empty(),
+        "empty EventLog file should have 0 bytes"
+    );
+
+    // Entries in deterministic order
+    let paths = extract_entry_paths(&bundle_path);
+    let mut sorted = paths.clone();
+    sorted.sort();
+    assert_eq!(paths, sorted, "entries must be alphabetically sorted");
+}
+
+/// Empty EventLog export must be deterministic across reruns.
+#[test]
+fn export_empty_eventlog_deterministic() {
+    let dir = tempdir().unwrap();
+    let eventlog_path = dir.path().join("eventlog.jsonl");
+    let writer = EventLogWriter::open(&eventlog_path).unwrap();
+    drop(writer);
+
+    let bundle1 = dir.path().join("bundle1.tar.zst");
+    let bundle2 = dir.path().join("bundle2.tar.zst");
+
+    let config1 = ExportConfig::new(&eventlog_path, &bundle1);
+    let config2 = ExportConfig::new(&eventlog_path, &bundle2);
+
+    let result1 = run_export_success(&config1);
+    let result2 = run_export_success(&config2);
+
+    // Same hash
+    assert_eq!(
+        result1.bundle_hash, result2.bundle_hash,
+        "empty EventLog exports must produce identical hashes"
+    );
+
+    // Same bytes
+    let bytes1 = std::fs::read(&bundle1).unwrap();
+    let bytes2 = std::fs::read(&bundle2).unwrap();
+    assert_eq!(
+        bytes1, bytes2,
+        "empty EventLog bundle bytes must be identical across reruns"
+    );
+}
+
 /// Helper: run export and unwrap Success variant.
 fn run_export_success(config: &ExportConfig) -> ExportSuccess {
     match panopticon_export::run_export(config).unwrap() {
