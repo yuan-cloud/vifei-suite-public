@@ -220,6 +220,7 @@ These constraints are mandatory for launch-docs execution in this repo.
 
 - Packaging matrix and go/no-go checklist: `docs/RELEASE_PACKAGING_CHECKLIST.md`
 - Trust verification and attestation rollback: `docs/RELEASE_TRUST_VERIFICATION.md`
+- Demo/media runbook and capture flow: `docs/DEMO_SCRIPT.md`
 
 ## Sources
 

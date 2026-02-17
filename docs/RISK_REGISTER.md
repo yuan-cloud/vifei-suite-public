@@ -456,3 +456,11 @@ Context:
 3. Nondeterminism: No runtime/path changes; checklist only. Deterministic checks remain delegated to existing Tour and checksum verification paths.
 4. Security: Go/no-go now explicitly requires checksum verification and green release-trust CI before publication, reducing accidental unverified release risk.
 5. Performance cliffs: No runtime performance impact; process overhead is release-time only.
+
+## bd-3qq.1 · LAUNCH-MEDIA: demo script + capture runbook · 2026-02-17
+
+1. Coupling: Demo flow is now coupled to current sample assets and CLI command shape (`--bin panopticon`). If command flags or sample paths change, demo script/runbook must be updated.
+2. Untested claims: Optional recording tools (`asciinema`, `vhs`) are documented as optional; this bead does not claim tool availability in all environments.
+3. Nondeterminism: Demo quickcheck explicitly uses deterministic fixture and verifies trust outputs; no new nondeterministic runtime behavior introduced.
+4. Security: Demo script preserves share-safe posture by demonstrating both success and refusal paths, reducing risk of unsafe export messaging.
+5. Performance cliffs: Quickcheck runs full stress Tour and can be CPU-heavy; this is expected and acceptable for pre-release media capture.
