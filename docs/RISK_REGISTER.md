@@ -1223,3 +1223,16 @@ Context:
 3. Nondeterminism: No truth-path changes; rendering remains deterministic for same state and dimensions.
 4. Security: No new security surface introduced; this is presentation-only guidance refinement.
 5. Performance: Minimal rendering overhead (small string/line calculations); no meaningful compute or memory risk.
+
+## bd-3q5 · A2-7 enterprise-ready closeout report · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1-I5/D1-D7 reporting posture (no behavioral changes)
+- Constitution touched: none
+
+1. Coupling: Closeout metrics are currently anchored to Tour profile workload and fixture shape; downstream decisions should refresh evidence when workload assumptions change.
+2. Untested claims: Report summarizes deterministic and UX test evidence but does not claim exhaustive real-user usability outcomes or production-host perf parity.
+3. Nondeterminism: No runtime behavior changes introduced; report-only aggregation.
+4. Security: No new security surface; report highlights refusal safety and deterministic contract posture without exposing secrets.
+5. Performance: No runtime impact; documentation improves decision quality for subsequent optimization rounds.
