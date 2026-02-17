@@ -752,10 +752,12 @@ mod tests {
         let path = dir.path().join("eventlog.jsonl");
         std::fs::write(&path, "{\"not\":\"a-committed-event\"}\n").unwrap();
 
-        let err = match EventLogWriter::open(&path) {
-            Ok(_) => panic!("expected open() to fail for malformed existing EventLog"),
-            Err(err) => err,
-        };
+        let result = EventLogWriter::open(&path);
+        assert!(
+            result.is_err(),
+            "open() should fail for malformed existing EventLog"
+        );
+        let err = result.err().unwrap();
         assert_eq!(err.kind(), io::ErrorKind::InvalidData);
         assert!(err.to_string().contains("failed to parse EventLog line 1"));
     }
