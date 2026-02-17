@@ -4,9 +4,9 @@
 //!
 //! # Layout
 //!
-//! - Top: Run summary (which runs, status, event count)
-//! - Middle: Event type breakdown (counts by Tier A type)
-//! - Bottom: Anomalies (errors, clock skew, policy decisions)
+//! - Top: Action Now (anomalies needing triage first)
+//! - Middle: Run context (which runs, status, event count)
+//! - Bottom: Event breakdown (counts by type)
 //!
 //! # Constitution
 //!
@@ -46,30 +46,30 @@ pub fn render_incident_lens(
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(3),
+                Constraint::Length(anomalies_height(state)),
                 Constraint::Length(run_summary_height(state)),
                 Constraint::Length(event_breakdown_height(state)),
-                Constraint::Min(3),
             ])
             .split(inner);
 
         render_onboarding_strip(frame, sections[0]);
-        render_run_summary(frame, sections[1], state, eventlog_path, total_events);
-        render_event_breakdown(frame, sections[2], state);
-        render_anomalies(frame, sections[3], state);
+        render_anomalies(frame, sections[1], state);
+        render_run_summary(frame, sections[2], state, eventlog_path, total_events);
+        render_event_breakdown(frame, sections[3], state);
     } else {
-        // Split inner area into three sections: run summary, event breakdown, anomalies
+        // Split inner area into three sections: anomalies, run summary, event breakdown
         let sections = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
+                Constraint::Length(anomalies_height(state)),
                 Constraint::Length(run_summary_height(state)),
                 Constraint::Length(event_breakdown_height(state)),
-                Constraint::Min(3),
             ])
             .split(inner);
 
-        render_run_summary(frame, sections[0], state, eventlog_path, total_events);
-        render_event_breakdown(frame, sections[1], state);
-        render_anomalies(frame, sections[2], state);
+        render_anomalies(frame, sections[0], state);
+        render_run_summary(frame, sections[1], state, eventlog_path, total_events);
+        render_event_breakdown(frame, sections[2], state);
     }
 }
 
@@ -105,6 +105,14 @@ fn event_breakdown_height(state: &State) -> u16 {
     (2 + types).max(3)
 }
 
+/// Height needed for anomalies section.
+fn anomalies_height(state: &State) -> u16 {
+    let count =
+        state.error_log.len() + state.clock_skew_events.len() + state.policy_decisions.len();
+    // Header + priority line + anomaly lines + help line + blank separator
+    (4 + count as u16).max(6)
+}
+
 /// Render the run summary section.
 fn render_run_summary(
     frame: &mut Frame,
@@ -115,7 +123,7 @@ fn render_run_summary(
 ) {
     let mut lines = vec![Line::from(vec![
         Span::styled(
-            "Run Summary",
+            "Run Context",
             Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
         ),
         Span::raw("  "),
@@ -162,7 +170,7 @@ fn render_run_summary(
 /// Render the event type breakdown section.
 fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
     let mut lines = vec![Line::from(Span::styled(
-        "Event Breakdown",
+        "Event Breakdown (Context)",
         Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
     ))];
 
@@ -195,13 +203,23 @@ fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
 /// Render the anomalies section (errors, clock skew, policy decisions).
 fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     let mut lines = vec![Line::from(Span::styled(
-        "Anomalies",
+        "Action Now (Anomalies)",
         Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
     ))];
 
     let has_anomalies = !state.error_log.is_empty()
         || !state.clock_skew_events.is_empty()
         || !state.policy_decisions.is_empty();
+
+    lines.push(Line::from(vec![
+        Span::styled("Priority:", Style::default().add_modifier(Modifier::BOLD)),
+        Span::raw(format!(
+            " ERR={} SKEW={} POLICY={}",
+            state.error_log.len(),
+            state.clock_skew_events.len(),
+            state.policy_decisions.len()
+        )),
+    ]));
 
     if !has_anomalies {
         lines.push(Line::from(Span::styled(
@@ -245,7 +263,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     // Help line at the bottom
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        "Keys: Tab=toggle lens, q=quit",
+        "Triage first: inspect ERR/SKEW/POLICY. Keys: Tab=toggle lens, q=quit",
         Style::default().fg(Color::DarkGray),
     )));
 
@@ -312,7 +330,7 @@ mod tests {
             .unwrap();
 
         let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
-        assert!(text.contains("Run Summary"), "Missing Run Summary header");
+        assert!(text.contains("Run Context"), "Missing Run Context header");
         assert!(
             text.contains("test-agent"),
             "Missing agent name in run summary"
@@ -358,7 +376,10 @@ mod tests {
             .unwrap();
 
         let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
-        assert!(text.contains("Anomalies"), "Missing Anomalies header");
+        assert!(
+            text.contains("Action Now (Anomalies)"),
+            "Missing Action Now header"
+        );
         assert!(
             text.contains("none detected"),
             "Missing 'none detected' for empty anomalies"
@@ -511,8 +532,37 @@ mod tests {
             .unwrap();
 
         let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
+        assert!(text.contains("Triage first"), "Missing triage-first hint");
         assert!(text.contains("Tab=toggle lens"), "Missing keybindings help");
         assert!(text.contains("q=quit"), "Missing quit keybinding");
+    }
+
+    #[test]
+    fn incident_lens_orders_triage_before_context() {
+        let backend = TestBackend::new(100, 30);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut state = populated_state();
+        state.error_log.push(ErrorEntry {
+            commit_index: 7,
+            kind: "runtime".into(),
+            message: "boom".into(),
+            severity: Some("high".into()),
+        });
+
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 100, 30);
+                render_incident_lens(frame, area, &state, "test.jsonl", 12, false);
+            })
+            .unwrap();
+
+        let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
+        let action_idx = text.find("Action Now (Anomalies)").unwrap();
+        let context_idx = text.find("Run Context").unwrap();
+        assert!(
+            action_idx < context_idx,
+            "Triage section must render before run context"
+        );
     }
 
     #[test]

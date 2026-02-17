@@ -552,3 +552,11 @@ Context:
 3. Nondeterminism: None introduced. Onboarding visibility is deterministic state transition based on explicit key input; no wall-clock or randomness.
 4. Security and privacy: No new data surfaces beyond static guidance text.
 5. Performance cliffs: Minimal. One additional short render block and boolean check per frame in Incident Lens.
+
+## bd-gxd.4 · UX-INCIDENT-HIERARCHY: triage-first incident lens layout
+
+1. Coupling: Incident Lens ordering now explicitly prioritizes anomaly triage before run/event context; copy and layout expectations are now coupled to this order and should remain aligned with operator workflow docs.
+2. Untested claims: Unit tests cover section ordering and headings, but no PTY-level behavioral test yet verifies human scan-time improvement under real terminal interaction.
+3. Nondeterminism: None introduced. Rendering remains deterministic over reducer state with no wall-clock/random inputs added.
+4. Security and privacy: No new data exposure paths; anomaly details still render from existing state fields only.
+5. Performance cliffs: Minimal impact. Additional anomaly summary line and section reordering are O(n) on already-materialized lists; no new heavy allocations or I/O paths.
