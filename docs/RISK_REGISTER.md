@@ -496,3 +496,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; documentation-only changes.
 4. Security: The rewrite keeps trust claims tied to verifiable commands and avoids promising unsupported deployment/security properties.
 5. Performance cliffs: No runtime impact. Slight maintenance overhead for keeping architecture and workflow sections aligned with future crate/command changes.
+
+## bd-1w9.3 · README-ASSETS: deterministic terminal-native visual asset pack · 2026-02-17
+
+1. Coupling: README visuals now explicitly couple to `capture_readme_assets` and `scripts/refresh_readme_assets.sh`. Changes in rendering/capture code may require asset refresh and README review.
+2. Untested claims: The playbook documents reproducibility and optional recording tools, but does not prove social-channel engagement outcomes.
+3. Nondeterminism: Core asset generation remains deterministic; optional recording tools (`asciinema`, `vhs`) can include timing variance and are excluded from canonical proof claims.
+4. Security: Avoiding AI-generated or manually fabricated visuals reduces risk of misleading evidence presentation.
+5. Performance cliffs: Asset refresh runs Tour capture and may be moderately CPU-heavy; this is acceptable for docs update workflows.
