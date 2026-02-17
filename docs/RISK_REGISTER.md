@@ -656,3 +656,27 @@ Context:
 3. Nondeterminism: No product-path nondeterminism introduced. CI evidence generation uses deterministic command lists and fixed output locations.
 4. Security and privacy: Uploaded CI artifacts now include richer test transcripts; they are fixture-based in this repo but still require normal repository access controls and retention discipline.
 5. Performance cliffs: `full-confidence` is intentionally heavier than PR fastlane and can increase push CI duration/cost; this is mitigated by keeping `fastlane` as PR default and using evidence artifacts for fast failure triage.
+
+## bd-gxd.7 · UX-VALIDATION: run operator-task polish validation and convert findings
+
+1. Coupling: Validation output is now coupled to the current UX evidence document set and naming (`ux-baseline`, `ux-modality-validation`, `ux-evidence-refresh`); future report renames should be coordinated.
+2. Untested claims: Interactive PTY triage behavior remains environment-dependent and may SKIP on hosts lacking PTY permissions; this is tracked by follow-up beads (`bd-kko`, `bd-1un`).
+3. Nondeterminism: No runtime nondeterminism introduced; this bead is report/coordination only.
+4. Security and privacy: Validation evidence uses local fixtures and operational metadata only; no new secret-bearing surfaces added.
+5. Performance cliffs: None in product code. Process overhead is limited to periodic validation report updates.
+
+## bd-gxd · UX-POLISH: premium operator experience for Panopticon CLI/TUI
+
+1. Coupling: The UX polish track now depends on maintaining consistency between CLI recovery copy, lens-specific hints, onboarding behavior, and modality evidence docs.
+2. Untested claims: Some UX outcomes are measured via deterministic proxy checks rather than broad human studies; repeat operator sessions should continue before major UX claims are expanded.
+3. Nondeterminism: The track preserved deterministic rendering and hash invariants; no truth-path randomness or time-based ordering was introduced.
+4. Security and privacy: UX changes stayed within existing share-safe and refusal messaging boundaries; no additional export or secret handling risk was introduced.
+5. Performance cliffs: Presentation-level additions are lightweight; the main risk remains CI/runtime validation overhead, already bounded by fastlane/full-confidence split.
+
+## bd-2yv · TEST-HARDEN: full coverage map + no-mock E2E and UI validation
+
+1. Coupling: Test-hardening now tightly couples release readiness to CI lane topology and evidence artifact contracts; future workflow changes must preserve these interfaces.
+2. Untested claims: Numeric line/function coverage percentages are still deferred pending llvm-cov availability and are tracked in defer register with expiry.
+3. Nondeterminism: Determinism checks were strengthened (including capture pipeline fixes), with remaining intentional variability documented (`refusal-report.json` metadata path).
+4. Security and privacy: Structured logs improve triage but may contain operational refusal context; artifact access controls remain important.
+5. Performance cliffs: Full-confidence CI is intentionally heavier; fastlane remains the mitigation for developer feedback latency.
