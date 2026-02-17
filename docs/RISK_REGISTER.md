@@ -328,3 +328,11 @@ Context:
 3. Nondeterminism: None. Tests verify determinism explicitly (same hash, same bytes across runs).
 4. Security: No security implications. Test-only additions.
 5. Performance: 4 integration tests add ~0.01s. Minimal I/O (empty eventlog files).
+
+## bd-c7m.2 · Tour: large stress fixture (10K events)
+
+1. Coupling: New fixture `fixtures/large-stress.jsonl` (6.7 MB, 19,475 events). Generator binary `gen-large-stress` in panopticon-tour crate. No new library dependencies.
+2. Untested claims: None. 9 integration tests verify all CAPACITY_ENVELOPE requirements: event count >= 10K, representative event mix (tool_use/tool_result/error/session_start/session_end), multiple runs (25 sessions), multiple agents (4), backward timestamps (5 for clock skew), varying payload sizes (2–4,413 bytes). Tour pipeline integration tests confirm successful processing and determinism.
+3. Nondeterminism: None. Generator uses xorshift64 with fixed seed `0xDEAD_BEEF_CAFE_1234`. Same binary → same fixture. Fixture is committed as-is and verified deterministic through Tour pipeline.
+4. Security: No security implications. Fixture contains synthetic data only — no real credentials, paths, or PII.
+5. Performance: 9 integration tests add ~6.5s (dominated by Tour pipeline processing of 19K events). Fixture file is 6.7 MB — within acceptable limits for a committed test fixture.

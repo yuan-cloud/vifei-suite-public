@@ -3,6 +3,10 @@ name = "panopticon-tour"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "gen-large-stress"
+path = "src/bin/gen_large_stress.rs"
+
 [dependencies]
 panopticon-core = { path = "../panopticon-core" }
 panopticon-import = { path = "../panopticon-import" }
