@@ -520,3 +520,11 @@ Context:
 3. Nondeterminism: Determinism checks were re-run and hash outputs matched; no new nondeterministic behavior introduced.
 4. Security: QA reinforces share-safe export posture and avoids introducing claims beyond validated behavior.
 5. Performance cliffs: QA process includes two stress Tour runs and can be time-consuming in CI-like environments, but this is intentional for trust verification.
+
+## bd-gxd.1 · UX-SCOPE: map premium UX goals to terminal-first constraints
+
+1. Coupling: Added a canonical UX scope reference (`docs/UX_SCOPE.md`) that downstream UX beads now depend on for principles and non-goals. Future UX edits should update this doc to avoid divergent strategy notes.
+2. Untested claims: The scope itself is planning text and does not assert runtime behavior. Behavioral claims remain to be validated by `bd-gxd.2`..`bd-gxd.10` and `bd-2yv.5`.
+3. Nondeterminism: None introduced. Documentation-only change; no runtime logic, ordering, hashing, or rendering behavior changed.
+4. Security and privacy: No new data handling. No secrets/PII introduced.
+5. Performance cliffs: None introduced. Potential process risk is over-scoping UX work; mitigated by ranked pain points and explicit non-goals in `docs/UX_SCOPE.md`.
