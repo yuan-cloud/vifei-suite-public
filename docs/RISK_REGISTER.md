@@ -440,3 +440,11 @@ Context:
 3. Nondeterminism: None introduced; documentation fixes only.
 4. Security: No new security surface. Review retained conservative share-safe posture and explicit refusal-path validation.
 5. Performance cliffs: None. QA/polish documentation updates only.
+
+## bd-3qq.2 · RELEASE-OPS: automate release build and artifact verification · 2026-02-17
+
+1. Coupling: CI `release-trust` now depends on `scripts/release_artifacts.sh` and `scripts/verify_release_artifacts.sh`; workflow and local release process are intentionally coupled to one command path.
+2. Untested claims: Provenance attestation verification still requires GitHub-hosted context; local verification covers checksum integrity and artifact presence only.
+3. Nondeterminism: Release binaries may differ across toolchain/host metadata, but checksum generation and verification flow is deterministic for a given build output.
+4. Security: This improves supply-chain posture by enforcing checksum verification in CI before artifact upload.
+5. Performance cliffs: Release packaging adds extra CI minutes on release-trust runs; impact is bounded to release paths and does not affect runtime behavior.

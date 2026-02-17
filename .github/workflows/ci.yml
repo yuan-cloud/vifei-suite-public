@@ -53,17 +53,11 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build release binaries
-        run: |
-          cargo build --release -p panopticon-tui
-          cargo build --release -p panopticon-tour
+      - name: Build and package release artifacts
+        run: scripts/release_artifacts.sh dist
 
-      - name: Package release artifacts and checksums
-        run: |
-          mkdir -p dist
-          cp target/release/panopticon dist/
-          cp target/release/bench_tour dist/
-          sha256sum dist/* > dist/sha256sums.txt
+      - name: Verify release artifact checksums
+        run: scripts/verify_release_artifacts.sh dist
 
       - name: Upload release artifact bundle
         uses: actions/upload-artifact@v4
