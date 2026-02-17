@@ -78,3 +78,25 @@ fn issue_template_contact_links_target_canonical_repo() {
         );
     }
 }
+
+#[test]
+fn readme_badges_target_canonical_repo() {
+    let root = workspace_root();
+    let readme_path = root.join("README.md");
+    let readme = std::fs::read_to_string(&readme_path).expect("cannot read README.md");
+
+    let required_fragments = [
+        "https://img.shields.io/github/actions/workflow/status/yuan-cloud/panopticon-suite/ci.yml",
+        "https://github.com/yuan-cloud/panopticon-suite/actions/workflows/ci.yml",
+        "https://img.shields.io/github/v/tag/yuan-cloud/panopticon-suite",
+        "https://github.com/yuan-cloud/panopticon-suite/releases",
+    ];
+
+    for fragment in required_fragments {
+        assert!(
+            readme.contains(fragment),
+            "README.md must include canonical badge/release fragment: {}",
+            fragment
+        );
+    }
+}

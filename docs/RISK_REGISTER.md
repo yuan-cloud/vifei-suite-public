@@ -872,3 +872,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; deterministic file-content assertions only.
 4. Security: Reduces risk of misrouted private vulnerability reports by preventing accidental link drift.
 5. Performance: Negligible test overhead.
+
+## bd-27t · COMM-8: guard README canonical GitHub slug links · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: README badge expectations now couple to canonical repository slug; repo slug changes require updating guard tests.
+2. Untested claims: Guard validates static badge/release link fragments, not external URL availability.
+3. Nondeterminism: No runtime nondeterminism introduced; deterministic string checks only.
+4. Security: Indirectly reduces trust-surface confusion by ensuring users land on canonical CI/release endpoints.
+5. Performance: Negligible test overhead.
