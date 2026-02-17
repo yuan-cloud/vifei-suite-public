@@ -1028,3 +1028,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; tests assert deterministic behavior across edge argv topologies.
 4. Security: No new security surface; better invariant coverage lowers risk of ambiguous parse handling in automation.
 5. Performance: Test-only increase in CI/runtime cost is small and acceptable; production runtime unchanged.
+
+## bd-1lh · v0.1 test completeness contract definition · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1-I5 and D1-D7 ownership mapping for test governance
+- Constitution touched: none
+
+1. Coupling: Coverage governance now depends on the coverage matrix staying aligned with crate test surfaces and CI lanes.
+2. Untested claims: The contract defines 'full enough' but does not itself add runtime tests; implementation beads remain required.
+3. Nondeterminism: No runtime nondeterminism introduced; docs-only change.
+4. Security: Clarifies share-safe and diagnostic coverage expectations, reducing blind spots in release confidence.
+5. Performance: No runtime impact; minor documentation maintenance overhead only.

@@ -78,6 +78,64 @@ Workspace inventory file lines:
   - deterministic in-process backends (`ratatui::TestBackend`) for render assertions.
 - Remaining gap is not mock removal; it is adding missing e2e/PTY and CI-governed execution lanes.
 
+## v0.1 Completeness Contract ("full enough")
+
+Panopticon v0.1 does not claim mathematical full coverage. It claims contract-complete coverage for the risk surfaces that matter to truth, determinism, and operator trust.
+
+Required for "full enough" in v0.1:
+
+1. Truth path contract complete:
+   - append writer ownership of `commit_index` is tested and guarded.
+   - reducer/projection determinism tests are green for normal and stress fixtures.
+2. CLI contract complete:
+   - robot envelope shape and exit-code mapping are covered for success and high-value error classes.
+   - alias behavior and bounded normalization behavior are covered.
+3. TUI operator path complete:
+   - incident/forensic lens transitions, Truth HUD surface, and PTY preflight behavior are covered.
+4. Share-safe/export path complete:
+   - clean export success and refusal/report behavior are covered with deterministic fixtures.
+5. E2E diagnostics complete:
+   - e2e outputs include structured stage logs, per-command transcripts, and replay hints.
+
+Out-of-scope for v0.1 "full enough":
+
+- full combinatorial argv proof over all token permutations.
+- browser/web UI automation.
+- probabilistic/fuzz proof over every malformed external payload family.
+
+## Invariant And Decision Coverage Ownership
+
+| Contract | Primary test ownership |
+|---|---|
+| I1: EventLog truth, Tier A lossless ordering | `panopticon-core` eventlog/reducer tests; `panopticon-tour` invariants |
+| I2: deterministic projection, projection degrades before truth | `panopticon-core` projection tests; `panopticon-tour` deterministic artifact tests |
+| I3: share-safe export refusal with structured report | `panopticon-export` unit/integration tests; CLI contract tests for refusal code path |
+| I4: determinism is testable in CI | `panopticon-tour` invariants + CI fastlane/full-confidence workflows |
+| I5: loud failure posture | CLI contract/error-path tests + explicit refusal/runtime error mapping |
+| D1: Agent Cassette first importer | `panopticon-import` cassette parser/mapping integration tests |
+| D2: Tier A minimal set remains protected | `panopticon-core` event typing + projection/Tour invariant tests |
+| D3: local-only CLI/TUI posture | CLI/TUI integration tests and workflow surface checks |
+| D4: append-only truth + rebuildable cache posture | `panopticon-core` and importer/export integration behavior checks |
+| D5: Incident default, Forensic toggle | `panopticon-tui` unit tests + PTY interactive e2e |
+| D6: canonical ordering by `commit_index` only | `panopticon-core` append/replay tests; tour parity tests |
+| D7: branch-policy neutrality | process/CI governance checks, not runtime tests |
+
+## Required E2E Logging Gates
+
+Any e2e lane considered passing for v0.1 must emit:
+
+- `run.jsonl` with stable stage/status records.
+- `summary.txt` with concise pass/fail and replay pointers.
+- `cmd/*.stdout.log` and `cmd/*.stderr.log` transcripts.
+- relevant artifact pointers (Tour/export/PTY assertion files) in logs.
+
+Failure diagnostics minimums:
+
+- failed stage id,
+- expected vs actual exit code,
+- exact replay command,
+- transcript path(s) for first failure.
+
 ## Top 10 High-Risk Gaps (Mapped)
 
 1. Expand CLI success-path JSON contract matrix and transcript checks -> `bd-1z3.2` (P1)
