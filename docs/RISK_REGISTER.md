@@ -648,3 +648,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced in product code. Validation uses deterministic JSON parsing and explicit date comparisons.
 4. Security and privacy: Ledger content is metadata-only and should not include secrets. CI enforcement reduces risk of silent stale waivers, but human review is still required to keep rationales accurate.
 5. Performance cliffs: Negligible. Validator cost is O(n) in waiver entries and runs quickly in CI; no production-path overhead.
+
+## bd-2yv.6 · TEST-CI-GATE: enforce coverage and E2E suites in CI
+
+1. Coupling: CI release gating is now explicitly coupled to job topology (`fastlane`, `full-confidence`, `release-trust`) and artifact paths under `.tmp/full-confidence`; workflow changes must keep docs and paths synchronized.
+2. Untested claims: We validated workflow logic locally via command parity, but did not execute GitHub-hosted jobs in this session; first remote run should be reviewed to confirm artifact upload paths and log retention behavior.
+3. Nondeterminism: No product-path nondeterminism introduced. CI evidence generation uses deterministic command lists and fixed output locations.
+4. Security and privacy: Uploaded CI artifacts now include richer test transcripts; they are fixture-based in this repo but still require normal repository access controls and retention discipline.
+5. Performance cliffs: `full-confidence` is intentionally heavier than PR fastlane and can increase push CI duration/cost; this is mitigated by keeping `fastlane` as PR default and using evidence artifacts for fast failure triage.

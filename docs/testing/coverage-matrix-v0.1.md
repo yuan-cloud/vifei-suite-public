@@ -100,3 +100,4 @@ Workspace inventory file lines:
 
 - `bd-2yv.8` completed: deterministic fastlane lane is now implemented and enforced in CI (`scripts/e2e/fastlane.sh`, `.github/workflows/ci.yml`).
 - `bd-2yv.7` completed: explicit defer register ledger plus validator added and enforced in CI (`docs/testing/defer-register-v0.1.json`, `scripts/testing/validate_defer_register.py`).
+- `bd-2yv.6` completed: CI now publishes distinct `fastlane` (PR default) and `full-confidence` (push/merge gate) lanes, uploads structured logs/artifacts, and gates `release-trust` on `full-confidence`.

@@ -12,6 +12,7 @@ env:
 
 jobs:
   fastlane:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,8 +36,9 @@ jobs:
       - name: Validate defer register
         run: python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
 
-  check:
-    needs: fastlane
+  full_confidence:
+    name: full-confidence
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,17 +58,49 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
+      - name: Prepare output directories
+        run: mkdir -p .tmp/full-confidence/logs .tmp/full-confidence/coverage
+
+      - name: Validate defer register
+        run: |
+          python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json \
+            2>&1 | tee .tmp/full-confidence/logs/defer-register.log
+
       - name: Format check
-        run: cargo fmt --check
+        run: cargo fmt --check 2>&1 | tee .tmp/full-confidence/logs/fmt.log
 
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings 2>&1 | tee .tmp/full-confidence/logs/clippy.log
 
       - name: Test
-        run: cargo test
+        run: cargo test 2>&1 | tee .tmp/full-confidence/logs/cargo-test.log
+
+      - name: Generate coverage inventory snapshot
+        run: |
+          cargo test --workspace --all-targets -- --list > .tmp/full-confidence/coverage/test-inventory.txt
+          cp docs/testing/coverage-matrix-v0.1.md .tmp/full-confidence/coverage/coverage-matrix-v0.1.md
+          cp docs/testing/defer-register-v0.1.json .tmp/full-confidence/coverage/defer-register-v0.1.json
+
+      - name: CLI E2E suite
+        run: |
+          OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
+            2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
+
+      - name: TUI E2E interactive suite
+        run: |
+          cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
+            2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.log
+
+      - name: Upload full-confidence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-confidence-${{ github.sha }}
+          path: .tmp/full-confidence/
+          if-no-files-found: error
 
   release-trust:
-    needs: check
+    needs: full_confidence
     if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:

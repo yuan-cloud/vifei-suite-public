@@ -52,7 +52,9 @@ All items below must pass for GO:
 - README command samples are executable as written
 
 4. Release-trust CI run is green for target commit/tag:
-- `check` job success
+- `fastlane` job success (PR default smoke lane)
+- `full-confidence` job success (merge/release confidence lane)
+- defer register validation passes (`docs/testing/defer-register-v0.1.json`)
 - `release-trust` job success
 - attestation step success
 

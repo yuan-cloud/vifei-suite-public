@@ -40,11 +40,14 @@ scripts/e2e/fastlane.sh
 Default output root: `.tmp/fastlane`
 
 ## CI Usage
-PR lane runs:
+PR default lane runs:
 
 ```bash
 scripts/e2e/fastlane.sh
 ```
+
+Merge/release gating is handled by the separate `full-confidence` lane
+(`docs/testing/FULL_CONFIDENCE.md`).
 
 ## Mapping to Full-Suite Commands
 - Formatting/lints/full tests:
