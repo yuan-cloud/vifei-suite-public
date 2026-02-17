@@ -66,6 +66,7 @@ pub struct EventLogWriter {
     /// The JSONL file handle.
     file: File,
     /// Path to the EventLog file.
+    #[allow(dead_code)] // Will be used for reload/recovery
     path: PathBuf,
     /// Next `commit_index` to assign.
     next_index: u64,
@@ -77,10 +78,12 @@ pub struct EventLogWriter {
 #[derive(Debug)]
 pub struct AppendResult {
     /// The committed event that was appended.
-    pub committed: CommittedEvent,
+    #[allow(dead_code)] // Will be used by importer/TUI
+    pub(crate) committed: CommittedEvent,
     /// Any detection events (e.g., `ClockSkewDetected`) appended before
     /// the main event. These have their own `commit_index` values.
-    pub detection_events: Vec<CommittedEvent>,
+    #[allow(dead_code)] // Will be used by importer/TUI
+    pub(crate) detection_events: Vec<CommittedEvent>,
 }
 
 #[derive(Default)]
@@ -142,12 +145,14 @@ impl EventLogWriter {
     }
 
     /// The `commit_index` that will be assigned to the next appended event.
-    pub fn next_index(&self) -> u64 {
+    #[allow(dead_code)] // Will be used for recovery/resume
+    pub(crate) fn next_index(&self) -> u64 {
         self.next_index
     }
 
     /// Path to the EventLog file.
-    pub fn path(&self) -> &Path {
+    #[allow(dead_code)] // Will be used for recovery/reload
+    pub(crate) fn path(&self) -> &Path {
         &self.path
     }
 

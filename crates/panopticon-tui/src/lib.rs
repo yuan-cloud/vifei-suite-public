@@ -44,7 +44,7 @@ use std::time::Duration;
 
 /// Which lens is currently active.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ActiveLens {
+enum ActiveLens {
     #[default]
     Incident,
     Forensic,
@@ -52,7 +52,7 @@ pub enum ActiveLens {
 
 impl ActiveLens {
     /// Toggle between Incident and Forensic lens.
-    pub fn toggle(&self) -> Self {
+    fn toggle(&self) -> Self {
         match self {
             ActiveLens::Incident => ActiveLens::Forensic,
             ActiveLens::Forensic => ActiveLens::Incident,
@@ -60,7 +60,8 @@ impl ActiveLens {
     }
 
     /// Display name for the lens.
-    pub fn name(&self) -> &'static str {
+    #[allow(dead_code)] // Will be used when rendering lens name in UI
+    fn name(&self) -> &'static str {
         match self {
             ActiveLens::Incident => "Incident Lens",
             ActiveLens::Forensic => "Forensic Lens",
@@ -69,26 +70,28 @@ impl ActiveLens {
 }
 
 /// Application state for the TUI.
-pub struct App {
+struct App {
     /// The ViewModel derived from the EventLog.
-    pub viewmodel: ViewModel,
+    viewmodel: ViewModel,
     /// Reducer state (kept for potential re-projection).
-    pub state: State,
+    #[allow(dead_code)] // Used by set_degradation_level
+    state: State,
     /// Projection invariants.
-    pub invariants: ProjectionInvariants,
+    #[allow(dead_code)] // Used by set_degradation_level
+    invariants: ProjectionInvariants,
     /// Currently active lens.
-    pub active_lens: ActiveLens,
+    active_lens: ActiveLens,
     /// Whether the application should quit.
-    pub should_quit: bool,
+    should_quit: bool,
     /// Path to the EventLog file.
-    pub eventlog_path: String,
+    eventlog_path: String,
     /// Total events in the EventLog.
-    pub total_events: usize,
+    total_events: usize,
 }
 
 impl App {
     /// Create a new App by loading an EventLog and reducing it.
-    pub fn new(eventlog_path: &Path) -> io::Result<Self> {
+    fn new(eventlog_path: &Path) -> io::Result<Self> {
         let events = read_eventlog(eventlog_path)?;
         let total_events = events.len();
 
@@ -114,7 +117,7 @@ impl App {
     }
 
     /// Handle a key event.
-    pub fn handle_key(&mut self, key: KeyCode) {
+    fn handle_key(&mut self, key: KeyCode) {
         match key {
             KeyCode::Char('q') | KeyCode::Esc => {
                 self.should_quit = true;
@@ -127,7 +130,8 @@ impl App {
     }
 
     /// Set degradation level and re-project.
-    pub fn set_degradation_level(&mut self, level: LadderLevel) {
+    #[allow(dead_code)] // Will be used when user triggers level change via keybind
+    fn set_degradation_level(&mut self, level: LadderLevel) {
         self.invariants.degradation_level = level;
         self.viewmodel = project(&self.state, &self.invariants);
     }
@@ -324,10 +328,9 @@ fn render_truth_hud(frame: &mut Frame, area: Rect, app: &App) {
         }
     };
 
-    let aggregation = match vm.aggregation_bin_size {
-        Some(bin) => format!("{} (bin={})", vm.aggregation_mode, bin),
-        None => vm.aggregation_mode.clone(),
-    };
+    let aggregation = vm
+        .aggregation_bin_size
+        .map(|bin| format!("{} (bin={bin})", vm.aggregation_mode));
 
     let queue_pressure_pct = (vm.queue_pressure() * 100.0) as u32;
     let pressure_style = if queue_pressure_pct >= 80 {
@@ -343,7 +346,10 @@ fn render_truth_hud(frame: &mut Frame, area: Rect, app: &App) {
         Span::styled(format!("{}", vm.degradation_level), level_style),
         Span::raw(" | "),
         Span::styled("Agg: ", Style::default().fg(Color::White)),
-        Span::raw(&aggregation),
+        match &aggregation {
+            Some(text) => Span::raw(text.as_str()),
+            None => Span::raw(vm.aggregation_mode.as_str()),
+        },
         Span::raw(" | "),
         Span::styled("Pressure: ", Style::default().fg(Color::White)),
         Span::styled(format!("{}%", queue_pressure_pct), pressure_style),

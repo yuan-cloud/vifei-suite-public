@@ -28,6 +28,7 @@ pub struct SecretPattern {
     /// Human-readable name for the pattern.
     pub name: &'static str,
     /// Category of secret (api_key, token, secret, pii).
+    #[allow(dead_code)]
     pub category: &'static str,
     /// Compiled regex for detection.
     pub regex: &'static Lazy<Regex>,
@@ -41,6 +42,7 @@ pub struct SecretMatch {
     /// The matched text (will be redacted for output).
     pub matched_text: String,
     /// Byte offset in the scanned content.
+    #[allow(dead_code)]
     pub offset: usize,
 }
 
