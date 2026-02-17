@@ -608,3 +608,11 @@ Context:
 3. Nondeterminism: Added bounded retry (max 1) and deterministic key sequences; preflight gate avoids flaky hard-fails in PTY-restricted environments.
 4. Security and privacy: Harness uses synthetic local fixtures only and writes transcripts to local `.tmp` output paths for failure triage.
 5. Performance cliffs: New PTY tests are lightweight but add external process overhead; they are scoped to one flow test plus one narrow-terminal profile.
+
+## bd-2yv.5 · TEST-UX: operator usability protocol and scoring
+
+1. Coupling: UX validation now depends on explicit task/script and scoring contracts in `docs/UX_TEST_PLAN.md`; downstream UX/test beads should use this protocol to avoid divergent evaluation criteria.
+2. Untested claims: Baseline pass confirms CLI trust/recovery flows and captures PTY skip behavior, but does not yet validate real interactive PTY execution on this host due environment limits.
+3. Nondeterminism: Protocol uses deterministic command scripts and fixed fixture inputs; PTY-dependent tasks include explicit skip reasons to avoid flaky implicit failures.
+4. Security and privacy: Evidence artifacts are local test outputs only; no production secrets were introduced.
+5. Performance cliffs: Baseline protocol includes stress tour and can be heavier than inner-loop tests, so it should run in validation lanes rather than every edit step.
