@@ -1,0 +1,36 @@
+┌ Forensic Lens (Tab to toggle) ───────────────────────────────────────────────────────────────────────────────────────┐
+│┌ Timeline ───────────────────────────────────┐┌ Inspector ──────────────────────────────────────────────────────────┐│
+││▸    0 RunStart                              ││Event #0  RunStart                                                   ││
+││     1 ToolCall                              ││                                                                     ││
+││     2 ToolResult                            ││  run_id:   run-readme-1                                             ││
+││     3 PolicyDecision                        ││  event_id: ev-1                                                     ││
+││     4 Error                                 ││  tier:     A                                                        ││
+││     5 ClockSkewDetected                     ││                                                                     ││
+││     6 RedactionApplied                      ││  agent: codex                                                       ││
+││     7 RunEnd                                ││  args:  capture-assets --deterministic                              ││
+││     8 [S] ClockSkewDetected                 ││                                                                     ││
+││     9 RunStart                              ││  Press Enter to expand details                                      ││
+││    10 [S] ClockSkewDetected                 ││                                                                     ││
+││    11 ToolCall                              ││                                                                     ││
+││    12 ToolResult                            ││                                                                     ││
+││    13 PolicyDecision                        ││                                                                     ││
+││    14 Error                                 ││                                                                     ││
+││    15 ClockSkewDetected                     ││                                                                     ││
+││    16 RedactionApplied                      ││                                                                     ││
+││    17 RunEnd                                ││                                                                     ││
+││                                             ││                                                                     ││
+││j/k=nav Enter=expand                         ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+││                                             ││                                                                     ││
+│└─────────────────────────────────────────────┘└─────────────────────────────────────────────────────────────────────┘│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Truth HUD ───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Level: L0 | Agg: 1:1 | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                                    │
+│ Version: projection-invariants-v0.1                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘

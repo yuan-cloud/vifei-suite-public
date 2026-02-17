@@ -189,6 +189,60 @@ pub fn render_to_buffer(eventlog_path: &Path, width: u16, height: u16) -> io::Re
     Ok(text)
 }
 
+/// Render an EventLog in Incident Lens mode with line breaks for docs assets.
+#[doc(hidden)]
+pub fn render_incident_multiline(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+) -> io::Result<String> {
+    let app = App::new(eventlog_path)?;
+    render_multiline(&app, width, height)
+}
+
+/// Render an EventLog in Forensic Lens mode with line breaks for docs assets.
+#[doc(hidden)]
+pub fn render_forensic_multiline(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+) -> io::Result<String> {
+    let mut app = App::new(eventlog_path)?;
+    app.active_lens = ActiveLens::Forensic;
+    render_multiline(&app, width, height)
+}
+
+/// Render an EventLog in Incident Lens mode with a forced degradation level.
+#[doc(hidden)]
+pub fn render_degraded_incident_multiline(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+    level: LadderLevel,
+) -> io::Result<String> {
+    let mut app = App::new(eventlog_path)?;
+    app.set_degradation_level(level);
+    render_multiline(&app, width, height)
+}
+
+fn render_multiline(app: &App, width: u16, height: u16) -> io::Result<String> {
+    let backend = ratatui::backend::TestBackend::new(width, height);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.draw(|frame| render(frame, app))?;
+
+    let buf = terminal.backend().buffer();
+    let mut text = String::new();
+    for y in 0..height {
+        for x in 0..width {
+            text.push(buf[(x, y)].symbol().chars().next().unwrap_or(' '));
+        }
+        if y + 1 < height {
+            text.push('\n');
+        }
+    }
+    Ok(text)
+}
+
 /// Run the TUI viewer for an EventLog.
 pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
     // Set up panic hook to restore terminal

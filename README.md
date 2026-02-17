@@ -34,6 +34,14 @@ cat tour-output/viewmodel.hash
 cat tour-output/metrics.json
 ```
 
+Reference captures and visuals for this README are in `docs/assets/readme/`:
+
+- `docs/assets/readme/incident-lens.txt`
+- `docs/assets/readme/forensic-lens.txt`
+- `docs/assets/readme/truth-hud-degraded.txt`
+- `docs/assets/readme/export-refusal.txt`
+- `docs/assets/readme/architecture.mmd`
+
 ## Quickstart
 
 ### 1) Build and check CLI surface

@@ -416,3 +416,11 @@ Context:
 3. Nondeterminism: No product-path nondeterminism introduced; docs-only change.
 4. Security: README reinforces `--share-safe` export posture and trust-challenge checks. No new secret or credential handling surface added.
 5. Performance cliffs: None. Documentation-only changes.
+
+## bd-x7q.3 · README-ASSETS: deterministic capture assets + architecture visual · 2026-02-17
+
+1. Coupling: Added `capture_readme_assets` binary and hidden render helpers in `panopticon-tui` to generate README assets from current render paths and export/tour APIs. If lens titles, HUD text, or export refusal formatting change, regenerated assets will change accordingly.
+2. Untested claims: Asset generation binary has no unit tests; correctness is validated through full workspace gates and deterministic capture outputs. Future bead should consider snapshot tests for generated assets if strict byte pinning is required.
+3. Nondeterminism: Captures are deterministic for provided sample EventLog and fixture inputs. `artifacts-view.txt` includes Tour hash for `fixtures/large-stress.jsonl` and can change only if deterministic core behavior changes.
+4. Security: Export-refusal asset intentionally includes redacted secret matches from synthetic input only. No real credentials introduced.
+5. Performance cliffs: Running `capture_readme_assets` executes a full Tour run on `large-stress.jsonl`, which is intentionally non-trivial CPU work. This is acceptable for docs asset refresh cadence.
