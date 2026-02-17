@@ -924,3 +924,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; deterministic file existence/string checks only.
 4. Security: Improves operator trust posture by reducing stale/broken public guidance risk.
 5. Performance: Negligible test-time overhead from small file reads.
+
+## bd-3n5 · STRUCT-2.1: split panopticon-export internals by concern · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I3 (share-safe export gate), I5 (loud failure), deterministic bundle/artifact expectations
+- Constitution touched: none
+
+1. Coupling: `panopticon-export` is now split across internal modules (`discover`, `secret_scan`, `bundle`) and tied via `pub(crate)` re-exports in `lib.rs`; future cross-module refactors need attention to internal visibility boundaries.
+2. Untested claims: This change claims behavior-preserving module decomposition; claim is covered by full crate/unit/integration tests but not by byte-for-byte diff snapshots of every possible archive permutation.
+3. Nondeterminism: No new nondeterminism sources were introduced; deterministic ordering and hashing logic were moved, not rewritten.
+4. Security: Secret scanning and refusal behavior remain unchanged in logic and still fail closed; no new parsing or secret-surface expansion was introduced.
+5. Performance: Runtime cost should be unchanged; only code organization changed, with negligible compile-time impact from extra modules.

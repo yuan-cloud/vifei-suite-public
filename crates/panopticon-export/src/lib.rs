@@ -30,18 +30,22 @@
 //!   the default when any doubt exists.
 //! - **I5 (Loud failure):** Errors are returned, never silently swallowed.
 
+mod bundle;
+mod discover;
 mod scanner;
+mod secret_scan;
 
 use panopticon_core::blob_store::BlobStore;
 use panopticon_core::event::CommittedEvent;
-use panopticon_core::eventlog::read_eventlog;
-use panopticon_core::projection::PROJECTION_INVARIANTS_VERSION;
-use scanner::{redact_match, scan_bytes, scan_text, SecretPatterns};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+
+pub(crate) use bundle::create_bundle;
+pub(crate) use discover::discover_content;
+pub(crate) use secret_scan::scan_for_secrets;
 
 /// Scanner version string for refusal reports.
 const SCANNER_VERSION: &str = "secret-scanner-v0.1";
@@ -258,97 +262,6 @@ impl DiscoveredContent {
     }
 }
 
-/// Discover all content referenced by an EventLog.
-///
-/// Reads the EventLog and identifies all blob references.
-pub(crate) fn discover_content(eventlog_path: &Path) -> io::Result<DiscoveredContent> {
-    let events = read_eventlog(eventlog_path)?;
-    let mut blob_refs = HashSet::new();
-
-    for event in &events {
-        if let Some(ref payload_ref) = event.payload_ref {
-            blob_refs.insert(payload_ref.clone());
-        }
-    }
-
-    Ok(DiscoveredContent {
-        eventlog_path: eventlog_path.to_path_buf(),
-        events,
-        blob_refs,
-    })
-}
-
-/// Scan discovered content for secrets.
-///
-/// Scans all event payloads and blob contents for secret patterns.
-/// Returns a list of blocked items. Empty list means clean.
-pub(crate) fn scan_for_secrets(
-    content: &DiscoveredContent,
-    blob_store: Option<&BlobStore>,
-) -> io::Result<Vec<BlockedItem>> {
-    let patterns = SecretPatterns::new();
-    let mut items = Vec::new();
-
-    // Scan event payloads
-    for event in &content.events {
-        let event_items = scan_event(&patterns, event);
-        items.extend(event_items);
-    }
-
-    // Scan blob contents
-    if let Some(store) = blob_store {
-        for blob_ref in &content.blob_refs {
-            if let Some(blob_data) = store.read_blob(blob_ref)? {
-                let blob_items = scan_blob(&patterns, blob_ref, &blob_data);
-                items.extend(blob_items);
-            }
-        }
-    }
-
-    Ok(items)
-}
-
-/// Scan a single event for secrets.
-fn scan_event(patterns: &SecretPatterns, event: &CommittedEvent) -> Vec<BlockedItem> {
-    let mut items = Vec::new();
-
-    // Serialize the payload to JSON for scanning
-    let payload_json = match serde_json::to_string(&event.payload) {
-        Ok(json) => json,
-        Err(_) => return items,
-    };
-
-    // Scan the payload JSON
-    for m in scan_text(patterns, &payload_json) {
-        items.push(BlockedItem {
-            event_id: event.event_id.clone(),
-            field_path: "payload".into(),
-            matched_pattern: m.pattern_name,
-            blob_ref: None,
-            redacted_match: redact_match(&m.matched_text),
-        });
-    }
-
-    items
-}
-
-/// Scan a blob for secrets.
-fn scan_blob(patterns: &SecretPatterns, blob_ref: &str, data: &[u8]) -> Vec<BlockedItem> {
-    let mut items = Vec::new();
-
-    for m in scan_bytes(patterns, data) {
-        items.push(BlockedItem {
-            event_id: String::new(),
-            field_path: "content".into(),
-            matched_pattern: m.pattern_name,
-            blob_ref: Some(blob_ref.to_string()),
-            redacted_match: redact_match(&m.matched_text),
-        });
-    }
-
-    items
-}
-
 /// Integrity manifest embedded in export bundles (M8.5).
 ///
 /// The manifest is the "receipt" for bundle consumers — tells them exactly
@@ -379,138 +292,6 @@ pub struct ManifestEntry {
     pub blake3: String,
     /// File size in bytes.
     pub size: u64,
-}
-
-/// Bundle discovered content into a deterministic tar+zstd archive.
-///
-/// Determinism requirements (CAPACITY_ENVELOPE Export determinism targets):
-/// - Tar format: POSIX (UStar/PAX-compatible)
-/// - Zstd compression level: 3 (pinned, not library default)
-/// - Tar mtime: 0 (Unix epoch, all entries normalized)
-/// - Tar uid/gid: 0 (normalized to prevent machine-specific values)
-/// - Tar username/groupname: empty
-/// - Entries sorted alphabetically by path
-/// - bundle_hash = BLAKE3 of final .tar.zst bytes
-pub(crate) fn create_bundle(
-    content: &DiscoveredContent,
-    blob_store: Option<&BlobStore>,
-    output_path: &Path,
-) -> io::Result<ExportSuccess> {
-    // Collect all entries as (archive_path, data) for deterministic sorting
-    let mut entries: Vec<(String, Vec<u8>)> = Vec::new();
-
-    // Add EventLog
-    let eventlog_bytes = std::fs::read(&content.eventlog_path)?;
-    entries.push(("eventlog.jsonl".to_string(), eventlog_bytes));
-
-    // Add blobs (sorted by ref for deterministic ordering)
-    let mut blob_count = 0usize;
-    if let Some(store) = blob_store {
-        let mut sorted_refs: Vec<&str> = content.blob_refs.iter().map(|s| s.as_str()).collect();
-        sorted_refs.sort();
-        for blob_ref in sorted_refs {
-            if let Some(data) = store.read_blob(blob_ref)? {
-                entries.push((format!("blobs/{}", blob_ref), data));
-                blob_count += 1;
-            }
-        }
-    }
-
-    // Sort all entries alphabetically by path (deterministic archive order)
-    entries.sort_by(|a, b| a.0.cmp(&b.0));
-
-    // Build manifest entries with BLAKE3 digests for each file
-    let manifest_file_entries: Vec<ManifestEntry> = entries
-        .iter()
-        .map(|(path, data)| ManifestEntry {
-            path: path.clone(),
-            blake3: blake3::hash(data).to_hex().to_string(),
-            size: data.len() as u64,
-        })
-        .collect();
-
-    // Compute commit_index range from events
-    let commit_index_range = content.events.iter().map(|event| event.commit_index).fold(
-        None,
-        |acc: Option<[u64; 2]>, idx| match acc {
-            Some([min_idx, max_idx]) => Some([min_idx.min(idx), max_idx.max(idx)]),
-            None => Some([idx, idx]),
-        },
-    );
-
-    // Build the manifest
-    let manifest = BundleManifest {
-        manifest_version: "manifest-v0.1".to_string(),
-        files: manifest_file_entries,
-        commit_index_range,
-        projection_invariants_version: PROJECTION_INVARIANTS_VERSION.to_string(),
-    };
-    let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("manifest serialization: {e}"),
-        )
-    })?;
-
-    // Add manifest to entries (will be sorted into correct position)
-    entries.push(("manifest.json".to_string(), manifest_json.into_bytes()));
-    entries.sort_by(|a, b| a.0.cmp(&b.0));
-
-    // Build tar+zstd into a memory buffer so we can BLAKE3-hash the result
-    let mut compressed_bytes: Vec<u8> = Vec::new();
-    {
-        // Zstd level 3 (pinned per CAPACITY_ENVELOPE)
-        let encoder = zstd::stream::write::Encoder::new(&mut compressed_bytes, 3)
-            .map_err(|e| io::Error::other(format!("zstd init: {e}")))?;
-        let mut tar_builder = tar::Builder::new(encoder);
-
-        for (path, data) in &entries {
-            append_tar_entry(&mut tar_builder, path, data)?;
-        }
-
-        // Finish tar (writes final blocks), then finish zstd (flushes frame)
-        let encoder = tar_builder.into_inner()?;
-        encoder.finish()?;
-    }
-
-    // bundle_hash = BLAKE3 of final .tar.zst bytes
-    let bundle_hash = blake3::hash(&compressed_bytes).to_hex().to_string();
-
-    // Write the completed bundle to disk
-    std::fs::write(output_path, &compressed_bytes)?;
-
-    Ok(ExportSuccess {
-        bundle_path: output_path.to_path_buf(),
-        bundle_hash,
-        event_count: content.event_count(),
-        blob_count,
-    })
-}
-
-/// Append a single entry to a tar archive with normalized metadata.
-///
-/// All metadata is normalized per CAPACITY_ENVELOPE Export determinism targets.
-fn append_tar_entry<W: io::Write>(
-    builder: &mut tar::Builder<W>,
-    path: &str,
-    data: &[u8],
-) -> io::Result<()> {
-    let mut header = tar::Header::new_ustar();
-    header.set_size(data.len() as u64);
-    header.set_mtime(0);
-    header.set_uid(0);
-    header.set_gid(0);
-    header.set_mode(0o644);
-    header
-        .set_username("")
-        .map_err(|e| io::Error::other(format!("set_username: {e}")))?;
-    header
-        .set_groupname("")
-        .map_err(|e| io::Error::other(format!("set_groupname: {e}")))?;
-    header.set_entry_type(tar::EntryType::Regular);
-    header.set_cksum();
-    builder.append_data(&mut header, path, data)?;
-    Ok(())
 }
 
 /// Run the full export pipeline.
@@ -563,6 +344,7 @@ mod tests {
     use super::*;
     use panopticon_core::event::{CommittedEvent, EventPayload, ImportEvent, Tier};
     use panopticon_core::eventlog::EventLogWriter;
+    use panopticon_core::projection::PROJECTION_INVARIANTS_VERSION;
     use tempfile::tempdir;
 
     fn make_event(id: &str, ts: u64, args: &str) -> ImportEvent {
