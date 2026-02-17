@@ -488,3 +488,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; this is documentation and process guidance only.
 4. Security: Restricting visuals to deterministic terminal-native captures reduces risk of misleading or fabricated evidence imagery.
 5. Performance cliffs: No product runtime impact; minor contributor overhead when regenerating visual assets.
+
+## bd-1w9.2 · README-IA: redesign information architecture and story flow · 2026-02-17
+
+1. Coupling: README structure now couples onboarding flow to specific command paths (`--bin panopticon`, stress Tour, share-safe export). CLI contract changes will require coordinated README updates.
+2. Untested claims: The IA rewrite improves clarity on paper, but audience comprehension gains are not yet measured by UX sessions.
+3. Nondeterminism: No runtime nondeterminism introduced; documentation-only changes.
+4. Security: The rewrite keeps trust claims tied to verifiable commands and avoids promising unsupported deployment/security properties.
+5. Performance cliffs: No runtime impact. Slight maintenance overhead for keeping architecture and workflow sections aligned with future crate/command changes.
