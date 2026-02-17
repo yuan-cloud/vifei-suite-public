@@ -86,6 +86,18 @@ pub struct AppendResult {
     pub(crate) detection_events: Vec<CommittedEvent>,
 }
 
+impl AppendResult {
+    /// Returns detection events written before the main committed event.
+    pub fn detection_events(&self) -> &[CommittedEvent] {
+        &self.detection_events
+    }
+
+    /// Returns the committed event appended for the input import event.
+    pub fn committed_event(&self) -> &CommittedEvent {
+        &self.committed
+    }
+}
+
 #[derive(Default)]
 struct ScanMetadata {
     highest_commit_index: Option<u64>,
@@ -542,17 +554,19 @@ mod tests {
         let skew = &result.detection_events[0];
         assert_eq!(skew.tier, Tier::A);
         assert!(skew.synthesized);
-        match &skew.payload {
-            EventPayload::ClockSkewDetected {
-                expected_ns,
-                actual_ns,
-                delta_ns,
-            } => {
-                assert_eq!(*expected_ns, 2_000_000_000);
-                assert_eq!(*actual_ns, 1_000_000_000);
-                assert_eq!(*delta_ns, 1_000_000_000);
-            }
-            _ => panic!("expected ClockSkewDetected payload"),
+        assert!(
+            matches!(&skew.payload, EventPayload::ClockSkewDetected { .. }),
+            "expected ClockSkewDetected payload"
+        );
+        if let EventPayload::ClockSkewDetected {
+            expected_ns,
+            actual_ns,
+            delta_ns,
+        } = &skew.payload
+        {
+            assert_eq!(*expected_ns, 2_000_000_000);
+            assert_eq!(*actual_ns, 1_000_000_000);
+            assert_eq!(*delta_ns, 1_000_000_000);
         }
 
         // Skew event gets commit_index before the main event.
@@ -649,17 +663,19 @@ mod tests {
         assert_eq!(skew.tier, Tier::A);
         assert!(skew.synthesized);
 
-        match &skew.payload {
-            EventPayload::ClockSkewDetected {
-                expected_ns,
-                actual_ns,
-                delta_ns,
-            } => {
-                assert_eq!(*expected_ns, 5_000_000_000);
-                assert_eq!(*actual_ns, 3_000_000_000);
-                assert_eq!(*delta_ns, 2_000_000_000);
-            }
-            _ => panic!("wrong payload type"),
+        assert!(
+            matches!(&skew.payload, EventPayload::ClockSkewDetected { .. }),
+            "wrong payload type"
+        );
+        if let EventPayload::ClockSkewDetected {
+            expected_ns,
+            actual_ns,
+            delta_ns,
+        } = &skew.payload
+        {
+            assert_eq!(*expected_ns, 5_000_000_000);
+            assert_eq!(*actual_ns, 3_000_000_000);
+            assert_eq!(*delta_ns, 2_000_000_000);
         }
     }
 
@@ -703,17 +719,22 @@ mod tests {
             1,
             "clock skew should still be detected after writer reopen"
         );
-        match &result.detection_events[0].payload {
-            EventPayload::ClockSkewDetected {
-                expected_ns,
-                actual_ns,
-                delta_ns,
-            } => {
-                assert_eq!(*expected_ns, 2_000_000_000);
-                assert_eq!(*actual_ns, 1_000_000_000);
-                assert_eq!(*delta_ns, 1_000_000_000);
-            }
-            _ => panic!("expected ClockSkewDetected payload"),
+        assert!(
+            matches!(
+                &result.detection_events[0].payload,
+                EventPayload::ClockSkewDetected { .. }
+            ),
+            "expected ClockSkewDetected payload"
+        );
+        if let EventPayload::ClockSkewDetected {
+            expected_ns,
+            actual_ns,
+            delta_ns,
+        } = &result.detection_events[0].payload
+        {
+            assert_eq!(*expected_ns, 2_000_000_000);
+            assert_eq!(*actual_ns, 1_000_000_000);
+            assert_eq!(*delta_ns, 1_000_000_000);
         }
     }
 }

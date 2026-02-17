@@ -736,3 +736,11 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism introduced; contract changes are output-shape and parsing behavior only, and remain deterministic for identical inputs.
 4. Security and privacy: Structured envelopes surface actionable path-level diagnostics and suggestions; this improves automation but means logs should still be treated as operational artifacts.
 5. Performance cliffs: Envelope standardization adds negligible serialization overhead; the main long-term risk is payload growth if optional fields are added without token-budget discipline.
+
+## bd-2fp.5 · A1-4: Pipeline pass-reduction spike (profile-gated)
+
+1. Coupling: `panopticon-tour` now depends on `EventLogWriter::append` result accessors for committed-sequence capture; this is an explicit cross-crate contract between Tour and core write-path APIs.
+2. Untested claims: We validated append-sequence/readback equivalence with a focused unit test, but we did not add a large-fixture equivalence test that compares old-vs-new pipeline internals under stress-size inputs.
+3. Nondeterminism: No new nondeterminism introduced; committed ordering still flows from append-writer `commit_index`, and deterministic artifact/hash checks remain green.
+4. Security and privacy: No new secret-handling surfaces were introduced; change is in Tour pipeline event flow only.
+5. Performance cliffs: Pass reduction removes one full EventLog reread in Tour, but measured gains may be modest when fsync/write dominates runtime; avoid extrapolating this as a universal latency win without privileged profiler evidence.

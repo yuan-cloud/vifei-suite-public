@@ -150,19 +150,22 @@ pub fn run_tour(config: &TourConfig) -> io::Result<TourResult> {
     // Create output directory
     fs::create_dir_all(&config.output_dir)?;
 
-    // Stage 2: Import through append writer (to temp EventLog)
+    // Stage 2: Import through append writer (to temp EventLog), while collecting
+    // the exact committed sequence from append results.
     let temp_dir = tempfile::tempdir()?;
     let eventlog_path = temp_dir.path().join("eventlog.jsonl");
     let mut writer = EventLogWriter::open(&eventlog_path)?;
+    let mut committed_events = Vec::with_capacity(imported_event_count * 2);
 
     for event in events {
-        writer.append(event)?;
+        let result = writer.append(event)?;
+        committed_events.extend(result.detection_events().iter().cloned());
+        committed_events.push(result.committed_event().clone());
     }
     drop(writer);
 
     // Stage 3: Reduce all events with periodic seek point capture
     let mut state = State::new();
-    let committed_events = panopticon_core::eventlog::read_eventlog(&eventlog_path)?;
     let committed_event_count = committed_events.len();
 
     // Capture ~20 seek points for time-travel replay, minimum 1 per event for small fixtures
@@ -416,7 +419,9 @@ fn render_ansi_capture(vm: &ViewModel, event_count: usize, vm_hash: &str) -> Str
 #[cfg(test)]
 mod tests {
     use super::*;
+    use panopticon_core::eventlog::{read_eventlog, EventLogWriter};
     use std::fs;
+    use std::io::{BufReader, Cursor};
     use std::path::Path;
     use tempfile::tempdir;
 
@@ -563,6 +568,31 @@ mod tests {
         let ansi1 = fs::read_to_string(output1.join("ansi.capture")).unwrap();
         let ansi2 = fs::read_to_string(output2.join("ansi.capture")).unwrap();
         assert_eq!(ansi1, ansi2);
+    }
+
+    #[test]
+    fn append_result_sequence_matches_eventlog_readback() {
+        let dir = tempdir().unwrap();
+        let fixture_path = create_clock_skew_fixture(dir.path());
+        let fixture_content = fs::read_to_string(&fixture_path).unwrap();
+        let events = parse_cassette(BufReader::new(Cursor::new(fixture_content)));
+
+        let eventlog_path = dir.path().join("eventlog.jsonl");
+        let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        let mut from_append = Vec::new();
+
+        for event in events {
+            let result = writer.append(event).unwrap();
+            from_append.extend(result.detection_events().iter().cloned());
+            from_append.push(result.committed_event().clone());
+        }
+        drop(writer);
+
+        let from_readback = read_eventlog(&eventlog_path).unwrap();
+        assert_eq!(
+            from_append, from_readback,
+            "append results must preserve canonical committed sequence"
+        );
     }
 
     #[test]
