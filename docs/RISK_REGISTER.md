@@ -232,3 +232,18 @@ Context:
 3. Nondeterminism: `scan_timestamp_utc` uses wall clock (`SystemTime::now()`), introducing non-determinism in the report file. This is explicitly permitted by the bead spec ("informational only, not in hash if report is hashed"). All other fields are deterministic; `blocked_items` is stably sorted by `(event_id, field_path, matched_pattern)`.
 4. Security: No new security risk. Refusal reports contain redacted matches only (via `redact_match()`). The `blob_ref` field exposes content-addressed hashes, not secrets.
 5. Performance: No new performance risk. Sorting blocked items is O(n log n) on finding count, negligible for expected volumes.
+
+---
+
+## bd-bjv.4 · M6.4: Truth HUD strip · 2026-02-17
+
+Context:
+- Bead owner: CloudyLake (claude-code)
+- Invariants referenced: I2 (deterministic projection — Truth HUD renders ViewModel state)
+- Constitution touched: none (references BACKPRESSURE_POLICY ladder levels for color coding)
+
+1. Coupling: `truth_hud::render_truth_hud` takes `&ViewModel` directly — coupled to ViewModel struct fields (`degradation_level`, `aggregation_mode`, `aggregation_bin_size`, `tier_a_drops`, `export_safety_state`, `projection_invariants_version`, `queue_pressure()`). Adding/removing ViewModel fields that the HUD should display requires updating `truth_hud.rs`. Color thresholds (50%/80% for pressure) are hardcoded in `pressure_style()` — if BACKPRESSURE_POLICY changes pressure thresholds, these must be updated manually.
+2. Untested claims: (a) `queue_pressure() * 100.0 as u32` truncates — values like 79.9% display as 79%, not 80%. This is cosmetic only. (b) The HUD assumes terminal width >= ~80 columns for the full line to display without wrapping. Narrow terminals may truncate content. (c) No test verifies the HUD is rendered in both lenses — the layout logic in `lib.rs` handles this, and the HUD tests only verify standalone rendering.
+3. Nondeterminism: None introduced. All rendering is deterministic given the same ViewModel. No RNG, no wall clock, no HashMap. Color selection is pure function of ViewModel values.
+4. Security: No secrets, tokens, or PII. The HUD displays only system metadata (levels, counts, versions). No event payloads flow through the HUD.
+5. Performance: No performance cliffs. `render_truth_hud` creates a small number of `Span` objects (<20) and renders two text lines. O(1) in event count. 10 tests add <0.01s to the test suite.
