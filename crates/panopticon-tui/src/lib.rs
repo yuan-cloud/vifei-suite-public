@@ -281,6 +281,28 @@ mod tests {
         text
     }
 
+    /// Create a simple key press event (no modifiers).
+    fn key(code: KeyCode) -> KeyEvent {
+        KeyEvent::new(code, KeyModifiers::empty())
+    }
+
+    /// Create a key press event with Ctrl modifier.
+    fn ctrl_key(c: char) -> KeyEvent {
+        KeyEvent::new(KeyCode::Char(c), KeyModifiers::CONTROL)
+    }
+
+    /// Create a test App from a temporary eventlog with multiple events.
+    fn test_app() -> (App, tempfile::TempDir) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.jsonl");
+        let mut writer = EventLogWriter::open(&path).unwrap();
+        writer.append(make_test_event("e1", 1_000_000_000)).unwrap();
+        writer.append(make_test_event("e2", 2_000_000_000)).unwrap();
+        drop(writer);
+        let app = App::new(&path).unwrap();
+        (app, dir)
+    }
+
     #[test]
     fn test_active_lens_toggle() {
         let lens = ActiveLens::Incident;
@@ -297,6 +319,93 @@ mod tests {
     #[test]
     fn test_active_lens_default() {
         assert_eq!(ActiveLens::default(), ActiveLens::Incident);
+    }
+
+    // --- Key handling tests ---
+
+    #[test]
+    fn handle_key_q_quits() {
+        let (mut app, _dir) = test_app();
+        assert!(!app.should_quit);
+        app.handle_key(key(KeyCode::Char('q')));
+        assert!(app.should_quit);
+    }
+
+    #[test]
+    fn handle_key_esc_quits() {
+        let (mut app, _dir) = test_app();
+        app.handle_key(key(KeyCode::Esc));
+        assert!(app.should_quit);
+    }
+
+    #[test]
+    fn handle_key_ctrl_c_quits() {
+        let (mut app, _dir) = test_app();
+        app.handle_key(ctrl_key('c'));
+        assert!(app.should_quit);
+    }
+
+    #[test]
+    fn handle_key_tab_toggles_lens() {
+        let (mut app, _dir) = test_app();
+        assert_eq!(app.active_lens, ActiveLens::Incident);
+        app.handle_key(key(KeyCode::Tab));
+        assert_eq!(app.active_lens, ActiveLens::Forensic);
+        app.handle_key(key(KeyCode::Tab));
+        assert_eq!(app.active_lens, ActiveLens::Incident);
+    }
+
+    #[test]
+    fn tab_preserves_forensic_state() {
+        let (mut app, _dir) = test_app();
+        // Switch to Forensic, move cursor
+        app.handle_key(key(KeyCode::Tab));
+        app.handle_key(key(KeyCode::Char('j')));
+        assert_eq!(app.forensic_state.cursor, 1);
+
+        // Toggle away and back
+        app.handle_key(key(KeyCode::Tab));
+        assert_eq!(app.active_lens, ActiveLens::Incident);
+        app.handle_key(key(KeyCode::Tab));
+        assert_eq!(app.active_lens, ActiveLens::Forensic);
+
+        // Cursor position preserved
+        assert_eq!(app.forensic_state.cursor, 1);
+    }
+
+    #[test]
+    fn forensic_nav_only_in_forensic_mode() {
+        let (mut app, _dir) = test_app();
+        // In Incident mode, j/k should not affect forensic state
+        app.handle_key(key(KeyCode::Char('j')));
+        assert_eq!(app.forensic_state.cursor, 0);
+
+        // Switch to Forensic, j moves cursor
+        app.handle_key(key(KeyCode::Tab));
+        app.handle_key(key(KeyCode::Char('j')));
+        assert_eq!(app.forensic_state.cursor, 1);
+    }
+
+    // --- Render tests ---
+
+    #[test]
+    fn truth_hud_visible_in_forensic_lens() {
+        let (mut app, _dir) = test_app();
+        app.active_lens = ActiveLens::Forensic;
+
+        let backend = TestBackend::new(120, 20);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| render(frame, &app)).unwrap();
+
+        let hud_text = buffer_text(&terminal, Rect::new(0, 16, 120, 4));
+        assert!(
+            hud_text.contains("Level:"),
+            "HUD must be visible in Forensic Lens"
+        );
+        assert!(
+            hud_text.contains("Version:"),
+            "HUD version must be visible in Forensic Lens"
+        );
     }
 
     #[test]
