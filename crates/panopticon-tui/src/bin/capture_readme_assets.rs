@@ -227,6 +227,9 @@ fn write_sample_export_clean_eventlog(path: &Path) -> io::Result<()> {
 
 fn generate_export_refusal(out_dir: &Path) -> io::Result<String> {
     let refused_eventlog = out_dir.join("sample-refusal-eventlog.jsonl");
+    if refused_eventlog.exists() {
+        fs::remove_file(&refused_eventlog)?;
+    }
     let mut writer = EventLogWriter::open(&refused_eventlog)?;
 
     writer.append(ImportEvent {
@@ -332,4 +335,64 @@ fn architecture_mermaid() -> String {
         "    I --> M[timetravel.capture]",
     ]
     .join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use panopticon_core::eventlog::read_eventlog;
+
+    #[test]
+    fn sample_events_are_source_ordered_and_tier_a() {
+        let events = sample_events();
+        assert_eq!(events.len(), 8);
+        for (idx, ev) in events.iter().enumerate() {
+            assert_eq!(ev.source_seq, Some((idx + 1) as u64));
+            assert_eq!(ev.tier, Tier::A);
+        }
+    }
+
+    #[test]
+    fn write_sample_export_clean_eventlog_roundtrips() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("clean.jsonl");
+        write_sample_export_clean_eventlog(&path).expect("write clean eventlog");
+
+        let committed = read_eventlog(&path).expect("read committed eventlog");
+        assert_eq!(committed.len(), 3);
+        assert_eq!(committed[0].event_id, "clean-1");
+        assert_eq!(committed[2].event_id, "clean-3");
+    }
+
+    #[test]
+    fn asset_index_lists_expected_files() {
+        let index = asset_index_markdown();
+        assert!(index.contains("incident-lens.txt"));
+        assert!(index.contains("forensic-lens.txt"));
+        assert!(index.contains("truth-hud-degraded.txt"));
+        assert!(index.contains("tour-artifacts/"));
+    }
+
+    #[test]
+    fn generate_export_refusal_is_deterministic_and_structured() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let out = dir.path();
+
+        let first = generate_export_refusal(out).expect("first refusal output");
+        let second = generate_export_refusal(out).expect("second refusal output");
+
+        assert_eq!(first, second, "refusal output must be deterministic");
+        assert!(
+            first.contains("Export REFUSED:"),
+            "missing refusal header in output"
+        );
+        assert!(
+            first.contains("event:ref-1 @ payload"),
+            "missing blocked item location/field path details"
+        );
+        assert!(
+            first.contains("openai_key"),
+            "missing matched pattern detail"
+        );
+    }
 }

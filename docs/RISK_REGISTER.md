@@ -592,3 +592,11 @@ Context:
 3. Nondeterminism: Structured log format is deterministic (`run_id`, monotonic `seq`, stable fields). Runtime command output may vary in timing but is captured as transcripts.
 4. Security and privacy: Uses repo fixtures only; refusal transcript may include masked secret indicators by design.
 5. Performance cliffs: Script runs full stress tour and export flows, so it is not suitable for every edit loop; intended for e2e lane usage.
+
+## bd-2yv.3 · TEST-CORE: close no-mock unit/integration gaps in core crates
+
+1. Coupling: Added direct tests around `capture_readme_assets` generation helpers; future changes to README artifact names and refusal formatting now require synchronized test updates.
+2. Untested claims: Core determinism and structure are covered for the capture binary helpers, but operator-level visual quality of generated artifacts still depends on higher-level acceptance checks.
+3. Nondeterminism: Fixed a real nondeterminism source by removing stale `sample-refusal-eventlog.jsonl` before regenerating refusal artifacts; repeat runs now produce stable refusal output.
+4. Security and privacy: Refusal test fixtures intentionally include secret-like markers for scanner assertions only; no new secret exposure paths were introduced.
+5. Performance cliffs: Added unit tests are lightweight and file-local; no runtime production performance impact.
