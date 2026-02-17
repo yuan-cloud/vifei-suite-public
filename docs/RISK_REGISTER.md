@@ -464,3 +464,11 @@ Context:
 3. Nondeterminism: Demo quickcheck explicitly uses deterministic fixture and verifies trust outputs; no new nondeterministic runtime behavior introduced.
 4. Security: Demo script preserves share-safe posture by demonstrating both success and refusal paths, reducing risk of unsafe export messaging.
 5. Performance cliffs: Quickcheck runs full stress Tour and can be CPU-heavy; this is expected and acceptable for pre-release media capture.
+
+## bd-3qq.4 · LAUNCH-COMMS: release notes + social copy pack · 2026-02-17
+
+1. Coupling: Launch copy now intentionally couples to verified docs (`docs/README_VERIFICATION.md`, `docs/RELEASE_TRUST_VERIFICATION.md`) and canonical assets in `docs/assets/readme/`; messaging must be updated when those proofs or asset paths change.
+2. Untested claims: Social templates reference optional channels (X, LinkedIn, article) but do not prove audience performance; this bead provides technically accurate copy, not distribution outcomes.
+3. Nondeterminism: None introduced. Documentation-only changes with no runtime behavior changes.
+4. Security: Guardrails explicitly prohibit over-claiming hosted deployment or unsupported channels, reducing risk of misleading trust/security statements.
+5. Performance cliffs: None in runtime. Minor process overhead during launch prep due to copy review and claim verification.
