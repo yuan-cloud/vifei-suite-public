@@ -54,8 +54,10 @@ Fastlane and full-confidence CI lanes enforce contract sections with explicit ta
 
 1. `FL0-artifacts` / `FL1-stages`
 - Verifies `.tmp/fastlane/run.jsonl` and `.tmp/fastlane/summary.txt` exist.
+- Verifies `.tmp/fastlane/pty-preflight.log` exists.
 - Verifies required fastlane stages are present in `run.jsonl`:
   - `cli_export_refusal_report`
+  - `tui_pty_preflight`
   - `tui_interactive_smoke`
   - `fastlane_total`
 - Replay:

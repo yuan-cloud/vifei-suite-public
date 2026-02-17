@@ -164,8 +164,50 @@ log_json "info" "cli_export_refusal_report" "ok" 0 "refusal report schema/order 
 # Minimal TUI smoke: width bucket contracts + interactive PTY path (skip-aware by design).
 stage_cmd tui_modality_smoke 0 \
   cargo test -p panopticon-tui --test modality_validation width_buckets_preserve_required_surface_markers
-stage_cmd tui_interactive_smoke 0 \
-  cargo test -p panopticon-tui --test tui_e2e_interactive interactive_tui_flow_lens_toggle_nav_and_quit -- --nocapture
+
+set +e
+env OUT_DIR="$OUT_DIR" scripts/e2e/pty_preflight.sh \
+  > "$OUT_DIR/cmd/tui_pty_preflight.stdout.log" \
+  2> "$OUT_DIR/cmd/tui_pty_preflight.stderr.log"
+pty_rc=$?
+set -e
+
+assert_file tui_pty_preflight_log "$OUT_DIR/pty-preflight.log"
+pty_status="$(python3 - "$OUT_DIR/pty-preflight.log" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+line = path.read_text(encoding="utf-8").strip()
+payload = json.loads(line) if line else {}
+status = payload.get("status")
+print(status if status in {"pass", "fail"} else "invalid")
+PY
+)"
+
+if [[ "$pty_status" == "invalid" ]]; then
+  log_json "error" "tui_pty_preflight" "failed" 1 "invalid PTY preflight payload schema/status" "$OUT_DIR/pty-preflight.log"
+  echo "[tui_pty_preflight] FAIL invalid PTY preflight payload" >> "$SUMMARY_TXT"
+  exit 1
+fi
+
+if [[ "$pty_rc" -ne 0 && "$pty_status" != "fail" ]]; then
+  log_json "error" "tui_pty_preflight" "failed" "$pty_rc" "preflight exited non-zero without status=fail" "$OUT_DIR/pty-preflight.log"
+  echo "[tui_pty_preflight] FAIL inconsistent preflight exit/status rc=$pty_rc status=$pty_status" >> "$SUMMARY_TXT"
+  exit 1
+fi
+
+log_json "info" "tui_pty_preflight" "ok" 0 "status=$pty_status rc=$pty_rc" "$OUT_DIR/pty-preflight.log"
+echo "[tui_pty_preflight] status=$pty_status rc=$pty_rc" >> "$SUMMARY_TXT"
+
+if [[ "$pty_status" == "pass" ]]; then
+  stage_cmd tui_interactive_smoke 0 \
+    cargo test -p panopticon-tui --test tui_e2e_interactive interactive_tui_flow_lens_toggle_nav_and_quit -- --nocapture
+else
+  log_json "info" "tui_interactive_smoke" "ok" 0 "gated: PTY capability unavailable for runner" "$OUT_DIR/pty-preflight.log"
+  echo "[tui_interactive_smoke] GATED due to PTY capability status=fail (see $OUT_DIR/pty-preflight.log)" >> "$SUMMARY_TXT"
+fi
 
 # Artifact existence smoke from deterministic README capture set.
 assert_file readme_asset_incident docs/assets/readme/incident-lens.txt

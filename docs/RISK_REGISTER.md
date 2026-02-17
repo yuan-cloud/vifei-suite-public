@@ -1119,3 +1119,16 @@ Context:
 3. Nondeterminism: This reduces nondeterministic CI failures by gating PTY-only checks behind explicit capability checks while preserving deterministic contract markers in logs.
 4. Security: No new runtime secret surface; replay hints remain command-only and diagnostic artifacts are local CI outputs.
 5. Performance: Minor CI overhead increase from additional contract validation; interactive PTY runs are skipped on unsupported runners, reducing wasted retry cycles.
+
+## bd-22i · TEST-4.8 fastlane PTY capability-gating contract · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (determinism in CI), I5 (loud failure posture), deterministic stage telemetry in PR smoke lane
+- Constitution touched: none
+
+1. Coupling: Fastlane now couples to PTY preflight artifact shape and stage names (`tui_pty_preflight`, `tui_interactive_smoke`); contract changes require synchronized script/CI/doc updates.
+2. Untested claims: We validated local pass/fail PTY gating paths and stage emissions, but hosted runner image churn can still alter PTY availability rates.
+3. Nondeterminism: This reduces nondeterministic PR failures by converting PTY capability variance into explicit, deterministic gating metadata instead of implicit test behavior.
+4. Security: No new security surface; logs remain local CI artifacts and replay guidance is command-only.
+5. Performance: Slight additional script overhead for preflight parsing is negligible; skipping interactive PTY smoke on unsupported runners avoids wasted cycles.

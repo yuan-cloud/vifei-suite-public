@@ -37,7 +37,9 @@ jobs:
         run: |
           test -f .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/run.jsonl"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
           test -f .tmp/fastlane/summary.txt || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/summary.txt"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          test -f .tmp/fastlane/pty-preflight.log || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/pty-preflight.log"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
           grep -q '"stage":"cli_export_refusal_report"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing cli_export_refusal_report stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"tui_pty_preflight"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing tui_pty_preflight stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
           grep -q '"stage":"tui_interactive_smoke"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing tui_interactive_smoke stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
           grep -q '"stage":"fastlane_total"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing fastlane_total stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
 
