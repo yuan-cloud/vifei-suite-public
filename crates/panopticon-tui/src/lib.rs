@@ -9,11 +9,19 @@
 //! # Architecture
 //!
 //! The TUI is strictly read-only. It NEVER writes to the EventLog.
-//! The rendering pipeline is pure: ViewModel → terminal output.
 //!
 //! ```text
-//! EventLog → reduce → State → project → ViewModel → render → terminal
+//! EventLog → reduce → State → project → ViewModel
+//!                       │                    │
+//!            Incident Lens (domain)    Truth HUD (honesty)
+//!            Forensic Lens (events)
 //! ```
+//!
+//! - **Truth HUD** renders honesty metrics from `ViewModel` (projection output).
+//! - **Incident Lens** renders domain data from `State` (reducer output).
+//! - **Forensic Lens** renders event details from `Vec<CommittedEvent>`.
+//!
+//! All three data sources are deterministic (same EventLog → same output).
 //!
 //! # Invariants
 //!
@@ -25,7 +33,7 @@ mod incident_lens;
 mod truth_hud;
 
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -123,9 +131,15 @@ impl App {
         })
     }
 
-    /// Handle a key event.
-    fn handle_key(&mut self, key: KeyCode) {
-        match key {
+    /// Handle a key event. Accepts the full KeyEvent to support modifier keys (Ctrl-C).
+    fn handle_key(&mut self, key: KeyEvent) {
+        // Ctrl-C: clean exit (raw mode captures Ctrl-C as key event, not SIGINT)
+        if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+            self.should_quit = true;
+            return;
+        }
+
+        match key.code {
             KeyCode::Char('q') | KeyCode::Esc => {
                 self.should_quit = true;
             }
@@ -182,7 +196,7 @@ pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
         if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
-                    app.handle_key(key.code);
+                    app.handle_key(key);
                 }
             }
         }
