@@ -155,8 +155,15 @@ Workspace crates:
 - `docs/UX_SCOPE.md`
 - `docs/UX_MODALITY_MATRIX.md`
 - `docs/UX_VISUAL_TONE.md`
+- `docs/PUBLIC_REPO_SETTINGS_CHECKLIST.md`
 - `PLANS.md`
 - `AGENTS.md`
+
+## Community and Security
+
+- `CONTRIBUTING.md`: contribution expectations and report quality checklist
+- `SUPPORT.md`: support channels and triage priorities
+- `SECURITY.md`: private vulnerability reporting policy
 
 ## Status
 

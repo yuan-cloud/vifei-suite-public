@@ -768,3 +768,29 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism introduced; logging changes add replay hints and benchmark snapshots without changing product output semantics.
 4. Security and privacy: Logs gained replay hints containing command strings and local paths; still non-secret, but operators should treat artifacts as internal diagnostics.
 5. Performance cliffs: Added release benchmark step in `cli_e2e.sh` increases runtime modestly; fastlane path remains budgeted and unchanged in scope.
+
+## bd-1bv.1 · COMM-1: community health docs pass · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Public issue intake is now coupled to GitHub issue forms and security contact routing; repository rename or org migration requires updating template URLs.
+2. Untested claims: We did not run live GitHub-side form rendering in this local session; validity is based on YAML structure and established template schema.
+3. Nondeterminism: No product-path nondeterminism introduced. Changes are static documentation and issue-template metadata only.
+4. Security: Security posture is improved by steering vuln reports to private advisory flow. Risk remains if users ignore template routing and open public issues.
+5. Performance: No runtime performance impact; only repository metadata and docs were changed.
+
+## bd-1bv.2 · COMM-2: public repo settings checklist · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: none
+- Constitution touched: none
+
+1. Coupling: Public-readiness workflow is now coupled to `docs/PUBLIC_REPO_SETTINGS_CHECKLIST.md` as the canonical operational checklist for metadata/settings flips.
+2. Untested claims: Checklist recommendations (topics, branch protection, release-note shape) are governance guidance and were not validated against every GitHub org policy variant.
+3. Nondeterminism: No nondeterminism introduced. This bead adds deterministic documentation only.
+4. Security: Checklist encourages stronger branch/ruleset hygiene and private vulnerability flow; no new secret-bearing surfaces were added.
+5. Performance: No product runtime impact. Operational overhead is limited to periodic checklist review during release prep.
