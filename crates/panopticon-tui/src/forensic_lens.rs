@@ -432,13 +432,27 @@ fn event_type_color(type_name: &str) -> Color {
     }
 }
 
-/// Truncate text unless expanded.
+/// Truncate text unless expanded. Uses char boundaries to avoid UTF-8 panics.
 fn truncate_or_full(s: &str, expanded: bool) -> String {
     if expanded || s.len() <= 60 {
         s.to_string()
     } else {
-        format!("{}…", &s[..59])
+        // Find the last char boundary at or before byte 59
+        let end = floor_char_boundary(s, 59);
+        format!("{}…", &s[..end])
     }
+}
+
+/// Find the largest byte index `<= pos` that is a valid char boundary.
+fn floor_char_boundary(s: &str, pos: usize) -> usize {
+    if pos >= s.len() {
+        return s.len();
+    }
+    let mut i = pos;
+    while i > 0 && !s.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
 }
 
 /// Calculate the visible window of events around the cursor.
@@ -760,5 +774,69 @@ mod tests {
     fn visible_window_empty() {
         assert_eq!(visible_window(0, 0, 10), (0, 0));
         assert_eq!(visible_window(0, 5, 0), (0, 0));
+    }
+
+    #[test]
+    fn truncate_ascii_short_unchanged() {
+        assert_eq!(truncate_or_full("hello", false), "hello");
+    }
+
+    #[test]
+    fn truncate_ascii_long_truncated() {
+        let long = "a".repeat(100);
+        let result = truncate_or_full(&long, false);
+        assert!(result.ends_with('…'));
+        assert!(result.len() < 100);
+    }
+
+    #[test]
+    fn truncate_expanded_returns_full() {
+        let long = "a".repeat(100);
+        assert_eq!(truncate_or_full(&long, true), long);
+    }
+
+    #[test]
+    fn truncate_utf8_emoji_no_panic() {
+        // Each emoji is 4 bytes. 15 emojis = 60 bytes, so 16 = 64 bytes triggers truncation.
+        let emojis = "🦀".repeat(16);
+        let result = truncate_or_full(&emojis, false);
+        // Must not panic, must end with ellipsis, must be valid UTF-8
+        assert!(result.ends_with('…'));
+        // The truncated portion must contain only whole emoji characters
+        let without_ellipsis = &result[..result.len() - '…'.len_utf8()];
+        assert!(without_ellipsis.chars().all(|c| c == '🦀'));
+    }
+
+    #[test]
+    fn truncate_utf8_cjk_no_panic() {
+        // CJK characters are 3 bytes each. 21 chars = 63 bytes triggers truncation.
+        let cjk = "漢".repeat(21);
+        let result = truncate_or_full(&cjk, false);
+        assert!(result.ends_with('…'));
+        let without_ellipsis = &result[..result.len() - '…'.len_utf8()];
+        assert!(without_ellipsis.chars().all(|c| c == '漢'));
+    }
+
+    #[test]
+    fn truncate_utf8_mixed_no_panic() {
+        // Mix of ASCII and multi-byte to stress byte boundary logic
+        let mixed = format!("{}{}", "abc", "é".repeat(30));
+        let result = truncate_or_full(&mixed, false);
+        assert!(result.ends_with('…'));
+    }
+
+    #[test]
+    fn floor_char_boundary_basics() {
+        let s = "hello";
+        assert_eq!(floor_char_boundary(s, 3), 3);
+        assert_eq!(floor_char_boundary(s, 100), 5);
+
+        // 🦀 = 4 bytes at positions 0..4
+        let crab = "🦀x";
+        assert_eq!(floor_char_boundary(crab, 0), 0);
+        assert_eq!(floor_char_boundary(crab, 1), 0); // mid-char, backs up to 0
+        assert_eq!(floor_char_boundary(crab, 2), 0);
+        assert_eq!(floor_char_boundary(crab, 3), 0);
+        assert_eq!(floor_char_boundary(crab, 4), 4); // start of 'x'
     }
 }
