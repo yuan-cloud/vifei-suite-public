@@ -32,8 +32,8 @@ use ratatui::{
 fn level_style(level: LadderLevel) -> Style {
     match level {
         LadderLevel::L0 => Style::default().fg(Color::Green),
-        LadderLevel::L1 | LadderLevel::L2 => Style::default().fg(Color::Yellow),
-        LadderLevel::L3 | LadderLevel::L4 => Style::default().fg(Color::Red),
+        LadderLevel::L1 | LadderLevel::L2 | LadderLevel::L3 => Style::default().fg(Color::Yellow),
+        LadderLevel::L4 => Style::default().fg(Color::Red),
         LadderLevel::L5 => Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
     }
 }
@@ -296,15 +296,15 @@ mod tests {
 
     #[test]
     fn level_style_colors() {
-        // L0 should be green
+        // L0 should be green (healthy)
         assert_eq!(level_style(LadderLevel::L0).fg, Some(Color::Green));
-        // L1, L2 should be yellow
+        // L1, L2, L3 should be yellow (degraded)
         assert_eq!(level_style(LadderLevel::L1).fg, Some(Color::Yellow));
         assert_eq!(level_style(LadderLevel::L2).fg, Some(Color::Yellow));
-        // L3, L4 should be red
-        assert_eq!(level_style(LadderLevel::L3).fg, Some(Color::Red));
+        assert_eq!(level_style(LadderLevel::L3).fg, Some(Color::Yellow));
+        // L4 should be red (critical)
         assert_eq!(level_style(LadderLevel::L4).fg, Some(Color::Red));
-        // L5 should be bold red
+        // L5 should be bold red (safe failure posture)
         let l5 = level_style(LadderLevel::L5);
         assert_eq!(l5.fg, Some(Color::Red));
     }
