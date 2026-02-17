@@ -55,12 +55,16 @@ run_cmd() {
   set -e
 
   if [[ "$rc" -ne "$expected" ]]; then
+    local replay_hint
+    replay_hint="(cd $ROOT_DIR && $cmd_str)"
     log_json "error" "$stage" "failed" "$rc" "unexpected exit (expected $expected) cmd=$cmd_str" "$out_file"
+    log_json "error" "$stage" "failed" "$rc" "replay_hint=$replay_hint" "$err_file"
     {
       echo "[$stage] FAIL expected=$expected actual=$rc"
       echo "  cmd: $cmd_str"
       echo "  stdout: $out_file"
       echo "  stderr: $err_file"
+      echo "  replay: $replay_hint"
     } >> "$SUMMARY_TXT"
     return 1
   fi
@@ -101,9 +105,10 @@ assert_contains() {
   fi
 }
 
-run_cmd help 0 cargo run -p panopticon-tui --bin panopticon -- --help
+run_cmd quick_help_json 0 cargo run -p panopticon-tui --bin panopticon
+assert_contains quick_help_json_stdout "$OUT_DIR/cmd/quick_help_json.stdout.log" "\"quick_help\""
 
-run_cmd view_non_tty_refusal 1 \
+run_cmd view_non_tty_refusal 4 \
   cargo run -p panopticon-tui --bin panopticon -- \
   view docs/assets/readme/sample-eventlog.jsonl
 
@@ -131,6 +136,13 @@ if drops != 0:
 PY
 log_json "info" "tour_metrics" "ok" 0 "tier_a_drops validated as 0" "$OUT_DIR/tour/metrics.json"
 
+run_cmd tour_bench_release 0 \
+  env PANOPTICON_TOUR_BENCH_ITERS="${PANOPTICON_TOUR_BENCH_ITERS:-3}" \
+  cargo run -q -p panopticon-tour --bin bench_tour --release
+assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p50="
+assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p95="
+assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p99="
+
 run_cmd export_clean 0 \
   cargo run -p panopticon-tui --bin panopticon -- \
   export docs/assets/readme/sample-export-clean-eventlog.jsonl \
@@ -139,17 +151,17 @@ run_cmd export_clean 0 \
   --refusal-report "$OUT_DIR/export/refusal-clean.json"
 
 assert_file export_bundle "$OUT_DIR/export/bundle.tar.zst"
-assert_contains export_clean_stdout "$OUT_DIR/cmd/export_clean.stdout.log" "Export successful"
+assert_contains export_clean_stdout "$OUT_DIR/cmd/export_clean.stdout.log" "\"code\":\"OK\""
 
-run_cmd export_refusal 1 \
+run_cmd export_refusal 3 \
   cargo run -p panopticon-tui --bin panopticon -- \
   export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/refused.tar.zst" \
   --refusal-report "$OUT_DIR/export/refusal-refused.json"
 
-assert_contains export_refusal_stderr "$OUT_DIR/cmd/export_refusal.stderr.log" "export refused"
-assert_contains export_refusal_stderr "$OUT_DIR/cmd/export_refusal.stderr.log" "Likely cause"
+assert_contains export_refusal_stdout "$OUT_DIR/cmd/export_refusal.stdout.log" "\"code\":\"EXPORT_REFUSED\""
+assert_contains export_refusal_stdout "$OUT_DIR/cmd/export_refusal.stdout.log" "\"blocked_items\""
 
 echo "E2E CLI run complete: $RUN_ID" | tee -a "$SUMMARY_TXT"
 echo "Artifacts:"

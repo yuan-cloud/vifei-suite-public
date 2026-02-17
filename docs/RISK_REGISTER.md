@@ -760,3 +760,11 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; tests assert deterministic JSON envelope keys for fixed inputs.
 4. Security and privacy: New tests use curated non-secret fixtures and temp output directories; no real credential material added.
 5. Performance cliffs: Additional integration tests slightly increase `panopticon-tui` test runtime, but impact is modest and bounded.
+
+## bd-1z3.3 · COV-3: e2e evidence/logging polish
+
+1. Coupling: E2E scripts now assume robot-mode JSON output contracts (`"code":"OK"`, `"code":"EXPORT_REFUSED"`) and no-arg quick-help behavior; CLI contract changes must update script assertions.
+2. Untested claims: We validated `cli_e2e.sh` and `fastlane.sh` end-to-end locally, but cross-platform shell behavior (non-bash environments) is still not part of this bead.
+3. Nondeterminism: No truth-path nondeterminism introduced; logging changes add replay hints and benchmark snapshots without changing product output semantics.
+4. Security and privacy: Logs gained replay hints containing command strings and local paths; still non-secret, but operators should treat artifacts as internal diagnostics.
+5. Performance cliffs: Added release benchmark step in `cli_e2e.sh` increases runtime modestly; fastlane path remains budgeted and unchanged in scope.

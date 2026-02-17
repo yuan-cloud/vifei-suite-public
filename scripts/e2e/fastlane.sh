@@ -57,12 +57,16 @@ stage_cmd() {
   set -e
 
   if [[ "$rc" -ne "$expected" ]]; then
+    local replay_hint
+    replay_hint="(cd $ROOT_DIR && $cmd_str)"
     log_json "error" "$stage" "failed" "$rc" "unexpected exit (expected $expected) cmd=$cmd_str" "$out_file"
+    log_json "error" "$stage" "failed" "$rc" "replay_hint=$replay_hint" "$err_file"
     {
       echo "[$stage] FAIL expected=$expected actual=$rc"
       echo "  cmd: $cmd_str"
       echo "  stdout: $out_file"
       echo "  stderr: $err_file"
+      echo "  replay: $replay_hint"
     } >> "$SUMMARY_TXT"
     exit 1
   fi
@@ -112,7 +116,8 @@ stage_cmd core_projection_hash 0 cargo test -p panopticon-core projection::tests
 stage_cmd docs_guard 0 cargo test -p panopticon-core --test docs_guard
 
 # CLI smoke: help + share-safe success/refusal contracts.
-stage_cmd cli_help 0 cargo run -p panopticon-tui --bin panopticon -- --help
+stage_cmd cli_quick_help_json 0 cargo run -p panopticon-tui --bin panopticon
+assert_contains cli_quick_help_json_stdout "$OUT_DIR/cmd/cli_quick_help_json.stdout.log" "\"quick_help\""
 
 stage_cmd cli_export_clean 0 \
   cargo run -p panopticon-tui --bin panopticon -- \
@@ -121,16 +126,16 @@ stage_cmd cli_export_clean 0 \
   --output "$OUT_DIR/export/bundle.tar.zst" \
   --refusal-report "$OUT_DIR/export/refusal-clean.json"
 assert_file cli_export_bundle "$OUT_DIR/export/bundle.tar.zst"
-assert_contains cli_export_clean_stdout "$OUT_DIR/cmd/cli_export_clean.stdout.log" "Export successful"
+assert_contains cli_export_clean_stdout "$OUT_DIR/cmd/cli_export_clean.stdout.log" "\"code\":\"OK\""
 
-stage_cmd cli_export_refusal 1 \
+stage_cmd cli_export_refusal 3 \
   cargo run -p panopticon-tui --bin panopticon -- \
   export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/refused.tar.zst" \
   --refusal-report "$OUT_DIR/export/refusal-refused.json"
-assert_contains cli_export_refusal_stderr "$OUT_DIR/cmd/cli_export_refusal.stderr.log" "export refused"
-assert_contains cli_export_refusal_stderr "$OUT_DIR/cmd/cli_export_refusal.stderr.log" "Likely cause"
+assert_contains cli_export_refusal_stdout "$OUT_DIR/cmd/cli_export_refusal.stdout.log" "\"code\":\"EXPORT_REFUSED\""
+assert_contains cli_export_refusal_stdout "$OUT_DIR/cmd/cli_export_refusal.stdout.log" "\"blocked_items\""
 
 # Minimal TUI smoke: width bucket contracts + interactive PTY path (skip-aware by design).
 stage_cmd tui_modality_smoke 0 \
