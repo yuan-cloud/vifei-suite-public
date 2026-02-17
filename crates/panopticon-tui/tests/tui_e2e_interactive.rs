@@ -16,11 +16,35 @@ struct SessionRun {
     stderr: String,
 }
 
+fn workspace_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root must be two levels above crate manifest dir")
+        .to_path_buf()
+}
+
+fn resolve_out_dir(raw: &str) -> PathBuf {
+    let path = PathBuf::from(raw);
+    if path.is_absolute() {
+        path
+    } else {
+        workspace_root().join(path)
+    }
+}
+
 fn test_out_dir() -> PathBuf {
-    let root = env::var("PANOPTICON_E2E_OUT").unwrap_or_else(|_| ".tmp/e2e/tui".to_string());
-    let path = PathBuf::from(root);
+    let raw = env::var("PANOPTICON_E2E_OUT").unwrap_or_else(|_| ".tmp/e2e/tui".to_string());
+    let path = resolve_out_dir(&raw);
     fs::create_dir_all(&path).expect("create e2e output dir");
     path
+}
+
+#[test]
+fn relative_panopticon_e2e_out_resolves_from_workspace_root() {
+    let out = resolve_out_dir(".tmp/e2e/tui");
+    let expected = workspace_root().join(".tmp/e2e/tui");
+    assert_eq!(out, expected);
 }
 
 fn script_available() -> bool {

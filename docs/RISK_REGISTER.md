@@ -680,3 +680,11 @@ Context:
 3. Nondeterminism: Determinism checks were strengthened (including capture pipeline fixes), with remaining intentional variability documented (`refusal-report.json` metadata path).
 4. Security and privacy: Structured logs improve triage but may contain operational refusal context; artifact access controls remain important.
 5. Performance cliffs: Full-confidence CI is intentionally heavier; fastlane remains the mitigation for developer feedback latency.
+
+## bd-kko · TEST-E2E-PTY-PATH: normalize TUI e2e output path to workspace root
+
+1. Coupling: TUI E2E output path resolution now depends on workspace root derivation from `CARGO_MANIFEST_DIR` (two-level parent assumption), which should remain stable with current workspace layout.
+2. Untested claims: We added direct test coverage for relative path normalization and exercised interactive tests, but cross-platform path behavior (non-Unix separators) still relies on Rust `PathBuf` semantics and has not been separately profiled.
+3. Nondeterminism: No nondeterminism introduced; path normalization is deterministic and independent of runtime clock/randomness.
+4. Security and privacy: No new secret/data exposure paths. Artifact location changed to improve traceability only.
+5. Performance cliffs: Negligible; path normalization is constant-time and only used in test harness setup.

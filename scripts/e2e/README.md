@@ -37,8 +37,8 @@ The script writes:
 
 The interactive TUI test writes:
 
-- `.tmp/e2e/tui/*.typescript`: PTY transcripts (first failure and retry attempt transcripts preserved).
-- `.tmp/e2e/tui/*.assertions.log`: pass/fail summary with transcript pointers.
+- `<workspace-root>/.tmp/e2e/tui/*.typescript`: PTY transcripts (first failure and retry attempt transcripts preserved).
+- `<workspace-root>/.tmp/e2e/tui/*.assertions.log`: pass/fail summary with transcript pointers.
 
 ## Failure Triage
 
