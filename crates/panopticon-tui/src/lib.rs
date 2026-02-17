@@ -168,6 +168,27 @@ impl App {
     }
 }
 
+/// Render an EventLog to a buffer string for snapshot testing.
+///
+/// Exercises the full pipeline: read → reduce → project → render.
+/// Used by integration tests to validate Truth HUD presence and wiring.
+#[doc(hidden)]
+pub fn render_to_buffer(eventlog_path: &Path, width: u16, height: u16) -> io::Result<String> {
+    let app = App::new(eventlog_path)?;
+    let backend = ratatui::backend::TestBackend::new(width, height);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.draw(|frame| render(frame, &app))?;
+
+    let buf = terminal.backend().buffer();
+    let mut text = String::new();
+    for y in 0..height {
+        for x in 0..width {
+            text.push(buf[(x, y)].symbol().chars().next().unwrap_or(' '));
+        }
+    }
+    Ok(text)
+}
+
 /// Run the TUI viewer for an EventLog.
 pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
     // Set up panic hook to restore terminal

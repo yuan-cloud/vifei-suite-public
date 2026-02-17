@@ -312,3 +312,11 @@ Context:
 3. Nondeterminism: None. Events are displayed by commit_index (from the eventlog read order). No HashMap iteration. No wall-clock in rendering. `queue_pressure * 100.0` in PolicyDecision display uses f64 formatting with explicit precision `{:.1}%`.
 4. Security: No security implications. TUI is read-only. No user input stored.
 5. Performance: Truth HUD fix: Length(3)→Length(4), zero perf impact. Forensic Lens: 12 new tests add ~0.03s. Rendering is O(visible_events) per frame. App stores full event list in memory — for v0.1 local-only, acceptable.
+
+## bd-bjv.6 · M6.6: Truth HUD snapshot test
+
+1. Coupling: Added `render_to_buffer` public function to panopticon-tui, exposing a `#[doc(hidden)]` test helper. Integration test depends on panopticon-core's EventLogWriter and panopticon-tui's render pipeline. Coupling is appropriate for an end-to-end test.
+2. Untested claims: None. All 6 required HUD fields are asserted. Empty eventlog edge case covered. Version string exact-match tested.
+3. Nondeterminism: None. render_to_buffer is deterministic (same EventLog → same output). TestBackend produces deterministic buffer content.
+4. Security: No security implications. Test-only code, read-only rendering.
+5. Performance: 4 integration tests add ~0.02s. render_to_buffer creates a TestBackend per call — acceptable for test use only.
