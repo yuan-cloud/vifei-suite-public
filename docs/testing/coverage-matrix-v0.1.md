@@ -95,3 +95,8 @@ Workspace inventory file lines:
 
 - This audit is the baseline for `TEST-HARDEN` sequencing; downstream beads should update this file when gaps close.
 - Once `cargo llvm-cov` is available, add numeric line/function coverage percentages as an additive section without replacing risk-ranked analysis.
+
+## Progress updates (post-baseline)
+
+- `bd-2yv.8` completed: deterministic fastlane lane is now implemented and enforced in CI (`scripts/e2e/fastlane.sh`, `.github/workflows/ci.yml`).
+- `bd-2yv.7` completed: explicit defer register ledger plus validator added and enforced in CI (`docs/testing/defer-register-v0.1.json`, `scripts/testing/validate_defer_register.py`).

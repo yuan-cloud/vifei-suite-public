@@ -32,6 +32,9 @@ jobs:
       - name: Fastlane smoke suite
         run: scripts/e2e/fastlane.sh
 
+      - name: Validate defer register
+        run: python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+
   check:
     needs: fastlane
     runs-on: ubuntu-latest
@@ -63,6 +66,7 @@ jobs:
         run: cargo test
 
   release-trust:
+    needs: check
     if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:

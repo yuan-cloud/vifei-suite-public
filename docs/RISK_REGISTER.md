@@ -640,3 +640,11 @@ Context:
 3. Nondeterminism: No new product-path nondeterminism was introduced; fastlane logs are sequence-numbered and stable-field JSONL, and assertions use deterministic fixtures and explicit command contracts.
 4. Security and privacy: The lane exercises share-safe refusal fixtures and captures transcripts under `.tmp/fastlane`; these logs can include refusal reasons and should remain local CI artifacts, not public release assets.
 5. Performance cliffs: Fastlane budget is bounded (`<=300s`) with explicit fail-on-budget breach, but cargo cache misses in cold CI can approach the ceiling; fallback full-suite commands are documented for triage when this happens.
+
+## bd-2yv.7 · TEST-DEFER-REGISTER: explicit uncovered-path waiver ledger
+
+1. Coupling: CI now couples test governance to `docs/testing/defer-register-v0.1.json` schema and validator behavior; any ledger shape changes must update `scripts/testing/validate_defer_register.py` in lockstep.
+2. Untested claims: The validator enforces field/date integrity and expiry checks, but it does not yet auto-verify that each `linked_beads` ID currently exists in `.beads/issues.jsonl`.
+3. Nondeterminism: No runtime nondeterminism introduced in product code. Validation uses deterministic JSON parsing and explicit date comparisons.
+4. Security and privacy: Ledger content is metadata-only and should not include secrets. CI enforcement reduces risk of silent stale waivers, but human review is still required to keep rationales accurate.
+5. Performance cliffs: Negligible. Validator cost is O(n) in waiver entries and runs quickly in CI; no production-path overhead.

@@ -1,0 +1,27 @@
+{
+  "version": "v0.1",
+  "updated_on": "2026-02-17",
+  "review_cadence": "weekly",
+  "entries": [
+    {
+      "id": "waiver-coverage-numeric-metrics",
+      "surface": "Numeric line/function coverage percentages (cargo llvm-cov unavailable in baseline environment)",
+      "risk_rank": "P1",
+      "owner": "maintainer",
+      "rationale": "Current coverage matrix is risk-ranked and command-backed, but lacks numeric line/function percentages until llvm-cov is available in CI and local dev images.",
+      "compensating_controls": [
+        "docs/testing/coverage-matrix-v0.1.md tracks uncovered paths and owners",
+        "PR fastlane and full quality gates must remain green",
+        "Deferred items are tracked as beads and linked below"
+      ],
+      "created_on": "2026-02-17",
+      "revisit_on": "2026-02-24",
+      "expires_on": "2026-03-31",
+      "status": "active",
+      "linked_beads": [
+        "bd-2yv.6",
+        "bd-2yv"
+      ]
+    }
+  ]
+}
