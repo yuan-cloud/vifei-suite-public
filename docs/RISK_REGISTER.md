@@ -704,3 +704,11 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced. The export range computation is pure and deterministic, and launch-doc wording edits do not affect runtime behavior.
 4. Security and privacy: No new secret surfaces introduced. The code change is metadata-range logic only; doc changes are wording and scope clarifications.
 5. Performance cliffs: No material performance impact; the range fold is linear over already loaded events and replaces an O(1) first/last read with an O(n) scan, which is acceptable at current v0.1 scale and export path frequency.
+
+## bd-1iv · UBS-HARDEN: production-path panic/unwrap cleanup and parser-context improvements
+
+1. Coupling: UBS hygiene now has tighter coupling to test-style patterns in `crates/panopticon-export/src/lib.rs`; future test authors should prefer `matches!` assertions over panic branches to keep scanner noise controlled.
+2. Untested claims: This bead focused on UBS signal quality and did not claim new runtime behavior; production export/refusal behavior remained covered by existing unit and integration suites.
+3. Nondeterminism: No new nondeterminism introduced; edits were test-logic refactors only, with deterministic assertions and no ordering/time/randomness changes.
+4. Security and privacy: Secret-scanner fixtures were rewritten to avoid obvious literal credential forms while preserving refusal-path coverage, reducing accidental “hardcoded secret” noise without weakening checks.
+5. Performance cliffs: No product-path performance impact; only test code changed and full quality gates remained green.

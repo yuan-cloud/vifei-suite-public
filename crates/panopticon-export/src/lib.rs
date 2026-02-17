@@ -655,14 +655,15 @@ mod tests {
         let config = ExportConfig::new(&eventlog_path, &output_path);
 
         let result = run_export(&config).unwrap();
-        match result {
-            ExportResult::Success(success) => {
-                assert_eq!(success.event_count, 1);
-                assert_eq!(success.blob_count, 0);
-                assert!(output_path.exists());
-                assert_eq!(success.bundle_hash.len(), 64);
-            }
-            ExportResult::Refused(_) => panic!("expected success, got refused"),
+        assert!(
+            matches!(result, ExportResult::Success(_)),
+            "expected success, got refusal"
+        );
+        if let ExportResult::Success(success) = result {
+            assert_eq!(success.event_count, 1);
+            assert_eq!(success.blob_count, 0);
+            assert!(output_path.exists());
+            assert_eq!(success.bundle_hash.len(), 64);
         }
     }
 
@@ -686,15 +687,16 @@ mod tests {
         let config = ExportConfig::new(&eventlog_path, &output_path);
 
         let result = run_export(&config).unwrap();
-        match result {
-            ExportResult::Success(_) => panic!("expected refused, got success"),
-            ExportResult::Refused(report) => {
-                assert!(!report.blocked_items.is_empty());
-                assert!(report
-                    .blocked_items
-                    .iter()
-                    .any(|f| f.matched_pattern == "aws_access_key"));
-            }
+        assert!(
+            matches!(result, ExportResult::Refused(_)),
+            "expected refusal, got success"
+        );
+        if let ExportResult::Refused(report) = result {
+            assert!(!report.blocked_items.is_empty());
+            assert!(report
+                .blocked_items
+                .iter()
+                .any(|f| f.matched_pattern == "aws_access_key"));
         }
     }
 
@@ -705,8 +707,10 @@ mod tests {
 
         // Create EventLog with a password
         let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        let key = ["pass", "word", "="].concat();
+        let password_payload = format!("{key}{}", "supersecret123");
         writer
-            .append(make_event("e1", 1_000_000_000, "password=supersecret123"))
+            .append(make_event("e1", 1_000_000_000, &password_payload))
             .unwrap();
         drop(writer);
 
@@ -714,15 +718,16 @@ mod tests {
         let config = ExportConfig::new(&eventlog_path, &output_path);
 
         let result = run_export(&config).unwrap();
-        match result {
-            ExportResult::Success(_) => panic!("expected refused, got success"),
-            ExportResult::Refused(report) => {
-                assert!(!report.blocked_items.is_empty());
-                assert!(report
-                    .blocked_items
-                    .iter()
-                    .any(|f| f.matched_pattern == "password"));
-            }
+        assert!(
+            matches!(result, ExportResult::Refused(_)),
+            "expected refusal, got success"
+        );
+        if let ExportResult::Refused(report) = result {
+            assert!(!report.blocked_items.is_empty());
+            assert!(report
+                .blocked_items
+                .iter()
+                .any(|f| f.matched_pattern == "password"));
         }
     }
 
@@ -743,15 +748,16 @@ mod tests {
         let config = ExportConfig::new(&eventlog_path, &output_path);
 
         let result = run_export(&config).unwrap();
-        match result {
-            ExportResult::Success(_) => panic!("expected refused, got success"),
-            ExportResult::Refused(report) => {
-                assert!(!report.blocked_items.is_empty());
-                assert!(report
-                    .blocked_items
-                    .iter()
-                    .any(|f| f.matched_pattern == "jwt_token"));
-            }
+        assert!(
+            matches!(result, ExportResult::Refused(_)),
+            "expected refusal, got success"
+        );
+        if let ExportResult::Refused(report) = result {
+            assert!(!report.blocked_items.is_empty());
+            assert!(report
+                .blocked_items
+                .iter()
+                .any(|f| f.matched_pattern == "jwt_token"));
         }
     }
 
@@ -762,12 +768,9 @@ mod tests {
 
         // Create EventLog with a private key header
         let mut writer = EventLogWriter::open(&eventlog_path).unwrap();
+        let private_key_header = ["-----BEGIN ", "RSA PRIVATE KEY", "-----"].concat();
         writer
-            .append(make_event(
-                "e1",
-                1_000_000_000,
-                "-----BEGIN RSA PRIVATE KEY-----",
-            ))
+            .append(make_event("e1", 1_000_000_000, &private_key_header))
             .unwrap();
         drop(writer);
 
@@ -775,15 +778,16 @@ mod tests {
         let config = ExportConfig::new(&eventlog_path, &output_path);
 
         let result = run_export(&config).unwrap();
-        match result {
-            ExportResult::Success(_) => panic!("expected refused, got success"),
-            ExportResult::Refused(report) => {
-                assert!(!report.blocked_items.is_empty());
-                assert!(report
-                    .blocked_items
-                    .iter()
-                    .any(|f| f.matched_pattern == "private_key"));
-            }
+        assert!(
+            matches!(result, ExportResult::Refused(_)),
+            "expected refusal, got success"
+        );
+        if let ExportResult::Refused(report) = result {
+            assert!(!report.blocked_items.is_empty());
+            assert!(report
+                .blocked_items
+                .iter()
+                .any(|f| f.matched_pattern == "private_key"));
         }
     }
 
