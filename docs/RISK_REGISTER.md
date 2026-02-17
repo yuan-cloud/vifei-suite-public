@@ -277,3 +277,18 @@ Context:
 3. Nondeterminism: None. Manifest entries are sorted alphabetically (inheriting the sorted `entries` vec). All fields are deterministic: file hashes are BLAKE3, commit_index range is from deterministic EventLog, projection_invariants_version is a constant. No wall clock, no RNG.
 4. Security: No new security risk. Manifest exposes file paths (archive-relative), sizes, and BLAKE3 hashes. No event content or blob data flows through the manifest. BLAKE3 hashes of blob data are already exposed via `payload_ref` in the EventLog.
 5. Performance: Manifest creation adds one BLAKE3 hash per file entry (already computed as part of collecting entries) and one JSON serialization. Negligible overhead.
+
+---
+
+## bd-d7c.6 · M8.6: Export tests (clean, refusal, re-export) · 2026-02-17
+
+Context:
+- Bead owner: CloudyLake (claude-code)
+- Invariants referenced: I3 (share-safe export), I4 (testable determinism via bundle_hash)
+- Constitution touched: none
+
+1. Coupling: Integration tests depend on the public API of panopticon-export (`run_export`, `ExportConfig`, `BundleManifest`, etc.) and panopticon-core (`EventLogWriter`, `BlobStore`, `ImportEvent`). Changes to the export pipeline public API or event schema will require test updates. This is desirable — tests should break when the API changes.
+2. Untested claims: (a) Cross-machine determinism not tested (same EventLog on different OSes/architectures). (b) Large bundle behavior not tested (tests use small fixtures). (c) No test for concurrent export of the same EventLog. All acceptable for v0.1.
+3. Nondeterminism: None. All tests use deterministic fixtures. No time-dependent assertions.
+4. Security: Test fixtures include known secret patterns (AWS keys, passwords) for refusal testing. These are well-known example values (AKIAIOSFODNN7EXAMPLE) that are not real credentials.
+5. Performance: 8 integration tests add ~0.04s to the test suite. Each creates temporary directories with small fixtures. No performance risk.
