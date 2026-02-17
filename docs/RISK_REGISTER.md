@@ -560,3 +560,11 @@ Context:
 3. Nondeterminism: None introduced. Rendering remains deterministic over reducer state with no wall-clock/random inputs added.
 4. Security and privacy: No new data exposure paths; anomaly details still render from existing state fields only.
 5. Performance cliffs: Minimal impact. Additional anomaly summary line and section reordering are O(n) on already-materialized lists; no new heavy allocations or I/O paths.
+
+## bd-gxd.5 · UX-CONTEXT-HINTS: lens-aware key hints and next actions
+
+1. Coupling: Help-copy logic is now lens/state-aware and coupled to `ForensicState.expanded` plus anomaly presence in `State`; future keybinding changes must update these hint templates together.
+2. Untested claims: Unit tests validate hint switching for anomaly/no-anomaly and expand/collapse states, but no terminal usability study yet measures reduced operator confusion.
+3. Nondeterminism: None introduced. Hint selection is pure deterministic branching from existing state and keyflow.
+4. Security and privacy: No new data surfaces; hints reference only existing event metadata and controls.
+5. Performance cliffs: Minimal. Added string formatting in render path is bounded and proportional to already-rendered state, with no new I/O or allocations of unbounded structures.

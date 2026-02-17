@@ -136,9 +136,23 @@ fn render_timeline(
     }
 
     // Help line at bottom
+    let selected = &events[forensic.cursor];
+    let next_action = if forensic.expanded {
+        format!(
+            "Next: #{} {} | Enter=collapse | j/k",
+            selected.commit_index,
+            selected.payload.event_type_name()
+        )
+    } else {
+        format!(
+            "Next: #{} {} | Enter=expand | j/k",
+            selected.commit_index,
+            selected.payload.event_type_name()
+        )
+    };
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        "j/k=nav Enter=expand",
+        next_action,
         Style::default().fg(Color::DarkGray),
     )));
 
@@ -573,6 +587,43 @@ mod tests {
         assert!(text.contains("RunStart"), "Missing RunStart in timeline");
         assert!(text.contains("ToolCall"), "Missing ToolCall in timeline");
         assert!(text.contains("Error"), "Missing Error in timeline");
+        assert!(text.contains("Next:"), "Missing next-action hint");
+    }
+
+    #[test]
+    fn forensic_lens_hint_changes_with_expand_state() {
+        let backend = TestBackend::new(120, 30);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let events = sample_events();
+
+        let collapsed = ForensicState::new();
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 120, 30);
+                render_forensic_lens(frame, area, &events, &collapsed);
+            })
+            .unwrap();
+        let collapsed_text = buffer_text(&terminal, Rect::new(0, 0, 120, 30));
+        assert!(
+            collapsed_text.contains("Enter=expand"),
+            "Expected expand hint when collapsed"
+        );
+
+        let expanded = ForensicState {
+            cursor: 0,
+            expanded: true,
+        };
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 120, 30);
+                render_forensic_lens(frame, area, &events, &expanded);
+            })
+            .unwrap();
+        let expanded_text = buffer_text(&terminal, Rect::new(0, 0, 120, 30));
+        assert!(
+            expanded_text.contains("Enter=collapse"),
+            "Expected collapse hint when expanded"
+        );
     }
 
     #[test]

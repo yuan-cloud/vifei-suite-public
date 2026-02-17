@@ -262,8 +262,13 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
 
     // Help line at the bottom
     lines.push(Line::from(""));
+    let next_action = if has_anomalies {
+        "Next action: Tab to Forensic, then j/k + Enter on anomaly events."
+    } else {
+        "Next action: monitor Run Context; Tab to Forensic for event-level audit."
+    };
     lines.push(Line::from(Span::styled(
-        "Triage first: inspect ERR/SKEW/POLICY. Keys: Tab=toggle lens, q=quit",
+        format!("{next_action} Keys: Tab=toggle lens, q=quit"),
         Style::default().fg(Color::DarkGray),
     )));
 
@@ -532,9 +537,47 @@ mod tests {
             .unwrap();
 
         let text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
-        assert!(text.contains("Triage first"), "Missing triage-first hint");
+        assert!(text.contains("Next action"), "Missing next-action hint");
         assert!(text.contains("Tab=toggle lens"), "Missing keybindings help");
         assert!(text.contains("q=quit"), "Missing quit keybinding");
+    }
+
+    #[test]
+    fn incident_lens_next_action_changes_with_anomalies() {
+        let backend = TestBackend::new(100, 30);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        let clean_state = empty_state();
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 100, 30);
+                render_incident_lens(frame, area, &clean_state, "test.jsonl", 0, false);
+            })
+            .unwrap();
+        let clean_text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
+        assert!(
+            clean_text.contains("monitor Run Context"),
+            "Expected no-anomaly next action"
+        );
+
+        let mut anomaly_state = empty_state();
+        anomaly_state.error_log.push(ErrorEntry {
+            commit_index: 42,
+            kind: "runtime".to_string(),
+            message: "tool crashed".to_string(),
+            severity: Some("high".to_string()),
+        });
+        terminal
+            .draw(|frame| {
+                let area = Rect::new(0, 0, 100, 30);
+                render_incident_lens(frame, area, &anomaly_state, "test.jsonl", 1, false);
+            })
+            .unwrap();
+        let anomaly_text = buffer_text(&terminal, Rect::new(0, 0, 100, 30));
+        assert!(
+            anomaly_text.contains("j/k + Enter on anomaly events"),
+            "Expected anomaly next action"
+        );
     }
 
     #[test]
