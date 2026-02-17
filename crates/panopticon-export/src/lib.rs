@@ -151,15 +151,20 @@ pub struct RefusalReport {
 impl RefusalReport {
     /// Create a new refusal report from blocked items.
     ///
-    /// Items are stably sorted by (event_id, field_path, matched_pattern)
+    /// Items are stably sorted by
+    /// (event_id, field_path, matched_pattern, blob_ref, redacted_match)
     /// for deterministic output per M8.3 requirements.
     pub fn new(eventlog_path: &str, mut items: Vec<BlockedItem>) -> Self {
-        // Deterministic sort: by event_id, then field_path, then matched_pattern
+        // Deterministic sort: include blob_ref and redacted_match as tie-breakers
+        // to avoid nondeterministic ordering when multiple blob findings share
+        // the same event_id/field_path/pattern tuple.
         items.sort_by(|a, b| {
             a.event_id
                 .cmp(&b.event_id)
                 .then_with(|| a.field_path.cmp(&b.field_path))
                 .then_with(|| a.matched_pattern.cmp(&b.matched_pattern))
+                .then_with(|| a.blob_ref.cmp(&b.blob_ref))
+                .then_with(|| a.redacted_match.cmp(&b.redacted_match))
         });
 
         let unique_locations: HashSet<&str> = items
@@ -721,6 +726,30 @@ mod tests {
         let json = serde_json::to_string(&report).unwrap();
         // blob_ref should be skipped when None
         assert!(!json.contains("blob_ref"));
+    }
+
+    #[test]
+    fn refusal_report_sort_is_deterministic_for_blob_ties() {
+        let items = vec![
+            BlockedItem {
+                event_id: String::new(),
+                field_path: "content".into(),
+                matched_pattern: "private_key".into(),
+                blob_ref: Some("z-blob".into()),
+                redacted_match: "----***z---".into(),
+            },
+            BlockedItem {
+                event_id: String::new(),
+                field_path: "content".into(),
+                matched_pattern: "private_key".into(),
+                blob_ref: Some("a-blob".into()),
+                redacted_match: "----***a---".into(),
+            },
+        ];
+        let report = RefusalReport::new("/tmp/test.jsonl", items);
+        assert_eq!(report.blocked_items.len(), 2);
+        assert_eq!(report.blocked_items[0].blob_ref.as_deref(), Some("a-blob"));
+        assert_eq!(report.blocked_items[1].blob_ref.as_deref(), Some("z-blob"));
     }
 
     // ---- M8.4: Deterministic tar+zstd bundling tests ----

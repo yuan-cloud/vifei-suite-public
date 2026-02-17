@@ -7,10 +7,21 @@ use serde_json::{json, Value};
 use std::path::Path;
 
 fn emit_json(value: Value) {
-    println!(
-        "{}",
-        serde_json::to_string(&value).expect("json output serialization must succeed")
-    );
+    match serde_json::to_string(&value) {
+        Ok(line) => println!("{line}"),
+        Err(err) => {
+            // Last-resort envelope to avoid panicking in robot mode.
+            let fallback = json!({
+                "schema_version": ROBOT_SCHEMA_VERSION,
+                "ok": false,
+                "code": "RUNTIME_ERROR",
+                "message": format!("failed to serialize JSON response: {err}"),
+                "suggestions": [],
+                "exit_code": AppExit::RuntimeError as u8,
+            });
+            println!("{fallback}");
+        }
+    }
 }
 
 pub(crate) fn emit_json_success(
