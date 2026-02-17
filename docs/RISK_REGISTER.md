@@ -744,3 +744,11 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; committed ordering still flows from append-writer `commit_index`, and deterministic artifact/hash checks remain green.
 4. Security and privacy: No new secret-handling surfaces were introduced; change is in Tour pipeline event flow only.
 5. Performance cliffs: Pass reduction removes one full EventLog reread in Tour, but measured gains may be modest when fsync/write dominates runtime; avoid extrapolating this as a universal latency win without privileged profiler evidence.
+
+## bd-1z3.1 · COV-1: reproducible coverage baseline capture
+
+1. Coupling: Coverage planning now depends on the refreshed matrix in `docs/testing/coverage-matrix-v0.1.md`; follow-on beads should update this file to avoid stale risk assumptions.
+2. Untested claims: Numeric line/branch percentages remain unavailable until `cargo-llvm-cov` is installed; this pass relies on test inventory counts plus risk-based gap mapping.
+3. Nondeterminism: No runtime nondeterminism introduced; this bead is documentation and planning evidence only.
+4. Security and privacy: No new secret-bearing data introduced; baseline references command outputs and existing local test inventory only.
+5. Performance cliffs: None in product runtime; only potential process cost is maintaining matrix freshness as test suite size grows.
