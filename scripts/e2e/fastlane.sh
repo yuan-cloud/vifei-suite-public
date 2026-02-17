@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+OUT_DIR="${OUT_DIR:-$ROOT_DIR/.tmp/fastlane}"
+RUN_ID="fastlane-v0.1"
+MAX_SECONDS="${FASTLANE_MAX_SECONDS:-300}"
+LOG_JSONL="$OUT_DIR/run.jsonl"
+SUMMARY_TXT="$OUT_DIR/summary.txt"
+
+mkdir -p "$OUT_DIR"/{cmd,export}
+: > "$LOG_JSONL"
+: > "$SUMMARY_TXT"
+
+START_TS="$(date +%s)"
+SEQ=0
+
+log_json() {
+  local level="$1"
+  local stage="$2"
+  local status="$3"
+  local exit_code="$4"
+  local message="$5"
+  local transcript="$6"
+  SEQ=$((SEQ + 1))
+  python3 - "$RUN_ID" "$SEQ" "$level" "$stage" "$status" "$exit_code" "$message" "$transcript" >> "$LOG_JSONL" <<'PY'
+import json
+import sys
+
+run_id, seq, level, stage, status, exit_code, message, transcript = sys.argv[1:]
+print(json.dumps({
+    "run_id": run_id,
+    "seq": int(seq),
+    "level": level,
+    "stage": stage,
+    "status": status,
+    "exit_code": int(exit_code),
+    "message": message,
+    "transcript": transcript,
+}, separators=(",", ":"), sort_keys=True))
+PY
+}
+
+stage_cmd() {
+  local stage="$1"
+  local expected="$2"
+  shift 2
+  local out_file="$OUT_DIR/cmd/${stage}.stdout.log"
+  local err_file="$OUT_DIR/cmd/${stage}.stderr.log"
+  local cmd_str
+  cmd_str="$(printf '%q ' "$@")"
+  cmd_str="${cmd_str% }"
+
+  set +e
+  "$@" >"$out_file" 2>"$err_file"
+  local rc=$?
+  set -e
+
+  if [[ "$rc" -ne "$expected" ]]; then
+    log_json "error" "$stage" "failed" "$rc" "unexpected exit (expected $expected) cmd=$cmd_str" "$out_file"
+    {
+      echo "[$stage] FAIL expected=$expected actual=$rc"
+      echo "  cmd: $cmd_str"
+      echo "  stdout: $out_file"
+      echo "  stderr: $err_file"
+    } >> "$SUMMARY_TXT"
+    exit 1
+  fi
+
+  log_json "info" "$stage" "ok" "$rc" "exit matched expected ($expected) cmd=$cmd_str" "$out_file"
+  {
+    echo "[$stage] PASS exit=$rc"
+    echo "  cmd: $cmd_str"
+    echo "  stdout: $out_file"
+    echo "  stderr: $err_file"
+  } >> "$SUMMARY_TXT"
+}
+
+assert_file() {
+  local stage="$1"
+  local path="$2"
+  if [[ -f "$path" ]]; then
+    log_json "info" "$stage" "ok" 0 "artifact present: $path" "$path"
+    echo "[$stage] artifact ok: $path" >> "$SUMMARY_TXT"
+  else
+    log_json "error" "$stage" "failed" 1 "missing artifact: $path" "$path"
+    echo "[$stage] missing artifact: $path" >> "$SUMMARY_TXT"
+    exit 1
+  fi
+}
+
+assert_contains() {
+  local stage="$1"
+  local path="$2"
+  local pattern="$3"
+  if rg -q "$pattern" "$path"; then
+    log_json "info" "$stage" "ok" 0 "pattern '$pattern' found in $path" "$path"
+    echo "[$stage] pattern ok: $pattern" >> "$SUMMARY_TXT"
+  else
+    log_json "error" "$stage" "failed" 1 "pattern '$pattern' missing in $path" "$path"
+    echo "[$stage] pattern missing: $pattern in $path" >> "$SUMMARY_TXT"
+    exit 1
+  fi
+}
+
+cd "$ROOT_DIR"
+
+# Core invariant smoke: canonical ordering + deterministic state/viewmodel hash paths.
+stage_cmd core_commit_index 0 cargo test -p panopticon-core eventlog::tests::commit_index_is_writer_assigned
+stage_cmd core_reducer_determinism 0 cargo test -p panopticon-core reducer::tests::determinism_10_runs
+stage_cmd core_projection_hash 0 cargo test -p panopticon-core projection::tests::test_viewmodel_hash_determinism
+stage_cmd docs_guard 0 cargo test -p panopticon-core --test docs_guard
+
+# CLI smoke: help + share-safe success/refusal contracts.
+stage_cmd cli_help 0 cargo run -p panopticon-tui --bin panopticon -- --help
+
+stage_cmd cli_export_clean 0 \
+  cargo run -p panopticon-tui --bin panopticon -- \
+  export docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --share-safe \
+  --output "$OUT_DIR/export/bundle.tar.zst" \
+  --refusal-report "$OUT_DIR/export/refusal-clean.json"
+assert_file cli_export_bundle "$OUT_DIR/export/bundle.tar.zst"
+assert_contains cli_export_clean_stdout "$OUT_DIR/cmd/cli_export_clean.stdout.log" "Export successful"
+
+stage_cmd cli_export_refusal 1 \
+  cargo run -p panopticon-tui --bin panopticon -- \
+  export docs/assets/readme/sample-refusal-eventlog.jsonl \
+  --share-safe \
+  --output "$OUT_DIR/export/refused.tar.zst" \
+  --refusal-report "$OUT_DIR/export/refusal-refused.json"
+assert_contains cli_export_refusal_stderr "$OUT_DIR/cmd/cli_export_refusal.stderr.log" "export refused"
+assert_contains cli_export_refusal_stderr "$OUT_DIR/cmd/cli_export_refusal.stderr.log" "Likely cause"
+
+# Minimal TUI smoke: width bucket contracts + interactive PTY path (skip-aware by design).
+stage_cmd tui_modality_smoke 0 \
+  cargo test -p panopticon-tui --test modality_validation width_buckets_preserve_required_surface_markers
+stage_cmd tui_interactive_smoke 0 \
+  cargo test -p panopticon-tui --test tui_e2e_interactive interactive_tui_flow_lens_toggle_nav_and_quit -- --nocapture
+
+# Artifact existence smoke from deterministic README capture set.
+assert_file readme_asset_incident docs/assets/readme/incident-lens.txt
+assert_file readme_asset_incident_narrow docs/assets/readme/incident-lens-narrow-72.txt
+assert_file readme_asset_forensic docs/assets/readme/forensic-lens.txt
+assert_file readme_asset_truth_hud docs/assets/readme/truth-hud-degraded.txt
+assert_file readme_asset_refusal docs/assets/readme/export-refusal.txt
+
+ELAPSED="$(( $(date +%s) - START_TS ))"
+log_json "info" "fastlane_total" "ok" 0 "elapsed_seconds=$ELAPSED max_seconds=$MAX_SECONDS" "$SUMMARY_TXT"
+echo "[fastlane_total] elapsed_seconds=$ELAPSED max_seconds=$MAX_SECONDS" >> "$SUMMARY_TXT"
+
+if [[ "$ELAPSED" -gt "$MAX_SECONDS" ]]; then
+  log_json "error" "fastlane_budget" "failed" 1 "fastlane exceeded budget: ${ELAPSED}s > ${MAX_SECONDS}s" "$SUMMARY_TXT"
+  {
+    echo "[fastlane_budget] FAIL elapsed=${ELAPSED}s budget=${MAX_SECONDS}s"
+    echo "  full-suite fallback:"
+    echo "  - cargo fmt --check"
+    echo "  - cargo clippy --all-targets -- -D warnings"
+    echo "  - cargo test"
+    echo "  - scripts/e2e/cli_e2e.sh"
+    echo "  - cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+  } >> "$SUMMARY_TXT"
+  exit 1
+fi
+
+{
+  echo
+  echo "Fastlane complete: $RUN_ID"
+  echo "JSONL log: $LOG_JSONL"
+  echo "Summary:   $SUMMARY_TXT"
+  echo "Elapsed:   ${ELAPSED}s"
+  echo
+  echo "Full-suite fallback commands:"
+  echo "  cargo fmt --check"
+  echo "  cargo clippy --all-targets -- -D warnings"
+  echo "  cargo test"
+  echo "  scripts/e2e/cli_e2e.sh"
+  echo "  cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+} | tee -a "$SUMMARY_TXT"

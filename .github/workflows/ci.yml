@@ -11,7 +11,29 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  fastlane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Fastlane smoke suite
+        run: scripts/e2e/fastlane.sh
+
   check:
+    needs: fastlane
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

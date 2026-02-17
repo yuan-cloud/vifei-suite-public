@@ -3,12 +3,14 @@
 ## Script
 
 - `scripts/e2e/cli_e2e.sh`: deterministic CLI end-to-end validation for help, non-TTY `view`, stress `tour`, clean `export`, and refusal `export`.
+- `scripts/e2e/fastlane.sh`: sub-5-minute deterministic smoke lane (core invariants, CLI success/refusal, TUI modality/interactive smoke, artifact checks).
 - `cargo test -p panopticon-tui --test tui_e2e_interactive`: PTY-backed interactive TUI E2E for lens toggle, forensic navigation, Truth HUD visibility, clean exit, and narrow-terminal profile.
 
 ## Run
 
 ```bash
 scripts/e2e/cli_e2e.sh
+scripts/e2e/fastlane.sh
 ```
 
 Optional output path:

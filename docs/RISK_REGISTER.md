@@ -632,3 +632,11 @@ Context:
 3. Nondeterminism: Removed append-based drift by resetting sample eventlog files before regeneration; this closes a real deterministic-capture defect.
 4. Security and privacy: Evidence artifacts are fixture-derived and local; refusal examples intentionally include redacted secret patterns for scanner behavior proof.
 5. Performance cliffs: Refresh pipeline now produces one additional render artifact; overhead is negligible compared with tour generation already in the pipeline.
+
+## bd-2yv.8 · TEST-FASTLANE: sub-5-minute smoke suite for developer feedback
+
+1. Coupling: Fastlane now couples CI and local smoke checks to specific stage names, output file paths, and CLI/TUI contract strings (`Export successful`, `export refused`, `Likely cause`), so intentional UX/copy changes must update fastlane assertions.
+2. Untested claims: Fastlane covers deterministic smoke only; it does not replace full-suite behavioral depth (broad combinatorial cases and longer stress envelopes) and should remain a gate pre-check, not final release evidence.
+3. Nondeterminism: No new product-path nondeterminism was introduced; fastlane logs are sequence-numbered and stable-field JSONL, and assertions use deterministic fixtures and explicit command contracts.
+4. Security and privacy: The lane exercises share-safe refusal fixtures and captures transcripts under `.tmp/fastlane`; these logs can include refusal reasons and should remain local CI artifacts, not public release assets.
+5. Performance cliffs: Fastlane budget is bounded (`<=300s`) with explicit fail-on-budget breach, but cargo cache misses in cold CI can approach the ceiling; fallback full-suite commands are documented for triage when this happens.
