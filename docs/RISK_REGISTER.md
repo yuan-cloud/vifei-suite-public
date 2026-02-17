@@ -1132,3 +1132,16 @@ Context:
 3. Nondeterminism: This reduces nondeterministic PR failures by converting PTY capability variance into explicit, deterministic gating metadata instead of implicit test behavior.
 4. Security: No new security surface; logs remain local CI artifacts and replay guidance is command-only.
 5. Performance: Slight additional script overhead for preflight parsing is negligible; skipping interactive PTY smoke on unsupported runners avoids wasted cycles.
+
+## bd-2gs · TEST-4.9 clarify PTY flake-checker lane scope diagnostics · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I4 (deterministic CI diagnostics), operator replayability expectations
+- Constitution touched: none
+
+1. Coupling: Checker diagnostics now couple to the fastlane run-id marker (`fastlane-v0.1`) for wrong-lane detection.
+2. Untested claims: We tested lane-scope diagnostics against local fastlane/full-confidence-style outputs; hosted CI path correctness still depends on preserving run-id contracts.
+3. Nondeterminism: No runtime nondeterminism added; this change improves deterministic error interpretation for manual operator invocations.
+4. Security: No new secret surface introduced; messaging changes only.
+5. Performance: Negligible script overhead (single `rg` check on run log).

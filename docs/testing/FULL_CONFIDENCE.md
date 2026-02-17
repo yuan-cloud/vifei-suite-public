@@ -28,6 +28,7 @@
 - runs only when preflight reports `status=pass`
 - one bounded retry in CI to reduce transient PTY harness flake without masking persistent failures
 - flake budget is enforced via `scripts/testing/check_pty_flake_contract.sh` (`PTY_MAX_RETRY_PASSES`, default `1`)
+- lane scope note: `check_pty_flake_contract.sh` validates full-confidence outputs only; it should not be pointed at fastlane output directories
 
 ## Artifacts
 The lane uploads `full-confidence-<sha>` containing:

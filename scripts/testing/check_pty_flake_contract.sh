@@ -5,6 +5,8 @@ OUT_DIR="${1:-.tmp/full-confidence}"
 PREFLIGHT_LOG="$OUT_DIR/pty-preflight.log"
 ASSERTIONS_GLOB="$OUT_DIR/tui-e2e/*.assertions.log"
 MAX_RETRY_PASSES="${PTY_MAX_RETRY_PASSES:-1}"
+FASTLANE_RUN_JSONL="$OUT_DIR/run.jsonl"
+FASTLANE_SUMMARY="$OUT_DIR/summary.txt"
 
 fail() {
   local section="$1"
@@ -15,8 +17,41 @@ fail() {
   exit 1
 }
 
-[[ -f "$PREFLIGHT_LOG" ]] || \
+usage_hint() {
+  cat <<EOF
+usage:
+  scripts/testing/check_pty_flake_contract.sh <full-confidence-out-dir>
+
+expected layout:
+  <OUT_DIR>/pty-preflight.log
+  <OUT_DIR>/tui-e2e/*.assertions.log
+
+examples:
+  scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence
+  PTY_MAX_RETRY_PASSES=1 scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence
+EOF
+}
+
+if [[ -f "$FASTLANE_RUN_JSONL" && -f "$FASTLANE_SUMMARY" ]]; then
+  if rg -q '"run_id":"fastlane-v0\.1"' "$FASTLANE_RUN_JSONL"; then
+    echo "CONTRACT_FAIL[PTY0-lane-scope] wrong lane directory: '$OUT_DIR' is a fastlane output bundle."
+    echo "hint: this checker validates full-confidence PTY assertion logs only."
+    echo "replay: scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence"
+    usage_hint
+    exit 1
+  fi
+fi
+
+if [[ ! -f "$PREFLIGHT_LOG" ]]; then
+  if [[ -f "$FASTLANE_RUN_JSONL" && -f "$FASTLANE_SUMMARY" ]]; then
+    echo "CONTRACT_FAIL[PTY0-preflight-log] wrong lane directory: '$OUT_DIR' looks like fastlane output."
+    echo "hint: this checker is full-confidence only; fastlane uses run.jsonl/summary.txt and does not emit tui-e2e assertion logs."
+    echo "replay: scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence"
+    usage_hint
+    exit 1
+  fi
   fail "PTY0-preflight-log" "missing PTY preflight log at $PREFLIGHT_LOG" "OUT_DIR=$OUT_DIR scripts/e2e/pty_preflight.sh"
+fi
 
 preflight_status="$(python3 - "$PREFLIGHT_LOG" <<'PY'
 import json
@@ -48,6 +83,13 @@ fi
 shopt -s nullglob
 assertion_files=($ASSERTIONS_GLOB)
 if [[ "${#assertion_files[@]}" -eq 0 ]]; then
+  if [[ -f "$FASTLANE_RUN_JSONL" && -f "$FASTLANE_SUMMARY" ]]; then
+    echo "CONTRACT_FAIL[PTY1-assertion-files] wrong lane directory: '$OUT_DIR' appears to be fastlane output."
+    echo "hint: fastlane is capability-gated but does not produce tui-e2e assertion logs."
+    echo "replay: scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence"
+    usage_hint
+    exit 1
+  fi
   fail "PTY1-assertion-files" "preflight passed but no assertion logs were produced" "TERM=xterm-256color PANOPTICON_E2E_OUT=$OUT_DIR/tui-e2e cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
 fi
 
