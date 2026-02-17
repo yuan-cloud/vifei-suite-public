@@ -33,8 +33,29 @@ jobs:
       - name: Fastlane smoke suite
         run: scripts/e2e/fastlane.sh
 
+      - name: Validate fastlane contract artifacts
+        run: |
+          test -f .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/run.jsonl"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          test -f .tmp/fastlane/summary.txt || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/summary.txt"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"cli_export_refusal_report"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing cli_export_refusal_report stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"tui_interactive_smoke"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing tui_interactive_smoke stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"fastlane_total"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing fastlane_total stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+
+      - name: Validate coverage contract references
+        run: |
+          bash scripts/testing/check_coverage_contract.sh \
+            2>&1 | tee .tmp/fastlane/coverage-contract.log
+
       - name: Validate defer register
         run: python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+
+      - name: Upload fastlane evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastlane-${{ github.sha }}
+          path: .tmp/fastlane/
+          if-no-files-found: error
 
   full_confidence:
     name: full-confidence
@@ -82,11 +103,23 @@ jobs:
           cargo test --workspace --all-targets -- --list > .tmp/full-confidence/coverage/test-inventory.txt
           cp docs/testing/coverage-matrix-v0.1.md .tmp/full-confidence/coverage/coverage-matrix-v0.1.md
           cp docs/testing/defer-register-v0.1.json .tmp/full-confidence/coverage/defer-register-v0.1.json
+          cp docs/testing/FASTLANE.md .tmp/full-confidence/coverage/FASTLANE.md
+
+      - name: Validate coverage contract references
+        run: |
+          bash scripts/testing/check_coverage_contract.sh \
+            2>&1 | tee .tmp/full-confidence/logs/coverage-contract.log
 
       - name: CLI E2E suite
         run: |
           OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
             2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
+
+      - name: Validate CLI E2E contract stages
+        run: |
+          test -f .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing cli-e2e run.jsonl"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          grep -q '"stage":"tour_metadata"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing tour_metadata stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          grep -q '"stage":"export_refusal_report"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing export_refusal_report stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
 
       - name: PTY preflight
         run: |

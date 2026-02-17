@@ -49,6 +49,31 @@ scripts/e2e/fastlane.sh
 Merge/release gating is handled by the separate `full-confidence` lane
 (`docs/testing/FULL_CONFIDENCE.md`).
 
+## Contract Enforcement (CI)
+Fastlane and full-confidence CI lanes enforce contract sections with explicit tags and replay commands:
+
+1. `FL0-artifacts` / `FL1-stages`
+- Verifies `.tmp/fastlane/run.jsonl` and `.tmp/fastlane/summary.txt` exist.
+- Verifies required fastlane stages are present in `run.jsonl`:
+  - `cli_export_refusal_report`
+  - `tui_interactive_smoke`
+  - `fastlane_total`
+- Replay:
+  - `scripts/e2e/fastlane.sh`
+
+2. `CC0-files` / `CC1-headings` / `CC2-paths`
+- Implemented by `scripts/testing/check_coverage_contract.sh`.
+- Verifies required coverage docs exist, required contract headings are present, and path references from `docs/testing/coverage-matrix-v0.1.md` resolve.
+- Replay:
+  - `bash scripts/testing/check_coverage_contract.sh`
+
+3. `FC1-cli`
+- Verifies full-confidence CLI E2E output includes semantic contract stages:
+  - `tour_metadata`
+  - `export_refusal_report`
+- Replay:
+  - `OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh`
+
 ## Mapping to Full-Suite Commands
 - Formatting/lints/full tests:
   - `cargo fmt --check`

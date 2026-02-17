@@ -1080,3 +1080,16 @@ Context:
 3. Nondeterminism: Added assertions explicitly reduce nondeterministic drift risk by requiring stable blocked-item sort order and deterministic cross-artifact hash/version linkage.
 4. Security: No new external surface; stronger refusal checks improve confidence that secret-bearing exports fail closed with auditable reports.
 5. Performance: Added script-side Python validations and one export integration case slightly increase CI/test time, but runtime product paths are unchanged.
+
+## bd-3fx · CI contract enforcement for coverage diagnostics · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: coverage contract freshness, deterministic diagnostics artifacts, replayable CI failures
+- Constitution touched: none
+
+1. Coupling: CI now depends on explicit contract tags (`FL0`, `FL1`, `CC*`, `FC1`) and coverage docs/headings; doc structure changes require synchronized CI/script updates.
+2. Untested claims: We validate contract checker and CI assertions locally, but cross-runner timing variance for GitHub-hosted environments is only covered by workflow execution, not local simulation.
+3. Nondeterminism: New checks reduce nondeterminism in failure analysis by requiring deterministic stage markers and explicit replay commands in logs.
+4. Security: No new runtime secret surface; stronger refusal/report stage checks increase confidence that share-safe guarantees remain enforced in CI.
+5. Performance: Added CI checks and artifact uploads increase pipeline cost slightly; sequencing remains budget-aware by keeping heavy validation in full-confidence and compact checks in fastlane.
