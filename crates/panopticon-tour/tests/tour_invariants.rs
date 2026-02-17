@@ -3,13 +3,21 @@
 use panopticon_core::eventlog::{read_eventlog, EventLogWriter};
 use panopticon_core::reducer::{reduce, State};
 use panopticon_import::cassette::parse_cassette;
-use panopticon_tour::{DegradationTransition, TourConfig};
+use panopticon_tour::{DegradationTransition, TimeTravelCapture, TourConfig};
+use serde::Deserialize;
 use std::fs;
 use std::io::{BufReader, Cursor};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
 type TransitionTuple = (String, String, String, u64);
+
+#[derive(Debug, Deserialize)]
+struct ArtifactMetrics {
+    event_count_total: usize,
+    queue_pressure: f64,
+    projection_invariants_version: String,
+}
 
 fn fixture_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -207,4 +215,56 @@ fn metrics_transitions_are_derivable_from_policy_decisions() {
             (&tr.from_level, &tr.to_level, &tr.trigger, tr_qp)
         );
     }
+}
+
+#[test]
+fn tour_artifacts_are_cross_field_consistent_on_large_fixture() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let output_dir = dir.path().join("out");
+    let config = TourConfig::new(fixture_path()).with_output_dir(&output_dir);
+    let result = panopticon_tour::run_tour(&config).expect("tour run");
+
+    let metrics: ArtifactMetrics = serde_json::from_str(
+        &fs::read_to_string(output_dir.join("metrics.json")).expect("metrics"),
+    )
+    .expect("parse metrics");
+    let timetravel: TimeTravelCapture = serde_json::from_str(
+        &fs::read_to_string(output_dir.join("timetravel.capture")).expect("timetravel"),
+    )
+    .expect("parse timetravel");
+    let ansi = fs::read_to_string(output_dir.join("ansi.capture")).expect("ansi");
+    let hash_file = fs::read_to_string(output_dir.join("viewmodel.hash")).expect("hash");
+    let hash_trimmed = hash_file.trim();
+
+    assert!(
+        !timetravel.seek_points.is_empty(),
+        "seek_points must be non-empty"
+    );
+    let last = timetravel.seek_points.last().expect("last seek point");
+
+    assert_eq!(
+        metrics.event_count_total as u64 - 1,
+        last.commit_index,
+        "last seek commit_index must align with event_count_total - 1"
+    );
+    assert_eq!(
+        timetravel.projection_invariants_version, metrics.projection_invariants_version,
+        "metrics and timetravel must report the same projection invariants version"
+    );
+    assert_eq!(
+        hash_trimmed, result.viewmodel_hash,
+        "viewmodel.hash file and TourResult hash must match"
+    );
+    assert_eq!(
+        last.viewmodel_hash, result.viewmodel_hash,
+        "last seek point must reflect final viewmodel hash"
+    );
+    assert!(
+        ansi.contains(hash_trimmed),
+        "ansi.capture must include the final viewmodel hash"
+    );
+    assert!(
+        (0.0..=1.0).contains(&metrics.queue_pressure),
+        "queue_pressure must stay in [0.0, 1.0]"
+    );
 }

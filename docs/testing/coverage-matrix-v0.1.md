@@ -163,3 +163,4 @@ Failure diagnostics minimums:
 - `bd-2fp.5` completed: Tour now avoids rereading EventLog by consuming append-result committed sequence; parity test added in `crates/panopticon-tour/src/lib.rs`.
 - `bd-1jr` completed: CLI contract topology coverage expanded (global/subcommand ordering equivalence, unknown-argument deterministic guidance, human replay hints) with high-value envelope golden checks in `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`.
 - `bd-15z` completed: PTY interactive diagnostics now converge on deterministic JSON schemas (`panopticon-pty-preflight-v1`, `panopticon-tui-e2e-assert-v1`) with stable reason-code taxonomy, transcript pointers, and CI artifact presence checks.
+- `bd-12m` completed: export/tour E2E expanded from artifact existence checks to cross-artifact semantic consistency and refusal-report schema/order determinism checks, including mixed inline+blob secret corpus coverage.

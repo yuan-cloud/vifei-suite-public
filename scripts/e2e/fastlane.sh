@@ -136,6 +136,30 @@ stage_cmd cli_export_refusal 3 \
   --refusal-report "$OUT_DIR/export/refusal-refused.json"
 assert_contains cli_export_refusal_stdout "$OUT_DIR/cmd/cli_export_refusal.stdout.log" "\"code\":\"EXPORT_REFUSED\""
 assert_contains cli_export_refusal_stdout "$OUT_DIR/cmd/cli_export_refusal.stdout.log" "\"blocked_items\""
+assert_file cli_export_refusal_report "$OUT_DIR/export/refusal-refused.json"
+
+python3 - "$OUT_DIR/export/refusal-refused.json" >> "$SUMMARY_TXT" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+report = json.loads(path.read_text())
+blocked = report.get("blocked_items")
+if report.get("report_version") != "refusal-v0.1":
+    raise SystemExit("unexpected refusal report_version")
+if not isinstance(blocked, list) or not blocked:
+    raise SystemExit("refusal report blocked_items must be non-empty")
+
+for left, right in zip(blocked, blocked[1:]):
+    l_key = (left["event_id"], left["field_path"], left["matched_pattern"])
+    r_key = (right["event_id"], right["field_path"], right["matched_pattern"])
+    if l_key > r_key:
+        raise SystemExit("blocked_items are not stably sorted")
+
+print(f"[cli_export_refusal] blocked_items={len(blocked)}")
+PY
+log_json "info" "cli_export_refusal_report" "ok" 0 "refusal report schema/order validated" "$OUT_DIR/export/refusal-refused.json"
 
 # Minimal TUI smoke: width bucket contracts + interactive PTY path (skip-aware by design).
 stage_cmd tui_modality_smoke 0 \

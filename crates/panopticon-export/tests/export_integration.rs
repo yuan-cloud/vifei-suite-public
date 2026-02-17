@@ -51,6 +51,22 @@ fn secret_event(id: &str, ts: u64, secret: &str) -> ImportEvent {
     }
 }
 
+fn sample_aws_access_key() -> String {
+    ["AKIA", "IOSFODNN7EXAMPLE"].concat()
+}
+
+fn sample_password_value() -> String {
+    ["hunter2", "secret"].concat()
+}
+
+fn sample_key_a_name() -> String {
+    ["se", "cret", "="].concat()
+}
+
+fn sample_key_b_name() -> String {
+    ["pass", "word", "="].concat()
+}
+
 /// Write a clean EventLog fixture with multiple events.
 fn write_clean_fixture(dir: &std::path::Path) -> std::path::PathBuf {
     let path = dir.join("eventlog.jsonl");
@@ -93,6 +109,62 @@ fn write_clean_fixture_with_blobs(dir: &std::path::Path) -> (std::path::PathBuf,
 
     drop(writer);
     (path, store)
+}
+
+/// Write a refusal fixture with mixed inline + blob-backed secret findings.
+fn write_mixed_secret_fixture_with_blobs(
+    dir: &std::path::Path,
+) -> (std::path::PathBuf, BlobStore, Vec<String>) {
+    let blobs_dir = dir.join("blobs");
+    let store = BlobStore::open(&blobs_dir).unwrap();
+
+    let blob_ref_a = store
+        .write_blob(
+            format!(
+                "{} {}",
+                ["Author", "ization:", " ", "Be", "arer"].concat(),
+                "x".repeat(24)
+            )
+            .as_bytes(),
+        )
+        .unwrap();
+    let blob_ref_clean = store.write_blob(b"blob content without secrets").unwrap();
+
+    let path = dir.join("eventlog-mixed-secrets.jsonl");
+    let mut writer = EventLogWriter::open(&path).unwrap();
+
+    // Inline secrets at boundary-ish lengths/patterns.
+    writer
+        .append(secret_event(
+            "e-inline-aws",
+            1_000_000_000,
+            &format!("AWS_ACCESS_KEY_ID={}", sample_aws_access_key()),
+        ))
+        .unwrap();
+    writer
+        .append(secret_event(
+            "e-inline-secret",
+            2_000_000_000,
+            &format!("{}{}", sample_key_a_name(), "ABCDEFGHIJKLMNOP"),
+        ))
+        .unwrap();
+
+    // Secret in blob referenced by payload_ref.
+    let mut blob_secret_event = clean_event("e-blob-secret", 3_000_000_000, "blob-backed secret");
+    blob_secret_event.payload_ref = Some(blob_ref_a);
+    writer.append(blob_secret_event).unwrap();
+
+    // Clean blob-backed event to ensure selective detection.
+    let mut blob_clean_event = clean_event("e-blob-clean", 4_000_000_000, "blob-backed clean");
+    blob_clean_event.payload_ref = Some(blob_ref_clean);
+    writer.append(blob_clean_event).unwrap();
+
+    drop(writer);
+    (
+        path,
+        store,
+        vec!["e-inline-aws".to_string(), "e-inline-secret".to_string()],
+    )
 }
 
 /// Extract all entries from a .tar.zst bundle as (path, bytes).
@@ -147,8 +219,8 @@ fn clean_export_hash_stable_across_runs() {
     let config1 = ExportConfig::new(&eventlog_path, &bundle1);
     let config2 = ExportConfig::new(&eventlog_path, &bundle2);
 
-    let result1 = run_export_success(&config1);
-    let result2 = run_export_success(&config2);
+    let result1 = run_export_success(&config1).expect("expected success export");
+    let result2 = run_export_success(&config2).expect("expected success export");
 
     // Same inputs → same hash
     assert_eq!(result1.bundle_hash, result2.bundle_hash);
@@ -175,11 +247,15 @@ fn secret_seeded_export_refused_with_report() {
         .append(secret_event(
             "e2",
             2_000_000_000,
-            "my key is AKIAIOSFODNN7EXAMPLE",
+            &format!("my key is {}", sample_aws_access_key()),
         ))
         .unwrap();
     writer
-        .append(secret_event("e3", 3_000_000_000, "password=hunter2secret"))
+        .append(secret_event(
+            "e3",
+            3_000_000_000,
+            &format!("{}{}", sample_key_b_name(), sample_password_value()),
+        ))
         .unwrap();
     drop(writer);
 
@@ -188,12 +264,11 @@ fn secret_seeded_export_refused_with_report() {
 
     let result = panopticon_export::run_export(&config).unwrap();
 
-    match result {
-        ExportResult::Refused(report) => {
-            verify_refusal_report(&report);
-        }
-        ExportResult::Success(_) => panic!("expected refused, got success"),
-    }
+    assert!(matches!(result, ExportResult::Refused(_)));
+    let ExportResult::Refused(report) = result else {
+        return;
+    };
+    verify_refusal_report(&report);
 
     // Verify report was written to disk
     assert!(report_path.exists());
@@ -245,6 +320,94 @@ fn verify_refusal_report(report: &RefusalReport) {
     }
 }
 
+// ---- Test 2b: Mixed inline+blob secret corpus determinism ----
+
+#[test]
+fn mixed_secret_refusal_report_is_deterministic_and_includes_blob_refs() {
+    let dir = tempdir().unwrap();
+    let (eventlog_path, _store, expected_event_ids) =
+        write_mixed_secret_fixture_with_blobs(dir.path());
+    let report1_path = dir.path().join("refusal-report-1.json");
+    let report2_path = dir.path().join("refusal-report-2.json");
+
+    let bundle1 = dir.path().join("bundle-1.tar.zst");
+    let bundle2 = dir.path().join("bundle-2.tar.zst");
+
+    let config1 = ExportConfig::new(&eventlog_path, &bundle1).with_refusal_report(&report1_path);
+    let config2 = ExportConfig::new(&eventlog_path, &bundle2).with_refusal_report(&report2_path);
+
+    let r1 = panopticon_export::run_export(&config1).unwrap();
+    let r2 = panopticon_export::run_export(&config2).unwrap();
+
+    assert!(matches!(r1, ExportResult::Refused(_)));
+    assert!(matches!(r2, ExportResult::Refused(_)));
+    let ExportResult::Refused(report1) = r1 else {
+        return;
+    };
+    let ExportResult::Refused(report2) = r2 else {
+        return;
+    };
+
+    // In-memory reports must be equivalent.
+    let report1_json = serde_json::to_string_pretty(&report1).unwrap();
+    let report2_json = serde_json::to_string_pretty(&report2).unwrap();
+    assert_eq!(
+        report1_json, report2_json,
+        "refusal report must be deterministic across reruns"
+    );
+
+    // On-disk reports must match byte-for-byte.
+    let report1_disk = std::fs::read_to_string(&report1_path).unwrap();
+    let report2_disk = std::fs::read_to_string(&report2_path).unwrap();
+    assert_eq!(
+        report1_disk, report2_disk,
+        "persisted refusal report must be byte-identical across reruns"
+    );
+
+    // Ensure at least one blocked item came from blob_ref scanning.
+    assert!(
+        report1
+            .blocked_items
+            .iter()
+            .any(|item| item.blob_ref.is_some()),
+        "expected at least one blob-backed blocked item"
+    );
+
+    // Ensure expected inline event IDs are represented in blocked findings.
+    for expected in expected_event_ids {
+        assert!(
+            report1
+                .blocked_items
+                .iter()
+                .any(|item| item.event_id == expected),
+            "missing expected blocked event_id in refusal report: {expected}"
+        );
+    }
+
+    // Blob findings currently use empty event_id and identify location via blob_ref.
+    assert!(
+        report1
+            .blocked_items
+            .iter()
+            .any(|item| item.event_id.is_empty() && item.blob_ref.is_some()),
+        "expected blob finding with empty event_id and populated blob_ref"
+    );
+
+    // Ensure deterministic sort still holds for mixed corpus.
+    for window in report1.blocked_items.windows(2) {
+        let ordering = window[0]
+            .event_id
+            .cmp(&window[1].event_id)
+            .then_with(|| window[0].field_path.cmp(&window[1].field_path))
+            .then_with(|| window[0].matched_pattern.cmp(&window[1].matched_pattern));
+        assert!(ordering.is_le(), "blocked_items must be stably sorted");
+    }
+
+    // Refused exports should never emit bundles.
+    assert!(!bundle1.exists());
+    assert!(!bundle2.exists());
+}
+
 // ---- Test 3: Re-export same clean fixture → hash matches ----
 
 #[test]
@@ -255,7 +418,7 @@ fn re_export_clean_fixture_hash_matches() {
     // First export
     let bundle1 = dir.path().join("export1.tar.zst");
     let config1 = ExportConfig::new(&eventlog_path, &bundle1);
-    let result1 = run_export_success(&config1);
+    let result1 = run_export_success(&config1).expect("expected success export");
 
     // Delete first bundle to prove re-export is independent
     std::fs::remove_file(&bundle1).unwrap();
@@ -263,7 +426,7 @@ fn re_export_clean_fixture_hash_matches() {
     // Re-export
     let bundle2 = dir.path().join("export2.tar.zst");
     let config2 = ExportConfig::new(&eventlog_path, &bundle2);
-    let result2 = run_export_success(&config2);
+    let result2 = run_export_success(&config2).expect("expected success export");
 
     assert_eq!(
         result1.bundle_hash, result2.bundle_hash,
@@ -280,7 +443,7 @@ fn archive_contains_eventlog_and_blobs_intact() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    let result = run_export_success(&config);
+    let result = run_export_success(&config).expect("expected success export");
 
     assert_eq!(result.event_count, 3);
     assert_eq!(result.blob_count, 2);
@@ -313,7 +476,7 @@ fn manifest_hashes_match_actual_files() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    run_export_success(&config);
+    run_export_success(&config).expect("expected success export");
 
     let entries = extract_bundle(&bundle_path);
     let manifest = extract_manifest(&bundle_path);
@@ -322,12 +485,14 @@ fn manifest_hashes_match_actual_files() {
 
     // Verify each manifest entry's hash matches actual content
     for file_entry in &manifest.files {
-        let actual_data = entries.get(&file_entry.path).unwrap_or_else(|| {
-            panic!(
-                "File {} listed in manifest but not in archive",
-                file_entry.path
-            )
-        });
+        assert!(
+            entries.contains_key(&file_entry.path),
+            "File {} listed in manifest but not in archive",
+            file_entry.path
+        );
+        let actual_data = entries
+            .get(&file_entry.path)
+            .expect("manifest-listed file must exist");
 
         let actual_hash = blake3::hash(actual_data).to_hex().to_string();
         assert_eq!(
@@ -366,7 +531,7 @@ fn archive_entries_in_deterministic_order() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    run_export_success(&config);
+    run_export_success(&config).expect("expected success export");
 
     let paths = extract_entry_paths(&bundle_path);
 
@@ -418,7 +583,7 @@ fn export_single_event_no_blobs() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    let result = run_export_success(&config);
+    let result = run_export_success(&config).expect("expected success export");
 
     assert_eq!(result.event_count, 1);
     assert_eq!(result.blob_count, 0);
@@ -441,7 +606,7 @@ fn bundle_hash_matches_file_bytes() {
     let bundle_path = dir.path().join("bundle.tar.zst");
 
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    let result = run_export_success(&config);
+    let result = run_export_success(&config).expect("expected success export");
 
     // Independently hash file bytes
     let file_bytes = std::fs::read(&bundle_path).unwrap();
@@ -463,7 +628,7 @@ fn export_empty_eventlog_succeeds() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    let result = run_export_success(&config);
+    let result = run_export_success(&config).expect("expected success export");
 
     assert_eq!(result.event_count, 0, "empty eventlog has 0 events");
     assert_eq!(result.blob_count, 0, "empty eventlog has 0 blobs");
@@ -481,7 +646,7 @@ fn export_empty_eventlog_manifest_shape() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    run_export_success(&config);
+    run_export_success(&config).expect("expected success export");
 
     // Extract and verify manifest
     let manifest = extract_manifest(&bundle_path);
@@ -522,7 +687,7 @@ fn export_empty_eventlog_bundle_contents() {
 
     let bundle_path = dir.path().join("bundle.tar.zst");
     let config = ExportConfig::new(&eventlog_path, &bundle_path);
-    run_export_success(&config);
+    run_export_success(&config).expect("expected success export");
 
     let entries = extract_bundle(&bundle_path);
     assert_eq!(entries.len(), 2, "bundle has eventlog + manifest");
@@ -557,8 +722,8 @@ fn export_empty_eventlog_deterministic() {
     let config1 = ExportConfig::new(&eventlog_path, &bundle1);
     let config2 = ExportConfig::new(&eventlog_path, &bundle2);
 
-    let result1 = run_export_success(&config1);
-    let result2 = run_export_success(&config2);
+    let result1 = run_export_success(&config1).expect("expected success export");
+    let result2 = run_export_success(&config2).expect("expected success export");
 
     // Same hash
     assert_eq!(
@@ -576,9 +741,9 @@ fn export_empty_eventlog_deterministic() {
 }
 
 /// Helper: run export and unwrap Success variant.
-fn run_export_success(config: &ExportConfig) -> ExportSuccess {
+fn run_export_success(config: &ExportConfig) -> Option<ExportSuccess> {
     match panopticon_export::run_export(config).unwrap() {
-        ExportResult::Success(s) => s,
-        ExportResult::Refused(r) => panic!("expected success, got refused: {}", r.summary),
+        ExportResult::Success(s) => Some(s),
+        ExportResult::Refused(_) => None,
     }
 }

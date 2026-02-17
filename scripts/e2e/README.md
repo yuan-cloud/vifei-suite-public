@@ -37,11 +37,17 @@ OUT_DIR=.tmp/e2e/tui scripts/e2e/pty_preflight.sh
 The script writes:
 
 - `run.jsonl`: machine-parseable event log with stable `run_id`, monotonic `seq`, stage, status, exit code, and transcript path.
+- `run.jsonl` includes deterministic metadata stages for trend comparison (for example Tour `viewmodel_hash` and `event_count_total`).
 - `summary.txt`: human-readable pass/fail summary with command and log file pointers.
 - `summary.txt` includes explicit `replay:` hints for failed stages.
 - `cmd/*.stdout.log` and `cmd/*.stderr.log`: per-step transcripts.
 - `tour/*`: generated Tour artifacts.
 - `export/*`: generated export artifacts.
+
+Artifact semantic checks enforced by `cli_e2e.sh`:
+
+- Tour: validates `tier_a_drops == 0`, `queue_pressure` bounds, `event_count_total > 0`, projection invariants version parity between `metrics.json` and `timetravel.capture`, final seek-point commit/hash consistency, and hash presence in `ansi.capture`.
+- Refusal export: validates `refusal-v0.1` schema shape, non-empty `blocked_items`, and deterministic blocked-item ordering by `(event_id, field_path, matched_pattern)`.
 
 The interactive TUI test writes:
 

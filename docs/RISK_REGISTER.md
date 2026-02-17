@@ -1067,3 +1067,16 @@ Context:
 3. Nondeterminism: Runtime product behavior unchanged; diagnostics now reduce ambiguity with fixed reason-code taxonomy and stable transcript-pointer fields.
 4. Security: No new secret surface; logs remain local artifact outputs. Replay hints are command-only and do not expose credentials.
 5. Performance: Production runtime unaffected; CI gains a small extra shell validation step and JSON log serialization overhead only in test/preflight paths.
+
+## bd-12m · Export/Tour E2E semantic integrity expansion · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: share-safe refusal determinism, Tour artifact consistency, deterministic metadata logging
+- Constitution touched: none
+
+1. Coupling: E2E scripts now couple to artifact schema/field contracts (`metrics.json`, `timetravel.capture`, refusal report ordering); schema changes must update tests and script validators together.
+2. Untested claims: We validate mixed inline+blob refusal determinism and key artifact cross-field consistency, but we still do not benchmark all scanner regex boundary variants or every importer source shape.
+3. Nondeterminism: Added assertions explicitly reduce nondeterministic drift risk by requiring stable blocked-item sort order and deterministic cross-artifact hash/version linkage.
+4. Security: No new external surface; stronger refusal checks improve confidence that secret-bearing exports fail closed with auditable reports.
+5. Performance: Added script-side Python validations and one export integration case slightly increase CI/test time, but runtime product paths are unchanged.
