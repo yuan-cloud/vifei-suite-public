@@ -1456,3 +1456,16 @@ Context:
 3. Nondeterminism: The script explicitly checks deterministic replay via hash equality and fails loudly on mismatch.
 4. Security: Uses local fixture data only and does not introduce new secret-handling surfaces.
 5. Performance cliffs: Runs two stress tours; intended for demo/proof workflows, not tight inner-loop development usage.
+
+## bd-1ggs · SHOWCASE-7 fast/full modes + demo2/demo3 + CI smoke · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4
+- Constitution touched: none
+
+1. Coupling: Demo scripts and CI now rely on stable CLI commands and fixture paths; command or path changes must update scripts and docs together.
+2. Untested claims: Full-mode CI execution is intentionally not default due to runtime cost; full paths remain manually validated.
+3. Nondeterminism: Fast smoke path checks deterministic hash equality and refusal/report behavior; full mode remains available for stress-grade validation.
+4. Security: Refusal demo uses fixture-generated refusal reports and does not expose external secrets; outputs remain local.
+5. Performance cliffs: Full demo modes are intentionally heavier and should be used for showcase/proof runs, while fast mode is optimized for CI and quick checks.

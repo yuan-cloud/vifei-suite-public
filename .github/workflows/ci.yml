@@ -33,6 +33,9 @@ jobs:
       - name: Fastlane smoke suite
         run: scripts/e2e/fastlane.sh
 
+      - name: Demo smoke suite (fast)
+        run: scripts/testing/demo_smoke.sh .tmp/demo-smoke-fastlane
+
       - name: Validate fastlane contract artifacts
         run: |
           test -f .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/run.jsonl"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
@@ -116,6 +119,11 @@ jobs:
         run: |
           OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
             2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
+
+      - name: Demo smoke suite (fast)
+        run: |
+          scripts/testing/demo_smoke.sh .tmp/full-confidence/demo-smoke \
+            2>&1 | tee .tmp/full-confidence/logs/demo-smoke.log
 
       - name: Validate CLI E2E contract stages
         run: |

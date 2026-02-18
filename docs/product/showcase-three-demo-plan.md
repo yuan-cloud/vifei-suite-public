@@ -88,3 +88,10 @@ Do not compromise:
 2. Captured assets under `docs/assets/readme/` and/or `docs/assets/showcase/`.
 3. README + showcase page sections per demo.
 4. One launch-ready command block per demo.
+
+## Current implementation status
+
+1. `scripts/demo/determinism_duel.sh` implemented with `--fast`/`--full`.
+2. `scripts/demo/refusal_radar.sh` implemented with `--fast`/`--full`.
+3. `scripts/demo/live_incident_wall.sh` implemented with `--fast`/`--full`.
+4. `scripts/testing/demo_smoke.sh` added for CI drift protection.

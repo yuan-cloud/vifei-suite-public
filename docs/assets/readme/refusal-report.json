@@ -27,7 +27,7 @@
       "redacted_match": "0123***6789"
     }
   ],
-  "scan_timestamp_utc": "2026-02-17T12:59:25Z",
+  "scan_timestamp_utc": "2026-02-18T16:56:00Z",
   "scanner_version": "secret-scanner-v0.1",
   "summary": "Export refused: 4 secret(s) detected in 1 location(s)"
 }

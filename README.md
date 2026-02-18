@@ -71,8 +71,10 @@ Expected result: both hash files match.
 Shortcut demo script:
 
 ```bash
-scripts/demo/determinism_duel.sh
+scripts/demo/determinism_duel.sh --fast
 ```
+
+Use `--full` for stress-grade replay duel.
 
 ### View an EventLog in TUI
 
@@ -118,6 +120,20 @@ cargo run -p panopticon-tui --bin panopticon -- export \
   --output out/bundle.tar.zst \
   --refusal-report out/refusal-report.json
 ```
+
+Refusal Radar demo script:
+
+```bash
+scripts/demo/refusal_radar.sh --fast
+```
+
+### Live Incident Wall assets
+
+```bash
+scripts/demo/live_incident_wall.sh --fast
+```
+
+This prepares premium showcase wall assets under `docs/assets/readme/`.
 
 ### Robot mode for AI agents
 

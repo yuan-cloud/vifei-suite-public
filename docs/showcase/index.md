@@ -31,13 +31,24 @@ Truth HUD (showcase):
 
 ![Truth HUD Showcase](../assets/readme/truth-hud-showcase.svg)
 
-## Proof track (determinism)
+## Demo track
 
 ```bash
-scripts/demo/determinism_duel.sh
+scripts/demo/determinism_duel.sh --fast
+scripts/demo/refusal_radar.sh --fast
+scripts/demo/live_incident_wall.sh --fast
 ```
 
-Expected result:
+Use `--full` for stress-grade runs:
 
-- `[duel] PASS: hashes match`
-- both hash lines are identical.
+```bash
+scripts/demo/determinism_duel.sh --full
+scripts/demo/refusal_radar.sh --full
+scripts/demo/live_incident_wall.sh --full
+```
+
+Expected signals:
+
+1. Determinism Duel prints identical hash A/hash B and `PASS`.
+2. Refusal Radar prints blocked field details and refusal `PASS`.
+3. Live Incident Wall prints showcase asset paths and `PASS`.

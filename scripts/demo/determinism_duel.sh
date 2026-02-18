@@ -7,11 +7,25 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
+MODE="full"
+if [[ "${1:-}" == "--fast" || "${1:-}" == "--full" ]]; then
+  MODE="${1#--}"
+  shift
+fi
+
 OUT_DIR="${1:-/tmp/panopticon_determinism_duel}"
-FIXTURE="${2:-fixtures/large-stress.jsonl}"
+if [[ "$MODE" == "fast" ]]; then
+  FIXTURE="fixtures/small-session.jsonl"
+else
+  FIXTURE="fixtures/large-stress.jsonl"
+fi
 
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR/a" "$OUT_DIR/b"
+
+echo "[duel] mode: $MODE"
+echo "[duel] fixture: $FIXTURE"
+started_at="$(date +%s)"
 
 echo "[duel] run A"
 cargo run -p panopticon-tui --bin panopticon -- \
@@ -32,5 +46,9 @@ if [[ "$hash_a" != "$hash_b" ]]; then
   exit 1
 fi
 
+ended_at="$(date +%s)"
+duration="$((ended_at - started_at))"
+
 echo "[duel] PASS: hashes match"
+echo "[duel] duration_sec: $duration"
 echo "[duel] outputs: $OUT_DIR"
