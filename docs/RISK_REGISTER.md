@@ -1521,3 +1521,16 @@ Context:
 3. Nondeterminism: No new nondeterministic behavior introduced; normalization and contract checks are pure and deterministic over input records.
 4. Security: Rejecting source-supplied `commit_index` tightens trust boundaries and reduces risk of forged canonical ordering metadata.
 5. Performance cliffs: Contract checks add minimal per-record overhead (string/option checks) and are unlikely to affect importer throughput materially.
+
+## bd-2ut2 · B2: OpenAI Responses adapter v1 · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: The adapter currently maps a focused OpenAI Responses subset (`response.*` and function-call items); future upstream event families should extend `map_payload` in one place to preserve predictable semantics.
+2. Untested claims: We do not yet validate every historical/legacy OpenAI Responses variant; this is addressed by upcoming cross-adapter conformance corpus work.
+3. Nondeterminism: Parser preserves source line order, uses stable fallbacks for IDs, and emits deterministic payload maps (`BTreeMap`), so no new ordering nondeterminism is introduced.
+4. Security: Source-provided `commit_index` is rejected and schema mismatches are surfaced as contract errors, reducing risk of untrusted canonical-order injection.
+5. Performance cliffs: Parsing is line-by-line and non-stream-buffered beyond input reader semantics; very large `item` payloads may increase allocation overhead, mitigated by existing payload-ref/blob boundaries in downstream append path.

@@ -13,6 +13,9 @@ pub const ADAPTER_CONTRACT_VERSION: &str = "adapter-contract-v1";
 /// Current Agent Cassette record schema version.
 pub const AGENT_CASSETTE_SCHEMA_VERSION: &str = "agent-cassette-v1";
 
+/// Current OpenAI Responses record schema version.
+pub const OPENAI_RESPONSES_SCHEMA_VERSION: &str = "openai-responses-v1";
+
 /// Deterministically normalize run identity.
 ///
 /// Returns `(run_id, synthesized)` where synthesized is true when fallback is used.
@@ -76,6 +79,7 @@ mod tests {
     fn version_constants_are_stable() {
         assert_eq!(ADAPTER_CONTRACT_VERSION, "adapter-contract-v1");
         assert_eq!(AGENT_CASSETTE_SCHEMA_VERSION, "agent-cassette-v1");
+        assert_eq!(OPENAI_RESPONSES_SCHEMA_VERSION, "openai-responses-v1");
     }
 
     #[test]
