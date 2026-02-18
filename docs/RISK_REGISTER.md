@@ -1638,3 +1638,16 @@ Context:
 3. Nondeterminism: Compare loads events in source order then computes diffs by canonical `commit_index`; output envelopes and divergence payloads are serialized deterministically.
 4. Security: Compare output includes local input paths and replay command suggestions; this is expected for local operator diagnostics and not a share-safe export artifact.
 5. Performance cliffs: Compare flattens payload JSON for both sides during diffing, which is linear in payload size and can be expensive for very large traces; this is now isolated behind one command for targeted optimization.
+
+## bd-28ny · C3: one-command incident evidence pack (local-first, share-safe) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I3, I4, I5, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: `incident-pack` now composes compare, replay/projection hashing, and export refusal checks inside `panopticon-tui`; changes in any of those contracts require coordinated pack contract updates.
+2. Untested claims: Tests cover clean success and fail-closed refusal paths for eventlog inputs; mixed cassette/eventlog incident-pack permutations are implemented but not yet exhaustively covered.
+3. Nondeterminism: Pack artifacts are derived from committed events in canonical order; manifest file map uses deterministic key ordering and BLAKE3 file hashes.
+4. Security: Incident pack intentionally writes local file paths and normalized eventlogs to output directory for operator handoff; these artifacts are not treated as redacted public exports by default.
+5. Performance cliffs: Incident pack performs replay+projection twice and executes two share-safe export scans; very large traces can incur higher CPU and I/O, but work is bounded to explicit operator invocation.

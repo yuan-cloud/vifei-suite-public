@@ -94,6 +94,28 @@ pub(crate) enum Commands {
         #[arg(long, value_enum, default_value = "eventlog")]
         right_format: CompareInputFormat,
     },
+
+    /// Build a local-first deterministic incident evidence pack from two inputs.
+    #[command(alias = "incident")]
+    IncidentPack {
+        /// Left input path (EventLog JSONL or cassette JSONL).
+        left: PathBuf,
+
+        /// Right input path (EventLog JSONL or cassette JSONL).
+        right: PathBuf,
+
+        /// Input format for the left side.
+        #[arg(long, value_enum, default_value = "eventlog")]
+        left_format: CompareInputFormat,
+
+        /// Input format for the right side.
+        #[arg(long, value_enum, default_value = "eventlog")]
+        right_format: CompareInputFormat,
+
+        /// Output directory for the generated evidence pack.
+        #[arg(long, default_value = "incident-pack")]
+        output_dir: PathBuf,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -126,6 +148,7 @@ Commands:
   export <eventlog.jsonl> --share-safe --output <bundle.tar.zst> [--refusal-report <path>]
   tour <fixture.jsonl> --stress [--output-dir <dir>]
   compare <left.jsonl> <right.jsonl> [--left-format eventlog|cassette] [--right-format eventlog|cassette]
+  incident-pack <left.jsonl> <right.jsonl> [--left-format eventlog|cassette] [--right-format eventlog|cassette] [--output-dir <dir>]
 Tips:
   panopticon --help
   panopticon <command> --help";
@@ -198,5 +221,19 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn incident_pack_alias_parses() {
+        let cli = Cli::try_parse_from([
+            "panopticon",
+            "incident",
+            "left.jsonl",
+            "right.jsonl",
+            "--output-dir",
+            "pack",
+        ])
+        .expect("parse");
+        assert!(matches!(cli.command, Commands::IncidentPack { .. }));
     }
 }

@@ -5,12 +5,15 @@ use crate::cli_normalize::format_cli_failure;
 use panopticon_core::delta::diff_runs;
 use panopticon_core::event::CommittedEvent;
 use panopticon_core::eventlog::read_eventlog;
+use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants};
+use panopticon_core::reducer::{replay, state_hash};
 use panopticon_export::{ExportConfig, ExportResult};
 use panopticon_import::cassette;
 use panopticon_tour::TourConfig;
 use panopticon_tui::{run_viewer, UiProfile};
 use serde_json::{json, Value};
-use std::fs::File;
+use std::collections::BTreeMap;
+use std::fs::{self, File};
 use std::io::BufReader;
 use std::path::Path;
 
@@ -133,6 +136,54 @@ fn compare_replay_suggestions(
         ),
     };
     vec![left_view, right_view]
+}
+
+fn format_name(format: CompareInputFormat) -> &'static str {
+    match format {
+        CompareInputFormat::Eventlog => "eventlog",
+        CompareInputFormat::Cassette => "cassette",
+    }
+}
+
+fn write_committed_eventlog(path: &Path, events: &[CommittedEvent]) -> Result<(), String> {
+    let mut lines = String::new();
+    for event in events {
+        let line = serde_json::to_string(event).map_err(|e| {
+            format!(
+                "failed to serialize committed event for {}: {e}",
+                path.display()
+            )
+        })?;
+        lines.push_str(&line);
+        lines.push('\n');
+    }
+    fs::write(path, lines).map_err(|e| format!("failed to write {}: {e}", path.display()))
+}
+
+fn hash_file_blake3(path: &Path) -> Result<String, String> {
+    let bytes = fs::read(path).map_err(|e| format!("failed to read {}: {e}", path.display()))?;
+    Ok(blake3::hash(&bytes).to_hex().to_string())
+}
+
+fn replay_summary(events: &[CommittedEvent]) -> Value {
+    let (state, _checkpoints) = replay(events);
+    let state_hash_hex = state_hash(&state);
+    let invariants = ProjectionInvariants::default();
+    let vm = project(&state, &invariants);
+    let vm_hash_hex = viewmodel_hash(&vm);
+    let first_commit_index = events.first().map(|e| e.commit_index);
+    let last_commit_index = events.last().map(|e| e.commit_index);
+    json!({
+        "event_count": events.len(),
+        "first_commit_index": first_commit_index,
+        "last_commit_index": last_commit_index,
+        "state_hash": state_hash_hex,
+        "viewmodel_hash": vm_hash_hex,
+        "projection_invariants_version": vm.projection_invariants_version,
+        "degradation_level": vm.degradation_level,
+        "tier_a_drops": vm.tier_a_drops,
+        "queue_pressure": vm.queue_pressure(),
+    })
 }
 
 pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]) -> AppExit {
@@ -700,6 +751,494 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                 }
             }
             return AppExit::DiffFound;
+        }
+        Commands::IncidentPack {
+            left,
+            right,
+            left_format,
+            right_format,
+            output_dir,
+        } => {
+            if let Err(msg) = ensure_file_exists(&left, "left input file") {
+                let suggestions =
+                    compare_replay_suggestions(&left, &right, left_format, right_format);
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "NOT_FOUND",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::NotFound as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {msg}"),
+                            "Left input path does not exist.",
+                            &suggestions,
+                            &[left.display().to_string(), right.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::NotFound;
+            }
+            if let Err(msg) = ensure_file_exists(&right, "right input file") {
+                let suggestions =
+                    compare_replay_suggestions(&left, &right, left_format, right_format);
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "NOT_FOUND",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::NotFound as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {msg}"),
+                            "Right input path does not exist.",
+                            &suggestions,
+                            &[left.display().to_string(), right.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::NotFound;
+            }
+
+            let left_events = match load_committed_events(&left, left_format) {
+                Ok(events) => events,
+                Err(msg) => {
+                    let suggestions =
+                        compare_replay_suggestions(&left, &right, left_format, right_format);
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("incident-pack failed: {msg}"),
+                                "Failed to parse left input using the selected format.",
+                                &suggestions,
+                                &[left.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+
+            let right_events = match load_committed_events(&right, right_format) {
+                Ok(events) => events,
+                Err(msg) => {
+                    let suggestions =
+                        compare_replay_suggestions(&left, &right, left_format, right_format);
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("incident-pack failed: {msg}"),
+                                "Failed to parse right input using the selected format.",
+                                &suggestions,
+                                &[right.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+
+            let normalized_dir = output_dir.join("normalized");
+            let replay_dir = output_dir.join("replay");
+            let compare_dir = output_dir.join("compare");
+            let export_dir = output_dir.join("export");
+            if let Err(e) = fs::create_dir_all(&normalized_dir)
+                .and_then(|_| fs::create_dir_all(&replay_dir))
+                .and_then(|_| fs::create_dir_all(&compare_dir))
+                .and_then(|_| fs::create_dir_all(&export_dir))
+            {
+                let suggestions = vec![format!(
+                    "panopticon incident-pack {} {} --output-dir {}",
+                    left.display(),
+                    right.display(),
+                    output_dir.display()
+                )];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &format!("failed to create output directories: {e}"),
+                        &suggestions,
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {e}"),
+                            "Output directory is not writable.",
+                            &suggestions,
+                            &[output_dir.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::RuntimeError;
+            }
+
+            let left_eventlog_path = normalized_dir.join("left.eventlog.jsonl");
+            let right_eventlog_path = normalized_dir.join("right.eventlog.jsonl");
+            if let Err(msg) = write_committed_eventlog(&left_eventlog_path, &left_events) {
+                let suggestions = vec![format!(
+                    "Check write permissions for {}",
+                    normalized_dir.display()
+                )];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {msg}"),
+                            "Unable to write normalized left eventlog.",
+                            &suggestions,
+                            &[left_eventlog_path.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::RuntimeError;
+            }
+            if let Err(msg) = write_committed_eventlog(&right_eventlog_path, &right_events) {
+                let suggestions = vec![format!(
+                    "Check write permissions for {}",
+                    normalized_dir.display()
+                )];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {msg}"),
+                            "Unable to write normalized right eventlog.",
+                            &suggestions,
+                            &[right_eventlog_path.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::RuntimeError;
+            }
+
+            let delta = diff_runs(&left_events, &right_events);
+            let divergence_count = delta.divergences.len();
+            let delta_path = compare_dir.join("delta.json");
+            if let Err(e) = fs::write(
+                &delta_path,
+                serde_json::to_vec_pretty(&delta).unwrap_or_else(|_| b"{}".to_vec()),
+            ) {
+                let suggestions = vec![format!(
+                    "Check write permissions for {}",
+                    compare_dir.display()
+                )];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &format!("failed to write compare delta: {e}"),
+                        &suggestions,
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("incident-pack failed: {e}"),
+                            "Unable to persist compare delta artifact.",
+                            &suggestions,
+                            &[delta_path.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::RuntimeError;
+            }
+
+            let left_replay_path = replay_dir.join("left.replay.json");
+            let right_replay_path = replay_dir.join("right.replay.json");
+            let left_replay = replay_summary(&left_events);
+            let right_replay = replay_summary(&right_events);
+            if let Err(e) = fs::write(
+                &left_replay_path,
+                serde_json::to_vec_pretty(&left_replay).unwrap_or_else(|_| b"{}".to_vec()),
+            ) {
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &format!("failed to write replay artifact: {e}"),
+                        &[],
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!("incident-pack failed: {e}");
+                }
+                return AppExit::RuntimeError;
+            }
+            if let Err(e) = fs::write(
+                &right_replay_path,
+                serde_json::to_vec_pretty(&right_replay).unwrap_or_else(|_| b"{}".to_vec()),
+            ) {
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &format!("failed to write replay artifact: {e}"),
+                        &[],
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!("incident-pack failed: {e}");
+                }
+                return AppExit::RuntimeError;
+            }
+
+            let left_bundle_path = export_dir.join("left.bundle.tar.zst");
+            let right_bundle_path = export_dir.join("right.bundle.tar.zst");
+            let left_refusal_path = export_dir.join("left.refusal-report.json");
+            let right_refusal_path = export_dir.join("right.refusal-report.json");
+
+            let left_export_cfg = ExportConfig::new(&left_eventlog_path, &left_bundle_path)
+                .with_refusal_report(&left_refusal_path);
+            let right_export_cfg = ExportConfig::new(&right_eventlog_path, &right_bundle_path)
+                .with_refusal_report(&right_refusal_path);
+
+            let left_export = panopticon_export::run_export(&left_export_cfg);
+            let right_export = panopticon_export::run_export(&right_export_cfg);
+
+            let (left_bundle_hash, right_bundle_hash) = match (left_export, right_export) {
+                (Ok(ExportResult::Success(left_ok)), Ok(ExportResult::Success(right_ok))) => {
+                    (left_ok.bundle_hash, right_ok.bundle_hash)
+                }
+                (Ok(ExportResult::Refused(left_refused)), _) => {
+                    let suggestions = vec![
+                        "Inspect left.refusal-report.json for exact blocked fields.".to_string(),
+                        format!(
+                            "panopticon export {} --share-safe --output out.tar.zst --refusal-report out/refusal-report.json",
+                            left_eventlog_path.display()
+                        ),
+                    ];
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "EXPORT_REFUSED",
+                            &left_refused.summary,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::ExportRefused as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("incident-pack export refused: {}", left_refused.summary),
+                                "Secret scanner found sensitive content in left input.",
+                                &suggestions,
+                                &[left_refusal_path.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::ExportRefused;
+                }
+                (_, Ok(ExportResult::Refused(right_refused))) => {
+                    let suggestions = vec![
+                        "Inspect right.refusal-report.json for exact blocked fields.".to_string(),
+                        format!(
+                            "panopticon export {} --share-safe --output out.tar.zst --refusal-report out/refusal-report.json",
+                            right_eventlog_path.display()
+                        ),
+                    ];
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "EXPORT_REFUSED",
+                            &right_refused.summary,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::ExportRefused as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("incident-pack export refused: {}", right_refused.summary),
+                                "Secret scanner found sensitive content in right input.",
+                                &suggestions,
+                                &[right_refusal_path.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::ExportRefused;
+                }
+                (Err(e), _) | (_, Err(e)) => {
+                    let suggestions = vec![format!(
+                        "panopticon export {} --share-safe --output out.tar.zst --refusal-report out/refusal-report.json",
+                        left_eventlog_path.display()
+                    )];
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &format!("incident-pack export failed: {e}"),
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("incident-pack export failed: {e}"),
+                                "Share-safe export stage failed while building evidence pack.",
+                                &suggestions,
+                                &[output_dir.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+
+            let mut files = BTreeMap::new();
+            let tracked = [
+                (
+                    "normalized/left.eventlog.jsonl",
+                    left_eventlog_path.as_path(),
+                ),
+                (
+                    "normalized/right.eventlog.jsonl",
+                    right_eventlog_path.as_path(),
+                ),
+                ("compare/delta.json", delta_path.as_path()),
+                ("replay/left.replay.json", left_replay_path.as_path()),
+                ("replay/right.replay.json", right_replay_path.as_path()),
+                ("export/left.bundle.tar.zst", left_bundle_path.as_path()),
+                ("export/right.bundle.tar.zst", right_bundle_path.as_path()),
+            ];
+            for (name, path) in tracked {
+                match hash_file_blake3(path) {
+                    Ok(hash) => {
+                        files.insert(name.to_string(), hash);
+                    }
+                    Err(msg) => {
+                        if mode == OutputMode::Json {
+                            emit_json_error(
+                                "RUNTIME_ERROR",
+                                &msg,
+                                &[],
+                                repair_notes,
+                                AppExit::RuntimeError as u8,
+                            );
+                        } else {
+                            eprintln!("incident-pack failed: {msg}");
+                        }
+                        return AppExit::RuntimeError;
+                    }
+                }
+            }
+
+            let manifest_path = output_dir.join("manifest.json");
+            let manifest = json!({
+                "schema_version": "panopticon-incident-pack-v1",
+                "command": "incident-pack",
+                "left_input_path": left,
+                "right_input_path": right,
+                "left_format": format_name(left_format),
+                "right_format": format_name(right_format),
+                "divergence_count": divergence_count,
+                "left_bundle_hash": left_bundle_hash,
+                "right_bundle_hash": right_bundle_hash,
+                "files": files,
+            });
+            match serde_json::to_vec_pretty(&manifest) {
+                Ok(bytes) => {
+                    if let Err(e) = fs::write(&manifest_path, bytes) {
+                        if mode == OutputMode::Json {
+                            emit_json_error(
+                                "RUNTIME_ERROR",
+                                &format!("failed to write manifest: {e}"),
+                                &[],
+                                repair_notes,
+                                AppExit::RuntimeError as u8,
+                            );
+                        } else {
+                            eprintln!("incident-pack failed: {e}");
+                        }
+                        return AppExit::RuntimeError;
+                    }
+                }
+                Err(e) => {
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &format!("failed to serialize manifest: {e}"),
+                            &[],
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!("incident-pack failed: {e}");
+                    }
+                    return AppExit::RuntimeError;
+                }
+            }
+
+            if mode == OutputMode::Json {
+                emit_json_success(
+                    "OK",
+                    "Incident evidence pack generated.",
+                    Some("incident-pack"),
+                    AppExit::Success as u8,
+                    repair_notes,
+                    json!({
+                        "output_dir": output_dir,
+                        "manifest_path": manifest_path,
+                        "divergence_count": divergence_count,
+                        "left_bundle_hash": left_bundle_hash,
+                        "right_bundle_hash": right_bundle_hash,
+                    }),
+                );
+            } else {
+                println!("Incident pack generated.");
+                println!("  Output dir:      {}", output_dir.display());
+                println!("  Manifest:        {}", manifest_path.display());
+                println!("  Divergences:     {}", divergence_count);
+                println!("  Left bundle:     {}", left_bundle_path.display());
+                println!("  Right bundle:    {}", right_bundle_path.display());
+            }
+            return AppExit::Success;
         }
     }
 

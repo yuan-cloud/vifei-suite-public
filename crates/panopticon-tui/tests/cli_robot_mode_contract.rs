@@ -278,6 +278,65 @@ fn compare_divergence_emits_diff_found_contract() {
 }
 
 #[test]
+fn incident_pack_success_emits_manifest_and_hashes() {
+    let compare_dir = tempdir().expect("tempdir");
+    let (_dir, left, right_same, _right_diff) = write_compare_eventlogs();
+    let output_dir = compare_dir.path().join("incident-pack");
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "incident-pack",
+        &left.display().to_string(),
+        &right_same.display().to_string(),
+        "--output-dir",
+        &output_dir.display().to_string(),
+    ]);
+    assert_eq!(code, 0, "incident pack should succeed for clean inputs");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["command"], "incident-pack");
+    assert_eq!(value["exit_code"], 0);
+    let manifest_path = value["data"]["manifest_path"]
+        .as_str()
+        .expect("manifest path string");
+    let manifest_json =
+        fs::read_to_string(manifest_path).expect("incident pack must write manifest.json");
+    let manifest: Value = serde_json::from_str(&manifest_json).expect("manifest json");
+    assert_eq!(manifest["schema_version"], "panopticon-incident-pack-v1");
+    assert!(manifest["files"].is_object());
+}
+
+#[test]
+fn incident_pack_refuses_when_secrets_detected() {
+    let out = tempdir().expect("tempdir");
+    let left_refusal_fixture = workspace_root()
+        .join("docs")
+        .join("assets")
+        .join("readme")
+        .join("sample-refusal-eventlog.jsonl");
+    let right_clean = workspace_root()
+        .join("docs")
+        .join("assets")
+        .join("readme")
+        .join("sample-export-clean-eventlog.jsonl");
+    let output_dir = out.path().join("incident-pack");
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "incident-pack",
+        &left_refusal_fixture.display().to_string(),
+        &right_clean.display().to_string(),
+        "--output-dir",
+        &output_dir.display().to_string(),
+    ]);
+    assert_eq!(code, 3, "secret findings should fail closed");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "EXPORT_REFUSED");
+    assert_eq!(value["exit_code"], 3);
+}
+
+#[test]
 fn alias_viewer_matches_view_contract_for_missing_file() {
     let (code, stdout, _stderr) = run_panopticon(&["--json", "viewer", "does-not-exist.jsonl"]);
     assert_eq!(code, 1, "viewer alias should route through view handler");
@@ -407,7 +466,7 @@ fn invalid_subcommand_envelope_matches_golden_shape() {
         "code": "INVALID_ARGS",
         "message": "Unknown subcommand.",
         "suggestions": [
-            "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, or `panopticon compare`.",
+            "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, `panopticon compare`, or `panopticon incident-pack`.",
             "Run `panopticon --help` for full command syntax."
         ],
         "exit_code": 2

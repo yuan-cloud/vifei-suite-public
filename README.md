@@ -127,6 +127,17 @@ Refusal Radar demo script:
 scripts/demo/refusal_radar.sh --fast
 ```
 
+### Incident evidence pack (one command)
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- incident-pack \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --output-dir out/incident-pack
+```
+
+This writes deterministic local artifacts (`compare/delta.json`, replay summaries, share-safe bundles, and `manifest.json`) and fails closed with `EXPORT_REFUSED` if scanner findings block export.
+
 ### Live Incident Wall assets
 
 ```bash
@@ -166,7 +177,7 @@ Robot JSON contract keys (`schema_version=panopticon-cli-robot-v1.1`):
 |---|---|---|
 | `schema_version` | string | Contract version for parsers |
 | `ok` | bool | Success/failure discriminator |
-| `code` | string | Stable status code (`OK`, `INVALID_ARGS`, `NOT_FOUND`, `EXPORT_REFUSED`, `RUNTIME_ERROR`) |
+| `code` | string | Stable status code (`OK`, `INVALID_ARGS`, `NOT_FOUND`, `EXPORT_REFUSED`, `RUNTIME_ERROR`, `DIFF_FOUND`) |
 | `message` | string | Human-readable summary |
 | `suggestions` | array[string] | Actionable next commands or hints |
 | `exit_code` | number | Process exit code mirror |
@@ -180,6 +191,7 @@ Exit codes:
 - `2`: invalid args
 - `3`: export refused (share-safe scanner refusal)
 - `4`: runtime error
+- `5`: diff found (compare divergence)
 
 ## Architecture Snapshot
 

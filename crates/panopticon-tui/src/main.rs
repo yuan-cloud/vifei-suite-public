@@ -85,7 +85,7 @@ fn parse_error_guidance(kind: ErrorKind) -> (&'static str, Vec<String>) {
         ErrorKind::InvalidSubcommand => (
             "Unknown subcommand.",
             vec![
-                "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, or `panopticon compare`."
+                "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, `panopticon compare`, or `panopticon incident-pack`."
                     .to_string(),
                 "Run `panopticon --help` for full command syntax.".to_string(),
             ],
