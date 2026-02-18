@@ -1820,3 +1820,16 @@ Context:
 3. Nondeterminism: Perf data remains environment-sensitive by nature; deterministic enforcement is achieved through locked baseline schema + explicit thresholds + explicit override reason requirement.
 4. Security: No secrets introduced. Override path can be misused if left on; mitigated by required `PANOPTICON_PERF_GATE_OVERRIDE_REASON` and documented incident-only policy.
 5. Performance: CI may fail more often on noisy runners once phase-2 is active; rollback path is documented and reversible by switching back to warn gate.
+
+## bd-lh63 · TRACK-D: replay SLO and perf regression governance · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: TRACK-D now couples benchmarking, artifact schema, and CI policy into one release-quality gate path. This is intentional governance coupling for performance accountability.
+2. Untested claims: We validated operational behavior in local runs and CI wiring, but long-term flake sensitivity across heterogeneous CI hardware remains a monitoring concern.
+3. Nondeterminism: Performance metrics remain host-sensitive; deterministic guard behavior is enforced through pinned fixture, schema, and explicit threshold policy.
+4. Security: No new secret handling introduced. Override pathway requires explicit reason to reduce silent bypass risk.
+5. Performance: Adds CI runtime cost from benchmark generation and gate checks; accepted tradeoff for enterprise-grade regression visibility.
