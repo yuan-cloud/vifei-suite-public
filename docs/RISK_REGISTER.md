@@ -1703,3 +1703,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; changes are documentation policy only.
 4. Security: Clarified that runtime artifact/serialize failures and export scanner findings must fail closed; this reduces ambiguity risk for future security regressions.
 5. Performance cliffs: No runtime cost; only documentation maintenance overhead when contract files move or rename.
+
+## bd-2cj9.6 · E5: runtime anti-masking guardrail check · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4, I5, D7 fail-closed execution boundary
+- Constitution touched: none
+
+1. Coupling: Added a repo guard test (`crates/panopticon-core/tests/runtime_masking_guard.rs`) that scans `panopticon-core/src` and `panopticon-tui/src` for specific serde fallback anti-patterns.
+2. Untested claims: Guard currently focuses on known fallback signatures and line-window heuristics; it may miss semantically equivalent patterns expressed in very different syntax.
+3. Nondeterminism: No runtime nondeterminism introduced; this is test-only scanning logic with deterministic inputs.
+4. Security: Guard reduces risk of silent artifact degradation by enforcing fail-closed behavior at CI/test time; no new secret surface added.
+5. Performance cliffs: Additional file-scan test adds small overhead to `cargo test`; scope is bounded to runtime source trees and fixed-window string checks.
