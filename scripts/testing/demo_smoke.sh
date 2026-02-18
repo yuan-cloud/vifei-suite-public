@@ -18,4 +18,7 @@ scripts/demo/refusal_radar.sh --fast "$OUT_BASE/radar"
 echo "[smoke] live incident wall (fast)"
 scripts/demo/live_incident_wall.sh --fast "$OUT_BASE/wall"
 
+echo "[smoke] competitor bakeoff (fast)"
+scripts/demo/competitor_bakeoff.sh --fast "$OUT_BASE/bakeoff"
+
 echo "[smoke] PASS"

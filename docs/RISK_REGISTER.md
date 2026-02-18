@@ -1846,3 +1846,16 @@ Context:
 3. Nondeterminism: Drift gate enforces deterministic replay/hash behavior across adapters for current fixtures; no new runtime nondeterminism introduced.
 4. Security: Additional adapter fixtures increase potential secret-containing sample risk; mitigated by synthetic fixture policy and share-safe scanning downstream.
 5. Performance: Conformance checks add CI runtime but are bounded and justified by cross-provider correctness guarantees.
+
+## bd-3ta1 · C4: competitor bakeoff demo harness + proof narrative assets · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I3, I4
+- Constitution touched: none
+
+1. Coupling: Bakeoff harness composes multiple demo scripts and CLI commands; output contract now depends on these surfaces staying stable.
+2. Untested claims: Full mode (`--full`) remains unexecuted in this pass, but fast-mode bakeoff is now exercised through `scripts/testing/demo_smoke.sh` as an end-to-end contract check.
+3. Nondeterminism: Report schema and required checks are deterministic for fixed inputs; runtime duration is informational only.
+4. Security: Harness reuses share-safe refusal flow and synthetic fixtures; no new secret exposure path introduced.
+5. Performance: Adds one more fast-demo smoke path and optional full bakeoff runtime overhead; acceptable for demo/GTM proof value.

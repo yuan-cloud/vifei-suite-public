@@ -138,6 +138,18 @@ cargo run -p panopticon-tui --bin panopticon -- incident-pack \
 
 This writes deterministic local artifacts (`compare/delta.json`, replay summaries, share-safe bundles, and `manifest.json`) and fails closed with `EXPORT_REFUSED` if scanner findings block export.
 
+### Competitor bakeoff harness (objective proof demo)
+
+```bash
+scripts/demo/competitor_bakeoff.sh --fast
+```
+
+This produces a timestamped proof bundle under `.tmp/competitor-bakeoff/` with:
+- determinism duel hash agreement
+- refusal-report blocked-item evidence
+- Truth HUD explainability token checks
+- incident-pack artifact validation
+
 ### Live Incident Wall assets
 
 ```bash
