@@ -62,7 +62,7 @@ Status note: Workflow definitions are in-repo; organization/repo-level Actions p
 - [x] `cargo fmt --check`
 - [x] `cargo clippy --all-targets -- -D warnings`
 - [x] `cargo test`
-- [ ] Latest release commit is pushed
-- [ ] Checklist reviewed and dated in release notes or operator log
+- [x] Latest release commit is pushed
+- [x] Checklist reviewed and dated in release notes or operator log
 
-Reviewed: 2026-02-18 (local workspace audit)
+Reviewed: 2026-02-18 (local workspace audit, HEAD `48d7a1f`)

@@ -1469,3 +1469,16 @@ Context:
 3. Nondeterminism: Fast smoke path checks deterministic hash equality and refusal/report behavior; full mode remains available for stress-grade validation.
 4. Security: Refusal demo uses fixture-generated refusal reports and does not expose external secrets; outputs remain local.
 5. Performance cliffs: Full demo modes are intentionally heavier and should be used for showcase/proof runs, while fast mode is optimized for CI and quick checks.
+
+## bd-rqeg · Release readiness closure pass (checklist + waiver review) · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: docs/process only
+- Constitution touched: none
+
+1. Coupling: Release-readiness reporting now depends on current checklist/doc paths; future checklist renames should update `docs/RELEASE_READINESS_2026-02-18.md`.
+2. Untested claims: GitHub UI/admin settings remain manually verified items and cannot be fully asserted from local repo state.
+3. Nondeterminism: No runtime or projection logic changed; docs and waiver metadata only.
+4. Security: No new data-handling surface; waiver text avoids secrets and records only tool availability facts.
+5. Performance cliffs: None; this pass adds no runtime work and no new hot-path behavior.

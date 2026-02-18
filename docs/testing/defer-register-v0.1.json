@@ -1,6 +1,6 @@
 {
   "version": "v0.1",
-  "updated_on": "2026-02-17",
+  "updated_on": "2026-02-18",
   "review_cadence": "weekly",
   "entries": [
     {
@@ -8,7 +8,7 @@
       "surface": "Numeric line/function coverage percentages (cargo llvm-cov unavailable in baseline environment)",
       "risk_rank": "P1",
       "owner": "maintainer",
-      "rationale": "Current coverage matrix is risk-ranked and command-backed, but lacks numeric line/function percentages until llvm-cov is available in CI and local dev images.",
+      "rationale": "Current coverage matrix is risk-ranked and command-backed, but lacks numeric line/function percentages until llvm-cov is available in CI and local dev images. Revalidated on 2026-02-18: `cargo llvm-cov --version` is unavailable in this environment.",
       "compensating_controls": [
         "docs/testing/coverage-matrix-v0.1.md tracks uncovered paths and owners",
         "PR fastlane and full quality gates must remain green",
