@@ -1,0 +1,5 @@
+{"type":"translation.request","schema_version":"cohere-translate-v1","request_id":"tr_001","event_id":"ev_001","created_at_ms":1739700000000,"model":"command-r-plus","source_lang":"en","target_lang":"fr","source_text":"Please keep this private client note out of exported summaries."}
+{"type":"translation.policy","schema_version":"cohere-translate-v1","request_id":"tr_001","event_id":"ev_002","created_at_ms":1739700000100,"policy":"pii_mask","policy_reason":"detected pii token sequence","queue_pressure":0.14}
+{"type":"translation.result","schema_version":"cohere-translate-v1","request_id":"tr_001","event_id":"ev_003","created_at_ms":1739700000200,"translated_text":"Veuillez garder cette note client privée hors des résumés exportés."}
+{"type":"translation.error","schema_version":"cohere-translate-v1","request_id":"tr_001","event_id":"ev_004","created_at_ms":1739700000300,"error":{"code":"qa_warning","message":"terminology glossary mismatch on one segment"}}
+{"type":"translation.completed","schema_version":"cohere-translate-v1","request_id":"tr_001","event_id":"ev_005","created_at_ms":1739700000400,"status":"completed-with-warning"}

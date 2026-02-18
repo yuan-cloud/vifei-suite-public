@@ -1547,3 +1547,16 @@ Context:
 3. Nondeterminism: Output ordering is source-line driven, IDs have deterministic fallbacks, and generic payload maps use `BTreeMap`, so no new nondeterministic iteration is introduced.
 4. Security: Source-supplied `commit_index` is rejected and schema drift is converted to explicit contract errors, preserving append-writer ownership of canonical order.
 5. Performance cliffs: Tool candidate extraction traverses a small list of possible fields per record; this remains bounded and linear per line for current schemas.
+
+## bd-14ja · B4: Cohere Translate adapter v1 (vertical differentiator) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: Cohere Translate mapping introduces a domain-specific adapter contract that still depends on shared normalization helpers; schema updates should remain centralized in `contract.rs`.
+2. Untested claims: Only a minimal v1 event surface is covered today; broader production variants (batch modes, retries, nested policy metadata) should be added in B5 conformance corpus.
+3. Nondeterminism: Parser is line-ordered, uses deterministic fallback IDs, and avoids unordered containers in payload data, so replay ordering and serialization remain stable.
+4. Security: Contract checks reject source-owned `commit_index` and schema mismatch is surfaced as explicit contract errors, preserving trust boundary between importer input and canonical ordering.
+5. Performance cliffs: Request argument synthesis includes source length metadata; very large source texts increase per-record string processing but remain linear and bounded by input line size.
