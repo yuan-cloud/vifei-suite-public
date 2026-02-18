@@ -1508,3 +1508,16 @@ Context:
 3. Nondeterminism: Audit classification is deterministic for a fixed repo state (sorted IDs, stable parsing); no truth-path or projection behavior changed.
 4. Security: Audit artifacts include issue titles and close reasons; they contain no secrets by design but should still be treated as internal governance outputs.
 5. Performance cliffs: Negligible runtime cost; script executes quickly and scales linearly with issue count.
+
+## bd-2pyi · B1: adapter contract framework and normalization boundaries · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: `panopticon-import` now centralizes adapter contract behavior in `contract.rs`; new adapters must conform to shared helpers (schema-version validation and commit-index rejection).
+2. Untested claims: Compatibility with future provider schemas is still prospective; each new adapter must add fixture-backed contract tests before relying on this framework.
+3. Nondeterminism: No new nondeterministic behavior introduced; normalization and contract checks are pure and deterministic over input records.
+4. Security: Rejecting source-supplied `commit_index` tightens trust boundaries and reduces risk of forged canonical ordering metadata.
+5. Performance cliffs: Contract checks add minimal per-record overhead (string/option checks) and are unlikely to affect importer throughput materially.

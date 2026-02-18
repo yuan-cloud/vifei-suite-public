@@ -50,6 +50,11 @@ use std::io::BufRead;
 use panopticon_core::event::{EventPayload, ImportEvent, Tier};
 use serde::Deserialize;
 
+use crate::contract::{
+    contract_error_payload, normalize_event_id, normalize_run_id, reject_source_commit_index,
+    validate_schema_version, AGENT_CASSETTE_SCHEMA_VERSION,
+};
+
 /// Source identifier for events produced by this importer.
 pub const SOURCE_ID: &str = "agent-cassette";
 
@@ -57,8 +62,10 @@ pub const SOURCE_ID: &str = "agent-cassette";
 struct CassetteRecord {
     #[serde(rename = "type")]
     record_type: Option<String>,
+    schema_version: Option<String>,
     session_id: Option<String>,
     id: Option<String>,
+    commit_index: Option<u64>,
     timestamp: Option<String>,
     agent: Option<String>,
     model: Option<String>,
@@ -122,16 +129,46 @@ pub fn parse_cassette<R: BufRead>(reader: R) -> Vec<ImportEvent> {
 /// Map a single Cassette JSON record to an [`ImportEvent`].
 fn map_record(record: &CassetteRecord, seq: u64, line_num: usize) -> ImportEvent {
     let record_type = record.record_type.as_deref().unwrap_or("unknown");
-    let session_id = record
-        .session_id
-        .clone()
-        .unwrap_or_else(|| "unknown-session".to_string());
-    let event_id = record
-        .id
-        .clone()
-        .unwrap_or_else(|| format!("cassette:{seq}"));
+    let (session_id, _run_synthesized) =
+        normalize_run_id(record.session_id.as_deref(), "unknown-session");
+    let fallback_event_id = format!("cassette:{seq}");
+    let (event_id, _event_id_synthesized) =
+        normalize_event_id(record.id.as_deref(), &fallback_event_id);
 
     let timestamp_ns = parse_timestamp_ns(record.timestamp.as_deref());
+
+    if let Err(message) = validate_schema_version(
+        record.schema_version.as_deref(),
+        AGENT_CASSETTE_SCHEMA_VERSION,
+    ) {
+        let (payload, tier) = contract_error_payload(message);
+        return ImportEvent {
+            run_id: session_id,
+            event_id,
+            source_id: SOURCE_ID.to_string(),
+            source_seq: Some(seq),
+            timestamp_ns,
+            tier,
+            payload,
+            payload_ref: None,
+            synthesized: true,
+        };
+    }
+
+    if let Err(message) = reject_source_commit_index(record.commit_index) {
+        let (payload, tier) = contract_error_payload(message);
+        return ImportEvent {
+            run_id: session_id,
+            event_id,
+            source_id: SOURCE_ID.to_string(),
+            source_seq: Some(seq),
+            timestamp_ns,
+            tier,
+            payload,
+            payload_ref: None,
+            synthesized: true,
+        };
+    }
 
     let (payload, tier) = map_payload(record_type, record, seq, line_num);
 
@@ -400,6 +437,30 @@ mod tests {
         if let EventPayload::Error { kind, message, .. } = &events[0].payload {
             assert_eq!(kind, "parse");
             assert!(message.contains("Malformed JSON at line 1"));
+        }
+    }
+
+    #[test]
+    fn source_commit_index_is_rejected_by_contract() {
+        let input = r#"{"type":"tool_use","session_id":"s1","timestamp":"2026-02-16T10:00:01Z","tool":"Read","commit_index":7}"#;
+        let events = parse_cassette(Cursor::new(input));
+        assert_eq!(events.len(), 1);
+        assert!(matches!(&events[0].payload, EventPayload::Error { .. }));
+        if let EventPayload::Error { kind, message, .. } = &events[0].payload {
+            assert_eq!(kind, "contract");
+            assert!(message.contains("commit_index"));
+        }
+    }
+
+    #[test]
+    fn schema_mismatch_is_rejected_by_contract() {
+        let input = r#"{"type":"tool_use","schema_version":"agent-cassette-v999","session_id":"s1","timestamp":"2026-02-16T10:00:01Z","tool":"Read"}"#;
+        let events = parse_cassette(Cursor::new(input));
+        assert_eq!(events.len(), 1);
+        assert!(matches!(&events[0].payload, EventPayload::Error { .. }));
+        if let EventPayload::Error { kind, message, .. } = &events[0].payload {
+            assert_eq!(kind, "contract");
+            assert!(message.contains("schema_version mismatch"));
         }
     }
 
