@@ -1326,3 +1326,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; parsing remains pure and source-order deterministic.
 4. Security: No new trust-boundary or secret-handling surface introduced.
 5. Performance: Small but measurable parse-share reduction observed; append remains dominant hotspot for future rounds.
+
+## bd-2sep · DOCS-1 launch/checklist reconciliation · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: documentation/process only; no truth-path behavior change
+- Constitution touched: none
+
+1. Coupling: README and verification docs now couple more tightly to current CLI help-mode behavior; future CLI contract changes must update both docs together.
+2. Untested claims: GitHub UI settings (description/topics/homepage/branch protection/actions policy) still require manual confirmation outside local workspace.
+3. Nondeterminism: No runtime nondeterminism introduced; this bead only updates docs and checklist state.
+4. Security: Reduced risk of accidental public leakage by replacing strategy-style wording with neutral release-language in launch planning docs.
+5. Performance cliffs: No runtime impact; process overhead is limited to periodic manual checklist reconciliation before public flips/releases.

@@ -18,24 +18,24 @@ Most agent workflows have logs but weak replay guarantees under stress. Panoptic
 
 ## 60-Second Quickstart
 
-1. Check CLI surface:
-
-```bash
-cargo run -p panopticon-tui --bin panopticon -- --help
-```
-
-2. Run deterministic stress Tour:
+1. Run deterministic stress Tour:
 
 ```bash
 cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
 ```
 
-3. Confirm proof artifacts:
+2. Confirm proof artifacts:
 
 ```bash
 ls -1 tour-output
 cat tour-output/viewmodel.hash
 cat tour-output/metrics.json
+```
+
+3. Optional human-readable CLI surface check:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- --human --help
 ```
 
 Expected artifact files:

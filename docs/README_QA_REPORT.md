@@ -1,6 +1,6 @@
 # README QA Report (`bd-1w9.5`)
 
-Date: 2026-02-17
+Date: 2026-02-18
 
 Scope:
 
@@ -14,13 +14,13 @@ Detailed command evidence lives in `docs/README_VERIFICATION.md`.
 
 This QA report intentionally summarizes gate outcomes to avoid duplicating the full verification log.
 
-1. CLI help command
+1. CLI surface check
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- --help
+cargo run -p panopticon-tui --bin panopticon -- --human --help
 ```
 
-Result: PASS. Command surface matches README sections (`view`, `export`, `tour`).
+Result: PASS (informational). Human-readable command surface matches README sections (`view`, `export`, `tour`).
 Source: `docs/README_VERIFICATION.md` (Command Validation Matrix items 1-3).
 
 2. Deterministic stress Tour command

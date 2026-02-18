@@ -1,6 +1,6 @@
 # Panopticon v0.1 Launch + Distribution Plan (Post-Stabilization)
 
-Status: planning artifact. Do not execute this track while core milestone beads are still unstable.
+Status: execution-tracked artifact. Core launch-doc tracks (`bd-x7q.*`, `bd-1w9.*`) are complete; remaining items are release-time operations and GitHub settings gates.
 
 ## Scope
 
@@ -108,7 +108,7 @@ Adaptation for Panopticon:
 - show proof artifacts (`metrics.json`, `viewmodel.hash`, capture files) early in README
 - keep mathematical/technical depth in docs, but prioritize runnable commands at top
 
-## "Pretty / Personality / Viral" Without Breaking Trust
+## Personality and Shareability Without Breaking Trust
 
 Allowed and recommended:
 
@@ -132,7 +132,7 @@ Expected phase-1 outcomes:
 - low-friction adoption by technical users if install + demo is under 2 minutes
 - moderate social spread unless clips and narrative are tightly packaged
 
-Higher-variance "viral" upside requires:
+Higher-variance reach requires:
 
 - one unmistakable demo sequence people want to repost
 - clear "why this is different" framing in first 15 seconds
