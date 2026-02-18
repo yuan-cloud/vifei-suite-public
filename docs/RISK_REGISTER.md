@@ -1716,3 +1716,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; this is test-only scanning logic with deterministic inputs.
 4. Security: Guard reduces risk of silent artifact degradation by enforcing fail-closed behavior at CI/test time; no new secret surface added.
 5. Performance cliffs: Additional file-scan test adds small overhead to `cargo test`; scope is bounded to runtime source trees and fixed-window string checks.
+
+## bd-2cj9.5 · E6: TRACK-E closeout evidence + final risk pass · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4, I5, D7
+- Constitution touched: none
+
+1. Coupling: Closeout doc now links policy wording, runtime behavior, and specific contract test names; future test renames require doc maintenance.
+2. Untested claims: Closeout summarizes repeated gate runs but does not independently archive machine-readable gate artifacts in a dedicated bundle.
+3. Nondeterminism: No runtime changes in this bead; documentation only.
+4. Security: Clarifies fail-closed boundary and rollback constraints, reducing risk of future silent fallback reintroduction in integrity paths.
+5. Performance cliffs: No runtime impact; minor documentation upkeep overhead only.
