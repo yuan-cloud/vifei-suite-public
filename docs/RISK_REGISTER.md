@@ -1495,3 +1495,16 @@ Context:
 3. Nondeterminism: Coverage outputs are informational artifacts and do not feed truth-path hashing; no reducer/projection ordering behavior changed.
 4. Security: Coverage artifacts can expose source file path structure; they should remain in CI artifacts and not be treated as secret-free export payloads by default.
 5. Performance cliffs: Coverage jobs are heavier than regular tests; scoped to full-confidence lane to avoid slowing fastlane/PR iteration.
+
+## bd-2ykd · A1: closure-evidence parity audit + taxonomy · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: process-only governance hardening
+- Constitution touched: none
+
+1. Coupling: New audit output couples `docs/RISK_REGISTER.md` heading conventions with `.beads/issues.jsonl` closure state; future heading format changes require synchronized audit script updates.
+2. Untested claims: Classification heuristics (milestone alias and parent rollup coverage) are policy choices, not runtime truths; follow-on CI guard (`bd-110f`) must codify exact exemption semantics.
+3. Nondeterminism: Audit classification is deterministic for a fixed repo state (sorted IDs, stable parsing); no truth-path or projection behavior changed.
+4. Security: Audit artifacts include issue titles and close reasons; they contain no secrets by design but should still be treated as internal governance outputs.
+5. Performance cliffs: Negligible runtime cost; script executes quickly and scales linearly with issue count.
