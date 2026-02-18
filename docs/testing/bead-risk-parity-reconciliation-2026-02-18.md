@@ -5,7 +5,7 @@ Scope: `bd-25a0` historical closure reconciliation.
 ## Commands run
 
 ```bash
-python3 scripts/testing/check_bead_closure_evidence.py \
+scripts/testing/check_bead_closure_evidence.py \
   --audit-output-json docs/testing/bead-risk-parity-audit-2026-02-18-reconciled.json \
   --audit-output-markdown docs/testing/bead-risk-parity-audit-2026-02-18-reconciled.md
 ```

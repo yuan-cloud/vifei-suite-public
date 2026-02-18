@@ -49,6 +49,11 @@ scripts/e2e/fastlane.sh
 Merge/release gating is handled by the separate `full-confidence` lane
 (`docs/testing/FULL_CONFIDENCE.md`).
 
+Invocation policy for test-governance scripts:
+
+- Prefer direct executable form (`scripts/testing/<name>`) over `bash <script>` to keep local and CI behavior aligned.
+- Python governance scripts in `scripts/testing/` are shebang-executable and follow the same policy.
+
 ## Contract Enforcement (CI)
 Fastlane and full-confidence CI lanes enforce contract sections with explicit tags and replay commands:
 
@@ -67,7 +72,7 @@ Fastlane and full-confidence CI lanes enforce contract sections with explicit ta
 - Implemented by `scripts/testing/check_coverage_contract.sh`.
 - Verifies required coverage docs exist, required contract headings are present, and path references from `docs/testing/coverage-matrix-v0.1.md` resolve.
 - Replay:
-  - `bash scripts/testing/check_coverage_contract.sh`
+  - `scripts/testing/check_coverage_contract.sh`
 
 3. `FC1-cli`
 - Verifies full-confidence CLI E2E output includes semantic contract stages:

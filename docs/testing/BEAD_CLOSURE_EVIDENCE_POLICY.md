@@ -5,7 +5,7 @@ Purpose: define auditable rules that determine when a closed bead is considered 
 Canonical audit command:
 
 ```bash
-python3 scripts/testing/audit_bead_risk_parity.py \
+scripts/testing/audit_bead_risk_parity.py \
   --output-json docs/testing/bead-risk-parity-audit-2026-02-18.json \
   --output-markdown docs/testing/bead-risk-parity-audit-2026-02-18.md
 ```
@@ -47,7 +47,7 @@ python3 scripts/testing/audit_bead_risk_parity.py \
 Guard command (fails on unresolved non-exempt gaps):
 
 ```bash
-python3 scripts/testing/check_bead_closure_evidence.py \
+scripts/testing/check_bead_closure_evidence.py \
   --audit-output-json .tmp/bead-closure-evidence/bead-risk-parity-audit.json \
   --audit-output-markdown .tmp/bead-closure-evidence/bead-risk-parity-audit.md
 ```

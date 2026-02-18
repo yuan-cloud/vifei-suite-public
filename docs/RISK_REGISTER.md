@@ -1781,3 +1781,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism added; reconciliation artifacts are deterministically generated from current tracker/risk state. The underlying parity report keeps a fixed generated timestamp, avoiding wall-clock drift in output shape.
 4. Security: No new data exposure. Risk is governance misuse if exemptions become permanent; mitigated by explicit rationale entries and stale-exemption warnings.
 5. Performance: Reconciliation step is lightweight and CI-safe. Main cliff would be unbounded growth of historical exemptions, addressed by future pruning/backfill work.
+
+## bd-1idz · A4: normalize script execution ergonomics for test-governance scripts · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4 (testability and repeatability of governance checks)
+- Constitution touched: none
+
+1. Coupling: CI and docs now assume governance scripts are executable and invoked directly via shebang (`scripts/testing/...`). This reduces ambiguity but couples behavior to executable-bit hygiene.
+2. Untested claims: We validated direct invocation paths for `check_coverage_contract.sh`, `validate_defer_register.py`, and `check_bead_closure_evidence.py`; we did not add a dedicated script-mode regression test suite.
+3. Nondeterminism: No runtime nondeterminism introduced. Invocation style changed only how scripts are launched, not script logic.
+4. Security: No new secret/PII handling changes. Direct invocation keeps interpreter choice explicit in shebang and avoids shell-wrapper drift.
+5. Performance: No material runtime impact; invocation normalization is a devex/process hardening change.

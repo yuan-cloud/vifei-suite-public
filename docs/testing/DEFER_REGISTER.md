@@ -8,7 +8,7 @@ Track explicit, time-bounded waivers for uncovered or deferred test surfaces dis
 
 ## Validation command
 ```bash
-python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
 ```
 
 Validation fails if:
