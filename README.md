@@ -138,6 +138,41 @@ cargo run -p panopticon-tui --bin panopticon -- incident-pack \
 
 This writes deterministic local artifacts (`compare/delta.json`, replay summaries, share-safe bundles, and `manifest.json`) and fails closed with `EXPORT_REFUSED` if scanner findings block export.
 
+Input format flags for mixed-source comparisons:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- incident-pack \
+  fixtures/small-session.jsonl \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --left-format cassette \
+  --right-format eventlog \
+  --output-dir out/incident-pack
+```
+
+Manifest input labels are share-safe file labels (not absolute local paths).
+
+### Deterministic run comparison
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- compare \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl
+```
+
+Optional mixed-format compare:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- compare \
+  fixtures/small-session.jsonl \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --left-format cassette \
+  --right-format eventlog
+```
+
+Exit behavior:
+- `0` when no divergence is found
+- `5` when divergences are found (`DIFF_FOUND` envelope in robot mode)
+
 ### Competitor bakeoff harness (objective proof demo)
 
 ```bash

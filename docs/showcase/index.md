@@ -37,6 +37,7 @@ Truth HUD (showcase):
 scripts/demo/determinism_duel.sh --fast
 scripts/demo/refusal_radar.sh --fast
 scripts/demo/live_incident_wall.sh --fast
+scripts/demo/competitor_bakeoff.sh --fast
 ```
 
 Use `--full` for stress-grade runs:
@@ -45,6 +46,7 @@ Use `--full` for stress-grade runs:
 scripts/demo/determinism_duel.sh --full
 scripts/demo/refusal_radar.sh --full
 scripts/demo/live_incident_wall.sh --full
+scripts/demo/competitor_bakeoff.sh --full
 ```
 
 Expected signals:
@@ -52,3 +54,16 @@ Expected signals:
 1. Determinism Duel prints identical hash A/hash B and `PASS`.
 2. Refusal Radar prints blocked field details and refusal `PASS`.
 3. Live Incident Wall prints showcase asset paths and `PASS`.
+4. Competitor Bakeoff writes `bakeoff-report.json` with deterministic/stability/refusal/explainability checks.
+
+## Verification bundle
+
+```bash
+mkdir -p .tmp/final-audit
+scripts/testing/check_bead_closure_evidence.py \
+  --audit-output-json .tmp/final-audit/bead-risk-parity.json \
+  --audit-output-markdown .tmp/final-audit/bead-risk-parity.md
+scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+scripts/testing/check_coverage_contract.sh
+scripts/testing/demo_smoke.sh .tmp/final-audit/demo-smoke
+```

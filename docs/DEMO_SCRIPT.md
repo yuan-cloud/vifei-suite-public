@@ -4,11 +4,12 @@ This is the reproducible demo flow for launch media (`bd-3qq.1`).
 
 ## Demo Goal (60-90 seconds)
 
-Show three proof moments, in order:
+Show four proof moments, in order:
 
 1. Deterministic stress tour produces stable proof artifacts.
 2. Trust challenge check: Tier A drops are zero and hash is stable.
 3. Share-safe export succeeds on clean input and refuses unsafe input.
+4. Competitor bakeoff report summarizes deterministic comparison signals.
 
 ## Preflight
 
@@ -30,6 +31,13 @@ Outputs:
 - `/tmp/panopticon_demo_run/tour/viewmodel.hash`
 - `/tmp/panopticon_demo_run/export-success.txt`
 - `/tmp/panopticon_demo_run/export-refused.txt`
+
+## Objective bakeoff check
+
+```bash
+scripts/demo/competitor_bakeoff.sh --fast /tmp/panopticon_demo_run/bakeoff
+cat /tmp/panopticon_demo_run/bakeoff/run-*/bakeoff-report.json
+```
 
 ## Presenter Script (spoken beats)
 
@@ -62,6 +70,16 @@ cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample
 
 ```bash
 cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-refusal-eventlog.jsonl --share-safe --output /tmp/panopticon_demo_run/export/refusal-bundle.tar.zst --refusal-report /tmp/panopticon_demo_run/export/refusal-report-refused.json || true
+```
+
+6. "Incident comparison contract supports mixed formats."
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- compare \
+  fixtures/small-session.jsonl \
+  docs/assets/readme/sample-export-clean-eventlog.jsonl \
+  --left-format cassette \
+  --right-format eventlog
 ```
 
 ## Capture Asset List

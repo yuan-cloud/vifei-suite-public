@@ -1937,3 +1937,16 @@ Context:
 3. Nondeterminism: No runtime behavior changes; docs describe deterministic proof surfaces and command flow only.
 4. Security: Improves audit transparency by routing evidence into one known path; no new secret exposure introduced.
 5. Performance: No runtime cost; minor maintenance overhead if script names or output paths change.
+
+## bd-2mwh · DOCS: align README/showcase/demo docs with current command surface · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: README/showcase/demo docs now explicitly reference compare and incident-pack format flags plus final-audit command paths, coupling docs to current CLI/API surface.
+2. Untested claims: Documentation commands were validated via test suite and existing scripts, but docs do not enforce real-time output-path existence beyond user execution.
+3. Nondeterminism: No runtime changes; docs describe deterministic outputs and stable command contracts.
+4. Security: Documentation clarifies that incident-pack manifest input labels are share-safe and does not advertise host-path-bearing outputs.
+5. Performance: No runtime impact; slight documentation maintenance overhead as command surfaces evolve.
