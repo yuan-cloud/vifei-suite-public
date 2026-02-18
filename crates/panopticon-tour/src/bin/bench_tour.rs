@@ -1,6 +1,7 @@
 use panopticon_tour::TourConfig;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -21,7 +22,7 @@ fn percentile(sorted: &[Duration], p: f64) -> Duration {
     sorted[idx]
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct BenchmarkStats {
     iters: usize,
     run_ms_p50: f64,
@@ -34,7 +35,7 @@ struct BenchmarkStats {
     peak_rss_kib: Option<u64>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct CommandProvenance {
     argv: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -47,11 +48,29 @@ struct CommandProvenance {
     target_arch: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct BenchArtifact {
     schema_version: String,
     stats: BenchmarkStats,
     command: CommandProvenance,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TrendKey {
+    benchmark: String,
+    git_sha: Option<String>,
+    target_os: String,
+    target_arch: String,
+    package_version: String,
+    fixture_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TrendRecord {
+    schema_version: String,
+    metric_schema_version: String,
+    key: TrendKey,
+    stats: BenchmarkStats,
 }
 
 fn mean(samples: &[Duration]) -> Duration {
@@ -79,6 +98,12 @@ fn parse_iters() -> usize {
         .unwrap_or(10)
 }
 
+fn trend_base_dir() -> PathBuf {
+    std::env::var("PANOPTICON_PERF_TREND_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(".tmp/perf/trends"))
+}
+
 #[cfg(target_os = "linux")]
 fn read_current_rss_kib() -> Option<u64> {
     let status = fs::read_to_string("/proc/self/status").ok()?;
@@ -97,6 +122,7 @@ fn read_current_rss_kib() -> Option<u64> {
 }
 
 fn write_artifact(path: &PathBuf, artifact: &BenchArtifact) -> Result<(), String> {
+    validate_bench_artifact(artifact)?;
     let parent = path
         .parent()
         .ok_or_else(|| format!("artifact path has no parent: {}", path.display()))?;
@@ -106,6 +132,76 @@ fn write_artifact(path: &PathBuf, artifact: &BenchArtifact) -> Result<(), String
         .map_err(|e| format!("failed to serialize bench artifact: {e}"))?;
     fs::write(path, payload)
         .map_err(|e| format!("failed to write bench artifact {}: {e}", path.display()))?;
+    Ok(())
+}
+
+fn validate_bench_artifact(artifact: &BenchArtifact) -> Result<(), String> {
+    if artifact.schema_version != "panopticon-tour-bench-v1" {
+        return Err(format!(
+            "unexpected bench schema_version: {}",
+            artifact.schema_version
+        ));
+    }
+    if artifact.stats.iters == 0 {
+        return Err("bench stats.iters must be greater than zero".to_string());
+    }
+    if artifact.command.fixture_path.trim().is_empty() {
+        return Err("command.fixture_path must be non-empty".to_string());
+    }
+    Ok(())
+}
+
+fn validate_trend_record(record: &TrendRecord) -> Result<(), String> {
+    if record.schema_version != "panopticon-perf-trend-v1" {
+        return Err(format!(
+            "unexpected trend schema_version: {}",
+            record.schema_version
+        ));
+    }
+    if record.metric_schema_version != "panopticon-tour-bench-v1" {
+        return Err(format!(
+            "unexpected metric_schema_version: {}",
+            record.metric_schema_version
+        ));
+    }
+    if record.key.benchmark != "bench_tour" {
+        return Err(format!(
+            "unexpected benchmark key: {}",
+            record.key.benchmark
+        ));
+    }
+    if record.stats.iters == 0 {
+        return Err("trend stats.iters must be greater than zero".to_string());
+    }
+    Ok(())
+}
+
+fn trend_log_path(base: &std::path::Path, command: &CommandProvenance) -> PathBuf {
+    base.join("bench_tour").join(format!(
+        "{}-{}.jsonl",
+        command.target_os, command.target_arch
+    ))
+}
+
+fn write_trend_record(path: &PathBuf, record: &TrendRecord) -> Result<(), String> {
+    validate_trend_record(record)?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| format!("trend path has no parent: {}", path.display()))?;
+    fs::create_dir_all(parent)
+        .map_err(|e| format!("failed to create trend dir {}: {e}", parent.display()))?;
+
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|e| format!("failed to open trend log {}: {e}", path.display()))?;
+
+    let line = serde_json::to_string(record)
+        .map_err(|e| format!("failed to serialize trend record: {e}"))?;
+    file.write_all(line.as_bytes())
+        .and_then(|_| file.write_all(b"\n"))
+        .map_err(|e| format!("failed to append trend record {}: {e}", path.display()))?;
     Ok(())
 }
 
@@ -181,8 +277,8 @@ fn main() -> Result<(), String> {
     };
     let artifact = BenchArtifact {
         schema_version: "panopticon-tour-bench-v1".to_string(),
-        stats,
-        command,
+        stats: stats.clone(),
+        command: command.clone(),
     };
 
     let artifact_path = std::env::var("PANOPTICON_TOUR_BENCH_ARTIFACT")
@@ -190,6 +286,23 @@ fn main() -> Result<(), String> {
         .unwrap_or_else(|_| PathBuf::from(".tmp/perf/bench_tour_metrics.json"));
     write_artifact(&artifact_path, &artifact)?;
     println!("tour_bench_artifact={}", artifact_path.display());
+
+    let trend_record = TrendRecord {
+        schema_version: "panopticon-perf-trend-v1".to_string(),
+        metric_schema_version: artifact.schema_version.clone(),
+        key: TrendKey {
+            benchmark: "bench_tour".to_string(),
+            git_sha: std::env::var("PANOPTICON_GIT_SHA").ok(),
+            target_os: command.target_os.clone(),
+            target_arch: command.target_arch.clone(),
+            package_version: command.package_version.clone(),
+            fixture_path: command.fixture_path.clone(),
+        },
+        stats: artifact.stats.clone(),
+    };
+    let trend_path = trend_log_path(&trend_base_dir(), &command);
+    write_trend_record(&trend_path, &trend_record)?;
+    println!("tour_perf_trend_log={}", trend_path.display());
     Ok(())
 }
 
@@ -205,5 +318,69 @@ mod tests {
     #[test]
     fn throughput_handles_zero() {
         assert_eq!(throughput_eps(0.0, 1000), 0.0);
+    }
+
+    #[test]
+    fn bench_artifact_validator_rejects_zero_iters() {
+        let artifact = BenchArtifact {
+            schema_version: "panopticon-tour-bench-v1".to_string(),
+            stats: BenchmarkStats {
+                iters: 0,
+                run_ms_p50: 1.0,
+                run_ms_p95: 1.0,
+                run_ms_p99: 1.0,
+                run_ms_mean: 1.0,
+                throughput_events_per_sec_p50: 10.0,
+                throughput_events_per_sec_p95: 10.0,
+                throughput_events_per_sec_p99: 10.0,
+                peak_rss_kib: None,
+            },
+            command: CommandProvenance {
+                argv: vec!["bench_tour".to_string()],
+                invoked_as: None,
+                fixture_path: "fixtures/large-stress.jsonl".to_string(),
+                fixture_bytes: 1,
+                fixture_line_count: 1,
+                package_version: "0.1.0".to_string(),
+                target_os: "linux".to_string(),
+                target_arch: "x86_64".to_string(),
+            },
+        };
+        let err = validate_bench_artifact(&artifact).expect_err("zero iters must be rejected");
+        assert!(err.contains("iters"));
+    }
+
+    #[test]
+    fn trend_record_roundtrip_schema_and_key() {
+        let stats = BenchmarkStats {
+            iters: 3,
+            run_ms_p50: 10.0,
+            run_ms_p95: 20.0,
+            run_ms_p99: 30.0,
+            run_ms_mean: 15.0,
+            throughput_events_per_sec_p50: 100.0,
+            throughput_events_per_sec_p95: 90.0,
+            throughput_events_per_sec_p99: 80.0,
+            peak_rss_kib: Some(1234),
+        };
+        let record = TrendRecord {
+            schema_version: "panopticon-perf-trend-v1".to_string(),
+            metric_schema_version: "panopticon-tour-bench-v1".to_string(),
+            key: TrendKey {
+                benchmark: "bench_tour".to_string(),
+                git_sha: Some("abc123".to_string()),
+                target_os: "linux".to_string(),
+                target_arch: "x86_64".to_string(),
+                package_version: "0.1.0".to_string(),
+                fixture_path: "fixtures/large-stress.jsonl".to_string(),
+            },
+            stats,
+        };
+        validate_trend_record(&record).expect("trend record should validate");
+        let json = serde_json::to_string(&record).expect("serialize trend record");
+        let decoded: TrendRecord = serde_json::from_str(&json).expect("deserialize trend record");
+        assert_eq!(decoded.schema_version, "panopticon-perf-trend-v1");
+        assert_eq!(decoded.metric_schema_version, "panopticon-tour-bench-v1");
+        assert_eq!(decoded.key.benchmark, "bench_tour");
     }
 }

@@ -1729,3 +1729,16 @@ Context:
 3. Nondeterminism: No runtime changes in this bead; documentation only.
 4. Security: Clarifies fail-closed boundary and rollback constraints, reducing risk of future silent fallback reintroduction in integrity paths.
 5. Performance cliffs: No runtime impact; minor documentation upkeep overhead only.
+
+## bd-1943 · D2: perf artifact schema + trend storage contract · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4 (derived artifacts stay deterministic and out of truth path)
+- Constitution touched: none
+
+1. Coupling: `bench_tour` now owns both bench artifact schema (`panopticon-tour-bench-v1`) and trend record schema (`panopticon-perf-trend-v1`), coupling CI/reporting consumers to these versioned field sets.
+2. Untested claims: Trend storage is validated with schema roundtrip tests and validator checks, but we do not yet enforce JSONL compaction/retention policy for long-running trend logs.
+3. Nondeterminism: No truth-path nondeterminism introduced; new artifacts are derived diagnostics. Trend append order reflects invocation order, intentionally outside canonical EventLog semantics.
+4. Security: Trend records may include optional git SHA and fixture path metadata; this is operational telemetry and not share-safe export data.
+5. Performance cliffs: Trend append adds one file-open + one line write per benchmark run; overhead is negligible compared with replay benchmark execution.
