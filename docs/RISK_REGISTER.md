@@ -1573,3 +1573,16 @@ Context:
 3. Nondeterminism: Drift gate reruns the same fixtures repeatedly and asserts byte-equal serialized ImportEvent outputs, directly detecting ordering/serialization instability.
 4. Security: Corpus fixtures are synthetic and local; no secrets are introduced, and drift gate validates importer contract boundary (no source commit_index ownership).
 5. Performance cliffs: CI adds an extra adapter-conformance test step; runtime cost is low now but may grow with corpus size and should remain bounded.
+
+## bd-dvmi · C1: deterministic run-delta engine (causal diff core) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I4, D6 ownership boundary
+- Constitution touched: none
+
+1. Coupling: `panopticon-core::delta` now depends on the committed-event schema shape; adding/removing committed fields or payload serialization changes will require coordinated delta updates.
+2. Untested claims: We validate deterministic output and key divergence classes, but do not yet cover very large run-pair diffs for memory profiling; that belongs in the next compare-command bead integration path.
+3. Nondeterminism: No new nondeterminism introduced. Diff traversal is keyed by `BTreeMap/BTreeSet`, paths are sorted deterministically, and matching is by canonical `commit_index` only.
+4. Security: No new secret-handling surface was added; this bead computes metadata-only divergence records from already-ingested committed events.
+5. Performance cliffs: Current implementation flattens payload JSON for both sides per matching index, which is linear in payload size and could become expensive on very large payloads; acceptable for v0.1 and now isolated for future targeted optimization.
