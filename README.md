@@ -150,6 +150,26 @@ This produces a timestamped proof bundle under `.tmp/competitor-bakeoff/` with:
 - Truth HUD explainability token checks
 - incident-pack artifact validation
 
+### Proofs (latest full local run)
+
+Run:
+
+```bash
+scripts/demo/competitor_bakeoff.sh --full
+```
+
+Inspect:
+
+```bash
+cat .tmp/competitor-bakeoff/run-*/bakeoff-report.json
+```
+
+Latest run summary (`2026-02-18T22:36:20Z`):
+- determinism hash agreement: `000573091386a86cabe6935bbe997897a83f42cf89595238e55c2f9c8d45eda6`
+- refusal semantics: `blocked_count=4`
+- explainability tokens present: `Level`, `Agg`, `Pressure`, `Drops`, `Export`, `Version`
+- incident pack artifacts validated: `manifest.json` and `compare/delta.json`
+
 ### Live Incident Wall assets
 
 ```bash
