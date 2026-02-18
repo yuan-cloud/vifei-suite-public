@@ -316,6 +316,8 @@ fn incident_pack_success_emits_manifest_and_hashes() {
         .expect("manifest path string");
     let manifest = read_json_file(Path::new(manifest_path));
     assert_eq!(manifest["schema_version"], "panopticon-incident-pack-v1");
+    assert_eq!(manifest["left_input_path"], "left.jsonl");
+    assert_eq!(manifest["right_input_path"], "right-same.jsonl");
     let files = manifest["files"]
         .as_object()
         .expect("manifest files must be object");

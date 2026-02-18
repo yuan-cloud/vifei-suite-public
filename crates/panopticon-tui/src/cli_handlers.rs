@@ -167,6 +167,14 @@ fn format_name(format: CompareInputFormat) -> &'static str {
     }
 }
 
+fn share_safe_input_label(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.is_empty())
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| "input".to_string())
+}
+
 fn write_committed_eventlog(path: &Path, events: &[CommittedEvent]) -> Result<(), String> {
     let mut lines = String::new();
     for event in events {
@@ -1192,8 +1200,8 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
             let manifest = json!({
                 "schema_version": "panopticon-incident-pack-v1",
                 "command": "incident-pack",
-                "left_input_path": left,
-                "right_input_path": right,
+                "left_input_path": share_safe_input_label(&left),
+                "right_input_path": share_safe_input_label(&right),
                 "left_format": format_name(left_format),
                 "right_format": format_name(right_format),
                 "divergence_count": divergence_count,

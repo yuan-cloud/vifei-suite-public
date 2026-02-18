@@ -1898,3 +1898,16 @@ Context:
 3. Nondeterminism: Temporary path generation uses process-id + monotonic counter only for local staging; committed output semantics remain deterministic and ordered by writer-assigned `commit_index`.
 4. Security: No new secret surfaces introduced; change is confined to internal normalization path before existing export/refusal checks.
 5. Performance: Cassette normalization now performs append-writer work (including detection checks), increasing compare/incident-pack cost slightly but restoring canonical truth semantics.
+
+## bd-2zbs · AUDIT: incident-pack manifest path privacy hardening · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3
+- Constitution touched: none
+
+1. Coupling: Manifest consumers now receive stable input labels rather than raw filesystem paths, reducing accidental dependence on host-specific absolute paths.
+2. Untested claims: Current tests cover typical file-path inputs; unusual edge cases (empty/invalid Unicode file names) remain handled by fallback label behavior but are not exhaustively fuzzed.
+3. Nondeterminism: Path labels derive from filename components only and remain deterministic for identical input arguments.
+4. Security: Eliminates local path disclosure in shareable incident-pack manifests, reducing operator and environment metadata leakage risk.
+5. Performance: Negligible overhead; string extraction from path components during manifest serialization.
