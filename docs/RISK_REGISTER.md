@@ -1599,3 +1599,16 @@ Context:
 3. Nondeterminism: Removed a real nondeterminism source where unsorted input could change selected `left_run_id`/`right_run_id`; payload_ref comparison now preserves None-vs-empty distinction deterministically.
 4. Security: No new security surface added; change is deterministic comparison semantics only.
 5. Performance cliffs: No measurable cliff introduced; comparisons remain linear in event and payload-path count.
+
+## bd-dvmi · C1 second fresh-eye correction (duplicate commit_index tie-break determinism) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I4, D6 ownership boundary
+- Constitution touched: none
+
+1. Coupling: Duplicate-index handling now couples to a deterministic event tie-break key derived from committed-event fields plus payload serialization.
+2. Untested claims: We still treat duplicate `commit_index` inputs as recoverable comparison input, not hard errors; upstream append-writer uniqueness invariants remain the primary prevention mechanism.
+3. Nondeterminism: Removed another potential nondeterminism source by making duplicate-index resolution independent of caller-provided slice order.
+4. Security: No new secret surface introduced; tie-break logic runs on already-ingested committed events.
+5. Performance cliffs: Tie-break key generation incurs extra serialization only when duplicate indices are present; normal unique streams are unaffected.

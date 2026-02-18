@@ -51,14 +51,8 @@ pub struct RunDelta {
 /// - order of output divergences is deterministic by construction.
 /// - input order does not matter; all access is via `BTreeMap` keyed by index.
 pub fn diff_runs(left: &[CommittedEvent], right: &[CommittedEvent]) -> RunDelta {
-    let left_by_index: BTreeMap<u64, &CommittedEvent> = left
-        .iter()
-        .map(|event| (event.commit_index, event))
-        .collect();
-    let right_by_index: BTreeMap<u64, &CommittedEvent> = right
-        .iter()
-        .map(|event| (event.commit_index, event))
-        .collect();
+    let left_by_index = index_events_by_commit_index(left);
+    let right_by_index = index_events_by_commit_index(right);
     let left_run_id = left_by_index
         .iter()
         .next()
@@ -109,6 +103,39 @@ pub fn diff_runs(left: &[CommittedEvent], right: &[CommittedEvent]) -> RunDelta 
         right_event_count: right.len(),
         divergences,
     }
+}
+
+fn index_events_by_commit_index(events: &[CommittedEvent]) -> BTreeMap<u64, &CommittedEvent> {
+    let mut out: BTreeMap<u64, &CommittedEvent> = BTreeMap::new();
+    for event in events {
+        match out.get(&event.commit_index) {
+            None => {
+                out.insert(event.commit_index, event);
+            }
+            Some(existing) => {
+                if event_stable_tiebreak_key(event) < event_stable_tiebreak_key(existing) {
+                    out.insert(event.commit_index, event);
+                }
+            }
+        }
+    }
+    out
+}
+
+fn event_stable_tiebreak_key(event: &CommittedEvent) -> String {
+    let payload = serde_json::to_string(&event.payload).unwrap_or_default();
+    format!(
+        "{}|{}|{}|{}|{}|{}|{}|{}|{}",
+        event.run_id,
+        event.event_id,
+        event.source_id,
+        event.source_seq.map(|v| v.to_string()).unwrap_or_default(),
+        event.timestamp_ns,
+        event.tier,
+        event.payload_ref.clone().unwrap_or_default(),
+        event.synthesized,
+        payload
+    )
 }
 
 fn compare_event(
@@ -467,5 +494,36 @@ mod tests {
             .divergences
             .iter()
             .any(|d| d.path == "$.payload_ref" && d.change_class == ChangeClass::ValueMismatch));
+    }
+
+    #[test]
+    fn duplicate_commit_index_resolution_is_input_order_independent() {
+        let mut a = committed(
+            0,
+            EventPayload::RunStart {
+                agent: "z-agent".to_string(),
+                args: None,
+            },
+        );
+        a.event_id = "z-id".to_string();
+
+        let mut b = committed(
+            0,
+            EventPayload::RunStart {
+                agent: "a-agent".to_string(),
+                args: None,
+            },
+        );
+        b.event_id = "a-id".to_string();
+
+        let right = vec![b.clone()];
+        let left_ab = vec![a.clone(), b.clone()];
+        let left_ba = vec![b, a];
+
+        let delta_ab = diff_runs(&left_ab, &right);
+        let delta_ba = diff_runs(&left_ba, &right);
+
+        assert_eq!(delta_ab, delta_ba);
+        assert!(delta_ab.divergences.is_empty());
     }
 }
