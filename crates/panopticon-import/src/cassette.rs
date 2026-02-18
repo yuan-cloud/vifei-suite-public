@@ -48,9 +48,30 @@ use std::collections::BTreeMap;
 use std::io::BufRead;
 
 use panopticon_core::event::{EventPayload, ImportEvent, Tier};
+use serde::Deserialize;
 
 /// Source identifier for events produced by this importer.
 pub const SOURCE_ID: &str = "agent-cassette";
+
+#[derive(Debug, Deserialize)]
+struct CassetteRecord {
+    #[serde(rename = "type")]
+    record_type: Option<String>,
+    session_id: Option<String>,
+    id: Option<String>,
+    timestamp: Option<String>,
+    agent: Option<String>,
+    model: Option<String>,
+    tool: Option<String>,
+    args: Option<serde_json::Value>,
+    result: Option<serde_json::Value>,
+    status: Option<String>,
+    exit_code: Option<i32>,
+    reason: Option<String>,
+    kind: Option<String>,
+    message: Option<String>,
+    severity: Option<String>,
+}
 
 /// Parse an Agent Cassette JSONL stream into an iterator of [`ImportEvent`].
 ///
@@ -78,7 +99,7 @@ pub fn parse_cassette<R: BufRead>(reader: R) -> Vec<ImportEvent> {
             continue;
         }
 
-        let record: serde_json::Value = match serde_json::from_str(trimmed) {
+        let record: CassetteRecord = match serde_json::from_str(trimmed) {
             Ok(v) => v,
             Err(e) => {
                 events.push(make_error_event(
@@ -99,25 +120,18 @@ pub fn parse_cassette<R: BufRead>(reader: R) -> Vec<ImportEvent> {
 }
 
 /// Map a single Cassette JSON record to an [`ImportEvent`].
-fn map_record(record: &serde_json::Value, seq: u64, line_num: usize) -> ImportEvent {
-    let record_type = record
-        .get("type")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown");
-
+fn map_record(record: &CassetteRecord, seq: u64, line_num: usize) -> ImportEvent {
+    let record_type = record.record_type.as_deref().unwrap_or("unknown");
     let session_id = record
-        .get("session_id")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown-session")
-        .to_string();
-
+        .session_id
+        .clone()
+        .unwrap_or_else(|| "unknown-session".to_string());
     let event_id = record
-        .get("id")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
+        .id
+        .clone()
         .unwrap_or_else(|| format!("cassette:{seq}"));
 
-    let timestamp_ns = parse_timestamp_ns(record);
+    let timestamp_ns = parse_timestamp_ns(record.timestamp.as_deref());
 
     let (payload, tier) = map_payload(record_type, record, seq, line_num);
 
@@ -140,55 +154,37 @@ fn map_record(record: &serde_json::Value, seq: u64, line_num: usize) -> ImportEv
 /// Map a Cassette record type to an [`EventPayload`] and [`Tier`].
 fn map_payload(
     record_type: &str,
-    record: &serde_json::Value,
+    record: &CassetteRecord,
     seq: u64,
     line_num: usize,
 ) -> (EventPayload, Tier) {
     match record_type {
         "session_start" => {
             let agent = record
-                .get("agent")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            let model = record.get("model").and_then(|v| v.as_str());
+                .agent
+                .clone()
+                .unwrap_or_else(|| "unknown".to_string());
+            let model = record.model.as_deref();
             let args = model.map(|m| format!("model={m}"));
             (EventPayload::RunStart { agent, args }, Tier::A)
         }
 
         "session_end" => {
-            let exit_code = record
-                .get("exit_code")
-                .and_then(|v| v.as_i64())
-                .map(|v| v as i32);
-            let reason = record
-                .get("reason")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
+            let exit_code = record.exit_code;
+            let reason = record.reason.clone();
             (EventPayload::RunEnd { exit_code, reason }, Tier::A)
         }
 
         "tool_use" => {
-            let tool = record
-                .get("tool")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            let args = record.get("args").and_then(json_value_to_string);
+            let tool = record.tool.clone().unwrap_or_else(|| "unknown".to_string());
+            let args = record.args.as_ref().and_then(json_value_to_string);
             (EventPayload::ToolCall { tool, args }, Tier::A)
         }
 
         "tool_result" => {
-            let tool = record
-                .get("tool")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            let result = record.get("result").and_then(json_value_to_string);
-            let status = record
-                .get("status")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
+            let tool = record.tool.clone().unwrap_or_else(|| "unknown".to_string());
+            let result = record.result.as_ref().and_then(json_value_to_string);
+            let status = record.status.clone();
             (
                 EventPayload::ToolResult {
                     tool,
@@ -200,20 +196,9 @@ fn map_payload(
         }
 
         "error" => {
-            let kind = record
-                .get("kind")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string();
-            let message = record
-                .get("message")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
-            let severity = record
-                .get("severity")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
+            let kind = record.kind.clone().unwrap_or_else(|| "unknown".to_string());
+            let message = record.message.clone().unwrap_or_default();
+            let severity = record.severity.clone();
             (
                 EventPayload::Error {
                     kind,
@@ -260,8 +245,8 @@ fn json_value_to_string(value: &serde_json::Value) -> Option<String> {
 ///
 /// Handles formats like `"2026-02-16T10:00:00.000Z"` and
 /// `"2026-02-16T10:00:00Z"`. Falls back to 0 if unparseable.
-fn parse_timestamp_ns(record: &serde_json::Value) -> u64 {
-    let ts_str = match record.get("timestamp").and_then(|v| v.as_str()) {
+fn parse_timestamp_ns(ts_str: Option<&str>) -> u64 {
+    let ts_str = match ts_str {
         Some(s) => s,
         None => return 0,
     };
@@ -389,12 +374,10 @@ mod tests {
         let input = "not json at all\n";
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
-        match &events[0].payload {
-            EventPayload::Error { kind, message, .. } => {
-                assert_eq!(kind, "parse");
-                assert!(message.contains("Malformed JSON at line 1"));
-            }
-            _ => panic!("expected Error payload"),
+        assert!(matches!(&events[0].payload, EventPayload::Error { .. }));
+        if let EventPayload::Error { kind, message, .. } = &events[0].payload {
+            assert_eq!(kind, "parse");
+            assert!(message.contains("Malformed JSON at line 1"));
         }
     }
 
@@ -454,12 +437,10 @@ mod tests {
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].run_id, "s1");
         assert_eq!(events[0].tier, Tier::A);
-        match &events[0].payload {
-            EventPayload::RunStart { agent, args } => {
-                assert_eq!(agent, "claude-code");
-                assert_eq!(args.as_deref(), Some("model=opus-4.5"));
-            }
-            _ => panic!("expected RunStart"),
+        assert!(matches!(&events[0].payload, EventPayload::RunStart { .. }));
+        if let EventPayload::RunStart { agent, args } = &events[0].payload {
+            assert_eq!(agent, "claude-code");
+            assert_eq!(args.as_deref(), Some("model=opus-4.5"));
         }
     }
 
@@ -469,12 +450,10 @@ mod tests {
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].tier, Tier::A);
-        match &events[0].payload {
-            EventPayload::RunEnd { exit_code, reason } => {
-                assert_eq!(*exit_code, Some(0));
-                assert_eq!(reason.as_deref(), Some("done"));
-            }
-            _ => panic!("expected RunEnd"),
+        assert!(matches!(&events[0].payload, EventPayload::RunEnd { .. }));
+        if let EventPayload::RunEnd { exit_code, reason } = &events[0].payload {
+            assert_eq!(*exit_code, Some(0));
+            assert_eq!(reason.as_deref(), Some("done"));
         }
     }
 
@@ -485,13 +464,12 @@ mod tests {
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_id, "tu_001");
         assert_eq!(events[0].tier, Tier::A);
-        match &events[0].payload {
-            EventPayload::ToolCall { tool, args } => {
-                assert_eq!(tool, "Read");
-                assert!(args.is_some());
-                assert!(args.as_ref().unwrap().contains("file_path"));
-            }
-            _ => panic!("expected ToolCall"),
+        assert!(matches!(&events[0].payload, EventPayload::ToolCall { .. }));
+        if let EventPayload::ToolCall { tool, args } = &events[0].payload {
+            assert_eq!(tool, "Read");
+            assert!(args
+                .as_deref()
+                .is_some_and(|text| text.contains("file_path")));
         }
     }
 
@@ -500,11 +478,9 @@ mod tests {
         let input = r#"{"type":"tool_use","session_id":"s1","timestamp":"2026-02-16T10:00:01Z","tool":"Read","args":"cat /foo.rs"}"#;
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
-        match &events[0].payload {
-            EventPayload::ToolCall { args, .. } => {
-                assert_eq!(args.as_deref(), Some("cat /foo.rs"));
-            }
-            _ => panic!("expected ToolCall"),
+        assert!(matches!(&events[0].payload, EventPayload::ToolCall { .. }));
+        if let EventPayload::ToolCall { args, .. } = &events[0].payload {
+            assert_eq!(args.as_deref(), Some("cat /foo.rs"));
         }
     }
 
@@ -514,17 +490,19 @@ mod tests {
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].tier, Tier::A);
-        match &events[0].payload {
-            EventPayload::ToolResult {
-                tool,
-                result,
-                status,
-            } => {
-                assert_eq!(tool, "Read");
-                assert_eq!(result.as_deref(), Some("file contents"));
-                assert_eq!(status.as_deref(), Some("success"));
-            }
-            _ => panic!("expected ToolResult"),
+        assert!(matches!(
+            &events[0].payload,
+            EventPayload::ToolResult { .. }
+        ));
+        if let EventPayload::ToolResult {
+            tool,
+            result,
+            status,
+        } = &events[0].payload
+        {
+            assert_eq!(tool, "Read");
+            assert_eq!(result.as_deref(), Some("file contents"));
+            assert_eq!(status.as_deref(), Some("success"));
         }
     }
 
@@ -533,14 +511,16 @@ mod tests {
         let input = r#"{"type":"tool_result","session_id":"s1","timestamp":"2026-02-16T10:00:02Z","tool":"Read","status":"success","result":{"ok":true,"bytes":42}}"#;
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
-        match &events[0].payload {
-            EventPayload::ToolResult { result, .. } => {
-                let result = result.as_deref().expect("result should be present");
-                assert!(result.starts_with('{'));
-                assert!(result.contains("\"ok\":true"));
-                assert!(result.contains("\"bytes\":42"));
-            }
-            _ => panic!("expected ToolResult"),
+        assert!(matches!(
+            &events[0].payload,
+            EventPayload::ToolResult { .. }
+        ));
+        if let EventPayload::ToolResult { result, .. } = &events[0].payload {
+            assert!(result.is_some());
+            let rendered = result.as_deref().unwrap_or("");
+            assert!(rendered.starts_with('{'));
+            assert!(rendered.contains("\"ok\":true"));
+            assert!(rendered.contains("\"bytes\":42"));
         }
     }
 
@@ -550,17 +530,16 @@ mod tests {
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].tier, Tier::A);
-        match &events[0].payload {
-            EventPayload::Error {
-                kind,
-                message,
-                severity,
-            } => {
-                assert_eq!(kind, "permission");
-                assert_eq!(message, "Cannot write");
-                assert_eq!(severity.as_deref(), Some("warning"));
-            }
-            _ => panic!("expected Error"),
+        assert!(matches!(&events[0].payload, EventPayload::Error { .. }));
+        if let EventPayload::Error {
+            kind,
+            message,
+            severity,
+        } = &events[0].payload
+        {
+            assert_eq!(kind, "permission");
+            assert_eq!(message, "Cannot write");
+            assert_eq!(severity.as_deref(), Some("warning"));
         }
     }
 
@@ -570,12 +549,13 @@ mod tests {
         let events = parse_cassette(Cursor::new(input));
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].tier, Tier::B);
-        match &events[0].payload {
-            EventPayload::Generic { event_type, data } => {
-                assert_eq!(event_type, "heartbeat");
-                assert_eq!(data.get("original_type").unwrap(), "heartbeat");
-            }
-            _ => panic!("expected Generic"),
+        assert!(matches!(&events[0].payload, EventPayload::Generic { .. }));
+        if let EventPayload::Generic { event_type, data } = &events[0].payload {
+            assert_eq!(event_type, "heartbeat");
+            assert_eq!(
+                data.get("original_type").map(String::as_str),
+                Some("heartbeat")
+            );
         }
     }
 
@@ -624,9 +604,7 @@ mod tests {
 
     #[test]
     fn parse_timestamp_with_millis() {
-        let record: serde_json::Value =
-            serde_json::from_str(r#"{"timestamp":"2026-02-16T10:00:01.500Z"}"#).unwrap();
-        let ns = parse_timestamp_ns(&record);
+        let ns = parse_timestamp_ns(Some("2026-02-16T10:00:01.500Z"));
         assert!(ns > 0, "should parse to nonzero ns");
         // 500ms = 500_000_000 ns fractional
         assert_eq!(ns % 1_000_000_000, 500_000_000);
@@ -634,17 +612,14 @@ mod tests {
 
     #[test]
     fn parse_timestamp_without_millis() {
-        let record: serde_json::Value =
-            serde_json::from_str(r#"{"timestamp":"2026-02-16T10:00:01Z"}"#).unwrap();
-        let ns = parse_timestamp_ns(&record);
+        let ns = parse_timestamp_ns(Some("2026-02-16T10:00:01Z"));
         assert!(ns > 0);
         assert_eq!(ns % 1_000_000_000, 0);
     }
 
     #[test]
     fn parse_timestamp_missing_returns_zero() {
-        let record: serde_json::Value = serde_json::from_str(r#"{}"#).unwrap();
-        assert_eq!(parse_timestamp_ns(&record), 0);
+        assert_eq!(parse_timestamp_ns(None), 0);
     }
 
     // -------------------------------------------------------------------
@@ -660,19 +635,15 @@ mod tests {
         assert_eq!(events.len(), 11);
 
         // First event should be RunStart.
-        match &events[0].payload {
-            EventPayload::RunStart { agent, .. } => {
-                assert_eq!(agent, "claude-code");
-            }
-            _ => panic!("first event should be RunStart"),
+        assert!(matches!(&events[0].payload, EventPayload::RunStart { .. }));
+        if let EventPayload::RunStart { agent, .. } = &events[0].payload {
+            assert_eq!(agent, "claude-code");
         }
 
         // Last event should be RunEnd.
-        match &events[10].payload {
-            EventPayload::RunEnd { exit_code, .. } => {
-                assert_eq!(*exit_code, Some(0));
-            }
-            _ => panic!("last event should be RunEnd"),
+        assert!(matches!(&events[10].payload, EventPayload::RunEnd { .. }));
+        if let EventPayload::RunEnd { exit_code, .. } = &events[10].payload {
+            assert_eq!(*exit_code, Some(0));
         }
 
         // All events should have source_id = "agent-cassette".

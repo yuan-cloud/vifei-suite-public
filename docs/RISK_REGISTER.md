@@ -1300,3 +1300,16 @@ Context:
 3. Nondeterminism: No runtime changes; documentation-only aggregation.
 4. Security: No new surface; report references deterministic and refusal-safe behavior without exposing secrets.
 5. Performance: No runtime impact; improves prioritization clarity for next optimization round.
+
+## bd-xx6w · A4 typed cassette parser path optimization · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4
+- Constitution touched: none
+
+1. Coupling: Importer mapping now depends on a typed record schema instead of ad-hoc JSON field access; future cassette format expansion needs schema updates.
+2. Untested claims: Existing test suite covers current mapped fields well, but uncommon unknown-field edge patterns still rely on generic fallbacks.
+3. Nondeterminism: No new nondeterminism introduced; parser remains line-order deterministic.
+4. Security: No new secret surface; no changes to refusal logic or export pathways.
+5. Performance: Evidence shows parse-share reduction and p95 improvement; occasional p99 variance remains and should be monitored in future rounds.
