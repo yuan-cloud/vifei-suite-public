@@ -1859,3 +1859,16 @@ Context:
 3. Nondeterminism: Report schema and required checks are deterministic for fixed inputs; runtime duration is informational only.
 4. Security: Harness reuses share-safe refusal flow and synthetic fixtures; no new secret exposure path introduced.
 5. Performance: Adds one more fast-demo smoke path and optional full bakeoff runtime overhead; acceptable for demo/GTM proof value.
+
+## bd-3efx · TRACK-C: deterministic incident delta + evidence pack · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I3, I4
+- Constitution touched: none
+
+1. Coupling: Compare, incident-pack, and bakeoff surfaces now share contract expectations; contract drift in one surface can break proof narratives unless checked in CI/smoke.
+2. Untested claims: Incident-pack semantics are exercised on deterministic fixtures; broader real-world corpus variability still depends on fixture expansion and user bug reports.
+3. Nondeterminism: Outputs are anchored to canonical ordering and deterministic hash paths; no wall-clock values are used in truth comparisons.
+4. Security: Evidence-pack flow remains fail-closed through refusal semantics and scanner checks before export artifacts are consumed in demos.
+5. Performance: New evidence workflows add CLI work per run but are bounded and optional; fast smoke coverage contains routine regression cost.
