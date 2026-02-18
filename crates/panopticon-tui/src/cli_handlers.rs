@@ -165,6 +165,12 @@ fn hash_file_blake3(path: &Path) -> Result<String, String> {
     Ok(blake3::hash(&bytes).to_hex().to_string())
 }
 
+fn write_json_pretty(path: &Path, value: &Value) -> Result<(), String> {
+    let bytes = serde_json::to_vec_pretty(value)
+        .map_err(|e| format!("failed to serialize JSON for {}: {e}", path.display()))?;
+    fs::write(path, bytes).map_err(|e| format!("failed to write {}: {e}", path.display()))
+}
+
 fn replay_summary(events: &[CommittedEvent]) -> Value {
     let (state, _checkpoints) = replay(events);
     let state_hash_hex = state_hash(&state);
@@ -959,10 +965,7 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
             let delta = diff_runs(&left_events, &right_events);
             let divergence_count = delta.divergences.len();
             let delta_path = compare_dir.join("delta.json");
-            if let Err(e) = fs::write(
-                &delta_path,
-                serde_json::to_vec_pretty(&delta).unwrap_or_else(|_| b"{}".to_vec()),
-            ) {
+            if let Err(e) = write_json_pretty(&delta_path, &json!(delta)) {
                 let suggestions = vec![format!(
                     "Check write permissions for {}",
                     compare_dir.display()
@@ -970,7 +973,7 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                 if mode == OutputMode::Json {
                     emit_json_error(
                         "RUNTIME_ERROR",
-                        &format!("failed to write compare delta: {e}"),
+                        &e,
                         &suggestions,
                         repair_notes,
                         AppExit::RuntimeError as u8,
@@ -993,14 +996,11 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
             let right_replay_path = replay_dir.join("right.replay.json");
             let left_replay = replay_summary(&left_events);
             let right_replay = replay_summary(&right_events);
-            if let Err(e) = fs::write(
-                &left_replay_path,
-                serde_json::to_vec_pretty(&left_replay).unwrap_or_else(|_| b"{}".to_vec()),
-            ) {
+            if let Err(e) = write_json_pretty(&left_replay_path, &left_replay) {
                 if mode == OutputMode::Json {
                     emit_json_error(
                         "RUNTIME_ERROR",
-                        &format!("failed to write replay artifact: {e}"),
+                        &e,
                         &[],
                         repair_notes,
                         AppExit::RuntimeError as u8,
@@ -1010,14 +1010,11 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                 }
                 return AppExit::RuntimeError;
             }
-            if let Err(e) = fs::write(
-                &right_replay_path,
-                serde_json::to_vec_pretty(&right_replay).unwrap_or_else(|_| b"{}".to_vec()),
-            ) {
+            if let Err(e) = write_json_pretty(&right_replay_path, &right_replay) {
                 if mode == OutputMode::Json {
                     emit_json_error(
                         "RUNTIME_ERROR",
-                        &format!("failed to write replay artifact: {e}"),
+                        &e,
                         &[],
                         repair_notes,
                         AppExit::RuntimeError as u8,

@@ -676,7 +676,7 @@ Context:
 ## bd-2yv · TEST-HARDEN: full coverage map + no-mock E2E and UI validation
 
 1. Coupling: Test-hardening now tightly couples release readiness to CI lane topology and evidence artifact contracts; future workflow changes must preserve these interfaces.
-2. Untested claims: Numeric line/function coverage percentages are still deferred pending llvm-cov availability and are tracked in defer register with expiry.
+2. Untested claims: At bead close time, numeric line/function coverage was deferred pending llvm-cov availability; this was later retired by `bd-im6j`, and no active numeric-coverage waiver remains.
 3. Nondeterminism: Determinism checks were strengthened (including capture pipeline fixes), with remaining intentional variability documented (`refusal-report.json` metadata path).
 4. Security and privacy: Structured logs improve triage but may contain operational refusal context; artifact access controls remain important.
 5. Performance cliffs: Full-confidence CI is intentionally heavier; fastlane remains the mitigation for developer feedback latency.
