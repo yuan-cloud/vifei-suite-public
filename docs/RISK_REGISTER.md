@@ -1365,3 +1365,16 @@ Context:
 3. Nondeterminism: No runtime changes in this bead; risk lies in future implementation if visual effects accidentally alter deterministic capture pathways.
 4. Security: No new security surface from research itself; future showcase page must avoid introducing unverifiable marketing claims.
 5. Performance cliffs: Potential extra render overhead in showcase mode is currently unmeasured and should be bounded during implementation.
+
+## bd-1siy · SHOWCASE-2 implement showcase UI profile in panopticon-tui · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4 (presentation-only changes; no truth-path mutation)
+- Constitution touched: none
+
+1. Coupling: Lens and HUD rendering now depend on `UiProfile`; future visual variants must preserve default `Standard` behavior and avoid branching in reducer/projection code paths.
+2. Untested claims: Current tests validate CLI parsing, render compatibility, and full suite health; explicit screenshot-diff assertions for showcase captures remain a follow-up if we want strict visual regression guardrails.
+3. Nondeterminism: No new nondeterminism introduced; profile selection changes styles/border types only and keeps event ordering/hash computation untouched.
+4. Security: No secret-handling or export-safety logic changed; README/demo updates remain command-accurate and verifiable.
+5. Performance cliffs: Showcase profile introduces additional style modifiers and rounded borders, with expected negligible overhead; if expanded with heavier effects later, capture and tour paths should be benchmarked.

@@ -11,9 +11,12 @@ cargo run -p panopticon-tui --bin capture_readme_assets
 
 required=(
   "incident-lens.txt"
+  "incident-lens-showcase.txt"
   "incident-lens-narrow-72.txt"
   "forensic-lens.txt"
+  "forensic-lens-showcase.txt"
   "truth-hud-degraded.txt"
+  "truth-hud-showcase.txt"
   "export-refusal.txt"
   "artifacts-view.txt"
   "architecture.mmd"

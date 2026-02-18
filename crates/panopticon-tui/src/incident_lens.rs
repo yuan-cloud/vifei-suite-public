@@ -12,13 +12,13 @@
 //!
 //! See `PLANS.md` § D5: "Correctness target: Deep investigation. Entry behavior: Incident triage."
 
-use crate::visual_tone;
+use crate::{visual_tone, UiProfile};
 use panopticon_core::reducer::State;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Frame,
 };
 
@@ -26,6 +26,7 @@ use ratatui::{
 ///
 /// Displays run summaries, event breakdowns, and anomalies drawn from
 /// the reducer State, plus contextual info from the App.
+#[allow(dead_code)] // Compatibility wrapper; default profile path for direct tests.
 pub fn render_incident_lens(
     frame: &mut Frame,
     area: Rect,
@@ -34,10 +35,37 @@ pub fn render_incident_lens(
     total_events: usize,
     show_onboarding: bool,
 ) {
+    render_incident_lens_with_profile(
+        frame,
+        area,
+        state,
+        eventlog_path,
+        total_events,
+        show_onboarding,
+        UiProfile::Standard,
+    );
+}
+
+pub fn render_incident_lens_with_profile(
+    frame: &mut Frame,
+    area: Rect,
+    state: &State,
+    eventlog_path: &str,
+    total_events: usize,
+    show_onboarding: bool,
+    profile: UiProfile,
+) {
     let block = Block::default()
-        .title(" Incident Lens (Tab to toggle) ")
+        .title(match profile {
+            UiProfile::Standard => " Incident Lens (Tab to toggle) ",
+            UiProfile::Showcase => " Incident Lens · Showcase (Tab to toggle) ",
+        })
         .borders(Borders::ALL)
-        .border_style(visual_tone::info());
+        .border_type(match profile {
+            UiProfile::Standard => BorderType::Plain,
+            UiProfile::Showcase => BorderType::Rounded,
+        })
+        .border_style(visual_tone::info_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -53,10 +81,17 @@ pub fn render_incident_lens(
             ])
             .split(inner);
 
-        render_onboarding_strip(frame, sections[0]);
-        render_anomalies(frame, sections[1], state);
-        render_run_summary(frame, sections[2], state, eventlog_path, total_events);
-        render_event_breakdown(frame, sections[3], state);
+        render_onboarding_strip(frame, sections[0], profile);
+        render_anomalies(frame, sections[1], state, profile);
+        render_run_summary(
+            frame,
+            sections[2],
+            state,
+            eventlog_path,
+            total_events,
+            profile,
+        );
+        render_event_breakdown(frame, sections[3], state, profile);
     } else {
         // Split inner area into three sections: anomalies, run summary, event breakdown
         let sections = Layout::default()
@@ -68,21 +103,28 @@ pub fn render_incident_lens(
             ])
             .split(inner);
 
-        render_anomalies(frame, sections[0], state);
-        render_run_summary(frame, sections[1], state, eventlog_path, total_events);
-        render_event_breakdown(frame, sections[2], state);
+        render_anomalies(frame, sections[0], state, profile);
+        render_run_summary(
+            frame,
+            sections[1],
+            state,
+            eventlog_path,
+            total_events,
+            profile,
+        );
+        render_event_breakdown(frame, sections[2], state, profile);
     }
 }
 
-fn render_onboarding_strip(frame: &mut Frame, area: Rect) {
+fn render_onboarding_strip(frame: &mut Frame, area: Rect, profile: UiProfile) {
     let lines = vec![
         Line::from(Span::styled(
             "First run: Tab switch lens | q quit",
-            visual_tone::warning().add_modifier(Modifier::BOLD),
+            visual_tone::warning_for(profile).add_modifier(Modifier::BOLD),
         )),
         Line::from(Span::styled(
             "Forensic controls: j/k move, Enter expand",
-            visual_tone::muted(),
+            visual_tone::muted_for(profile),
         )),
     ];
 
@@ -145,20 +187,21 @@ fn render_run_summary(
     state: &State,
     eventlog_path: &str,
     total_events: usize,
+    profile: UiProfile,
 ) {
     let mut lines = vec![Line::from(vec![
         Span::styled("Run Context", visual_tone::header()),
         Span::raw("  "),
         Span::styled(
             format!("{} ({} events)", eventlog_path, total_events),
-            visual_tone::muted(),
+            visual_tone::muted_for(profile),
         ),
     ])];
 
     if state.run_metadata.is_empty() {
         lines.push(Line::from(Span::styled(
             "  (no runs)",
-            visual_tone::muted(),
+            visual_tone::muted_for(profile),
         )));
     } else {
         for (run_id, info) in &state.run_metadata {
@@ -174,7 +217,7 @@ fn render_run_summary(
 
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled(&info.agent, visual_tone::info()),
+                Span::styled(&info.agent, visual_tone::info_for(profile)),
                 Span::raw(format!(" ({})", run_id)),
                 Span::raw(" ["),
                 status_span,
@@ -188,7 +231,7 @@ fn render_run_summary(
 }
 
 /// Render the event type breakdown section.
-fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
+fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State, profile: UiProfile) {
     let mut lines = vec![Line::from(Span::styled(
         "Event Breakdown (Context)",
         visual_tone::header(),
@@ -197,14 +240,14 @@ fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
     if state.event_counts_by_type.is_empty() {
         lines.push(Line::from(Span::styled(
             "  (no events)",
-            visual_tone::muted(),
+            visual_tone::muted_for(profile),
         )));
     } else {
         for (event_type, count) in &state.event_counts_by_type {
             let style = match event_type.as_str() {
                 "Error" => visual_tone::error(),
                 "ClockSkewDetected" => visual_tone::warning(),
-                "PolicyDecision" | "RedactionApplied" => visual_tone::accent(),
+                "PolicyDecision" | "RedactionApplied" => visual_tone::accent_for(profile),
                 _ => Style::default(),
             };
 
@@ -221,7 +264,7 @@ fn render_event_breakdown(frame: &mut Frame, area: Rect, state: &State) {
 }
 
 /// Render the anomalies section (errors, clock skew, policy decisions).
-fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
+fn render_anomalies(frame: &mut Frame, area: Rect, state: &State, profile: UiProfile) {
     let mut lines = vec![Line::from(Span::styled(
         "Action Now (Anomalies)",
         visual_tone::header(),
@@ -271,7 +314,7 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
         for pd in &state.policy_decisions {
             lines.push(Line::from(vec![
                 Span::raw("  "),
-                Span::styled("POLICY", visual_tone::accent()),
+                Span::styled("POLICY", visual_tone::accent_for(profile)),
                 Span::raw(format!(
                     " @{}: {} → {} ({})",
                     pd.commit_index, pd.from_level, pd.to_level, pd.trigger
@@ -283,7 +326,10 @@ fn render_anomalies(frame: &mut Frame, area: Rect, state: &State) {
     // Help line at the bottom
     lines.push(Line::from(""));
     let next_action = next_action_line(has_anomalies, area.width);
-    lines.push(Line::from(Span::styled(next_action, visual_tone::muted())));
+    lines.push(Line::from(Span::styled(
+        next_action,
+        visual_tone::muted_for(profile),
+    )));
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
     frame.render_widget(paragraph, area);

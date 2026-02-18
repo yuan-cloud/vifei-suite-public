@@ -4,7 +4,9 @@ use panopticon_core::projection::LadderLevel;
 use panopticon_export::{run_export, ExportConfig, ExportResult};
 use panopticon_tour::{run_tour, TourConfig};
 use panopticon_tui::{
-    render_degraded_incident_multiline, render_forensic_multiline, render_incident_multiline,
+    render_degraded_incident_multiline, render_degraded_incident_multiline_with_profile,
+    render_forensic_multiline, render_forensic_multiline_with_profile, render_incident_multiline,
+    render_incident_multiline_with_profile, UiProfile,
 };
 use std::fs;
 use std::io;
@@ -30,6 +32,29 @@ fn main() -> io::Result<()> {
 
     let degraded = render_degraded_incident_multiline(&eventlog_path, 120, 36, LadderLevel::L3)?;
     fs::write(out_dir.join("truth-hud-degraded.txt"), degraded)?;
+
+    let incident_showcase =
+        render_incident_multiline_with_profile(&eventlog_path, 120, 36, UiProfile::Showcase)?;
+    fs::write(
+        out_dir.join("incident-lens-showcase.txt"),
+        incident_showcase,
+    )?;
+
+    let forensic_showcase =
+        render_forensic_multiline_with_profile(&eventlog_path, 120, 36, UiProfile::Showcase)?;
+    fs::write(
+        out_dir.join("forensic-lens-showcase.txt"),
+        forensic_showcase,
+    )?;
+
+    let degraded_showcase = render_degraded_incident_multiline_with_profile(
+        &eventlog_path,
+        120,
+        36,
+        LadderLevel::L3,
+        UiProfile::Showcase,
+    )?;
+    fs::write(out_dir.join("truth-hud-showcase.txt"), degraded_showcase)?;
 
     let refusal = generate_export_refusal(&out_dir)?;
     fs::write(out_dir.join("export-refusal.txt"), refusal)?;
@@ -315,9 +340,12 @@ fn asset_index_markdown() -> String {
         "",
         "Files:",
         "- incident-lens.txt",
+        "- incident-lens-showcase.txt",
         "- incident-lens-narrow-72.txt",
         "- forensic-lens.txt",
+        "- forensic-lens-showcase.txt",
         "- truth-hud-degraded.txt",
+        "- truth-hud-showcase.txt",
         "- export-refusal.txt",
         "- refusal-report.json",
         "- sample-export-clean-eventlog.jsonl",
@@ -378,9 +406,12 @@ mod tests {
     fn asset_index_lists_expected_files() {
         let index = asset_index_markdown();
         assert!(index.contains("incident-lens.txt"));
+        assert!(index.contains("incident-lens-showcase.txt"));
         assert!(index.contains("incident-lens-narrow-72.txt"));
         assert!(index.contains("forensic-lens.txt"));
+        assert!(index.contains("forensic-lens-showcase.txt"));
         assert!(index.contains("truth-hud-degraded.txt"));
+        assert!(index.contains("truth-hud-showcase.txt"));
         assert!(index.contains("tour-artifacts/"));
     }
 

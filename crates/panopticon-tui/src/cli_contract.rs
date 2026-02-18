@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -19,6 +19,12 @@ pub(crate) struct Cli {
     pub(crate) command: Commands,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+pub(crate) enum UiProfileArg {
+    Standard,
+    Showcase,
+}
+
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// View an EventLog in the TUI.
@@ -26,6 +32,10 @@ pub(crate) enum Commands {
     View {
         /// Path to the EventLog JSONL file.
         eventlog: PathBuf,
+
+        /// Presentation profile (style/layout only; does not alter truth semantics).
+        #[arg(long, value_enum, default_value = "standard")]
+        profile: UiProfileArg,
     },
 
     /// Export an EventLog as a share-safe bundle.
@@ -88,7 +98,7 @@ pub(crate) const QUICK_HELP: &str = "\
 panopticon — deterministic AI run recorder
 Usage: panopticon [--json|--human] <command> [args]
 Commands:
-  view <eventlog.jsonl>
+  view <eventlog.jsonl> [--profile standard|showcase]
   export <eventlog.jsonl> --share-safe --output <bundle.tar.zst> [--refusal-report <path>]
   tour <fixture.jsonl> --stress [--output-dir <dir>]
 Tips:
@@ -99,7 +109,7 @@ pub(crate) const ROBOT_SCHEMA_VERSION: &str = "panopticon-cli-robot-v1.1";
 
 #[cfg(test)]
 mod tests {
-    use super::{Cli, Commands};
+    use super::{Cli, Commands, UiProfileArg};
     use clap::Parser;
 
     #[test]
@@ -127,5 +137,18 @@ mod tests {
         let cli =
             Cli::try_parse_from(["panopticon", "tours", "f.jsonl", "--stress"]).expect("parse");
         assert!(matches!(cli.command, Commands::Tour { .. }));
+    }
+
+    #[test]
+    fn view_profile_parses_showcase() {
+        let cli = Cli::try_parse_from(["panopticon", "view", "e.jsonl", "--profile", "showcase"])
+            .expect("parse");
+        assert!(matches!(
+            cli.command,
+            Commands::View {
+                profile: UiProfileArg::Showcase,
+                ..
+            }
+        ));
     }
 }

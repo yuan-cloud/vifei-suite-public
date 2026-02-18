@@ -1,8 +1,8 @@
-use crate::cli_contract::{AppExit, Cli, Commands, OutputMode, ROBOT_SCHEMA_VERSION};
+use crate::cli_contract::{AppExit, Cli, Commands, OutputMode, UiProfileArg, ROBOT_SCHEMA_VERSION};
 use crate::cli_normalize::format_cli_failure;
 use panopticon_export::{ExportConfig, ExportResult};
 use panopticon_tour::TourConfig;
-use panopticon_tui::run_viewer;
+use panopticon_tui::{run_viewer, UiProfile};
 use serde_json::{json, Value};
 use std::path::Path;
 
@@ -83,8 +83,13 @@ fn ensure_file_exists(path: &Path, label: &str) -> Result<(), String> {
 }
 
 pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]) -> AppExit {
+    let map_profile = |profile: UiProfileArg| match profile {
+        UiProfileArg::Standard => UiProfile::Standard,
+        UiProfileArg::Showcase => UiProfile::Showcase,
+    };
+
     match cli.command {
-        Commands::View { eventlog } => {
+        Commands::View { eventlog, profile } => {
             if let Err(msg) = ensure_file_exists(&eventlog, "eventlog file") {
                 let suggestions = vec![
                     format!(
@@ -114,7 +119,7 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                 }
                 return AppExit::NotFound;
             }
-            if let Err(e) = run_viewer(&eventlog) {
+            if let Err(e) = run_viewer(&eventlog, map_profile(profile)) {
                 let suggestions = vec![
                     format!("panopticon view {}", eventlog.display()),
                     "panopticon --help".to_string(),

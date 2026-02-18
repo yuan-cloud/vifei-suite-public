@@ -19,12 +19,13 @@
 //! - Always visible in BOTH lenses (Incident and Forensic).
 //! - At L4 (Freeze UI), non-HUD panes may freeze, but Truth HUD remains live.
 
+use crate::UiProfile;
 use panopticon_core::projection::{ExportSafetyState, LadderLevel, ViewModel};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
 
@@ -77,7 +78,17 @@ fn pressure_style(pressure_pct: u32) -> Style {
 /// - Tier A drops counter
 /// - Export safety state
 /// - projection_invariants_version
+#[allow(dead_code)] // Compatibility wrapper; default profile path for direct tests.
 pub fn render_truth_hud(frame: &mut Frame, area: Rect, vm: &ViewModel) {
+    render_truth_hud_with_profile(frame, area, vm, UiProfile::Standard);
+}
+
+pub fn render_truth_hud_with_profile(
+    frame: &mut Frame,
+    area: Rect,
+    vm: &ViewModel,
+    profile: UiProfile,
+) {
     let aggregation = vm
         .aggregation_bin_size
         .map(|bin| format!("{} (bin={bin})", vm.aggregation_mode));
@@ -122,9 +133,21 @@ pub fn render_truth_hud(frame: &mut Frame, area: Rect, vm: &ViewModel) {
     ]);
 
     let block = Block::default()
-        .title(" Truth HUD ")
+        .title(match profile {
+            UiProfile::Standard => " Truth HUD ",
+            UiProfile::Showcase => " Truth HUD · Showcase ",
+        })
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Magenta));
+        .border_type(match profile {
+            UiProfile::Standard => BorderType::Plain,
+            UiProfile::Showcase => BorderType::Rounded,
+        })
+        .border_style(match profile {
+            UiProfile::Standard => Style::default().fg(Color::Magenta),
+            UiProfile::Showcase => Style::default()
+                .fg(Color::LightMagenta)
+                .add_modifier(Modifier::BOLD),
+        });
 
     let inner = block.inner(area);
     frame.render_widget(block, area);

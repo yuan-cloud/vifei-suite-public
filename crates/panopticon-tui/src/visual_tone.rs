@@ -8,6 +8,7 @@
 //! - accent: synthetic/special markers
 //! - muted: helper text and metadata chrome
 
+use crate::UiProfile;
 use ratatui::style::{Color, Modifier, Style};
 
 pub fn success() -> Style {
@@ -36,4 +37,38 @@ pub fn muted() -> Style {
 
 pub fn header() -> Style {
     Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+}
+
+pub fn info_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => info(),
+        UiProfile::Showcase => Style::default()
+            .fg(Color::LightCyan)
+            .add_modifier(Modifier::BOLD),
+    }
+}
+
+pub fn warning_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => warning(),
+        UiProfile::Showcase => Style::default()
+            .fg(Color::LightYellow)
+            .add_modifier(Modifier::BOLD),
+    }
+}
+
+pub fn accent_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => accent(),
+        UiProfile::Showcase => Style::default()
+            .fg(Color::LightMagenta)
+            .add_modifier(Modifier::BOLD),
+    }
+}
+
+pub fn muted_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => muted(),
+        UiProfile::Showcase => Style::default().fg(Color::Gray),
+    }
 }

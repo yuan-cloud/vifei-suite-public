@@ -53,6 +53,14 @@ use std::io::{self, stdout};
 use std::path::Path;
 use std::time::Duration;
 
+/// Presentation profile for UI rendering.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum UiProfile {
+    #[default]
+    Standard,
+    Showcase,
+}
+
 /// Which lens is currently active.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum ActiveLens {
@@ -103,6 +111,8 @@ struct App {
     forensic_state: forensic_lens::ForensicState,
     /// Whether first-run onboarding hints are visible in Incident Lens.
     show_onboarding: bool,
+    /// Presentation profile.
+    ui_profile: UiProfile,
 }
 
 impl App {
@@ -132,6 +142,7 @@ impl App {
             events,
             forensic_state: forensic_lens::ForensicState::new(),
             show_onboarding: true,
+            ui_profile: UiProfile::Standard,
         })
     }
 
@@ -184,7 +195,7 @@ pub fn render_to_buffer(eventlog_path: &Path, width: u16, height: u16) -> io::Re
     let app = App::new(eventlog_path)?;
     let backend = ratatui::backend::TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend)?;
-    terminal.draw(|frame| render(frame, &app))?;
+    terminal.draw(|frame| render(frame, &app, UiProfile::Standard))?;
 
     let buf = terminal.backend().buffer();
     let mut text = String::new();
@@ -203,8 +214,19 @@ pub fn render_incident_multiline(
     width: u16,
     height: u16,
 ) -> io::Result<String> {
+    render_incident_multiline_with_profile(eventlog_path, width, height, UiProfile::Standard)
+}
+
+/// Render an EventLog in Incident Lens mode with line breaks and profile styling.
+#[doc(hidden)]
+pub fn render_incident_multiline_with_profile(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+    profile: UiProfile,
+) -> io::Result<String> {
     let app = App::new(eventlog_path)?;
-    render_multiline(&app, width, height)
+    render_multiline(&app, width, height, profile)
 }
 
 /// Render an EventLog in Forensic Lens mode with line breaks for docs assets.
@@ -214,9 +236,20 @@ pub fn render_forensic_multiline(
     width: u16,
     height: u16,
 ) -> io::Result<String> {
+    render_forensic_multiline_with_profile(eventlog_path, width, height, UiProfile::Standard)
+}
+
+/// Render an EventLog in Forensic Lens mode with line breaks and profile styling.
+#[doc(hidden)]
+pub fn render_forensic_multiline_with_profile(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+    profile: UiProfile,
+) -> io::Result<String> {
     let mut app = App::new(eventlog_path)?;
     app.active_lens = ActiveLens::Forensic;
-    render_multiline(&app, width, height)
+    render_multiline(&app, width, height, profile)
 }
 
 /// Render an EventLog in Incident Lens mode with a forced degradation level.
@@ -227,15 +260,33 @@ pub fn render_degraded_incident_multiline(
     height: u16,
     level: LadderLevel,
 ) -> io::Result<String> {
-    let mut app = App::new(eventlog_path)?;
-    app.set_degradation_level(level);
-    render_multiline(&app, width, height)
+    render_degraded_incident_multiline_with_profile(
+        eventlog_path,
+        width,
+        height,
+        level,
+        UiProfile::Standard,
+    )
 }
 
-fn render_multiline(app: &App, width: u16, height: u16) -> io::Result<String> {
+/// Render an EventLog in Incident Lens mode with forced degradation and profile styling.
+#[doc(hidden)]
+pub fn render_degraded_incident_multiline_with_profile(
+    eventlog_path: &Path,
+    width: u16,
+    height: u16,
+    level: LadderLevel,
+    profile: UiProfile,
+) -> io::Result<String> {
+    let mut app = App::new(eventlog_path)?;
+    app.set_degradation_level(level);
+    render_multiline(&app, width, height, profile)
+}
+
+fn render_multiline(app: &App, width: u16, height: u16, profile: UiProfile) -> io::Result<String> {
     let backend = ratatui::backend::TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend)?;
-    terminal.draw(|frame| render(frame, app))?;
+    terminal.draw(|frame| render(frame, app, profile))?;
 
     let buf = terminal.backend().buffer();
     let mut text = String::new();
@@ -251,7 +302,7 @@ fn render_multiline(app: &App, width: u16, height: u16) -> io::Result<String> {
 }
 
 /// Run the TUI viewer for an EventLog.
-pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
+pub fn run_viewer(eventlog_path: &Path, profile: UiProfile) -> io::Result<()> {
     // Set up panic hook to restore terminal
     let original_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
@@ -268,11 +319,12 @@ pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
 
     // Create app state
     let mut app = App::new(eventlog_path)?;
+    app.ui_profile = profile;
 
     // Main event loop
     loop {
         // Render
-        terminal.draw(|frame| render(frame, &app))?;
+        terminal.draw(|frame| render(frame, &app, app.ui_profile))?;
 
         // Handle events
         if event::poll(Duration::from_millis(100))? {
@@ -297,7 +349,7 @@ pub fn run_viewer(eventlog_path: &Path) -> io::Result<()> {
 }
 
 /// Render the application to a frame.
-fn render(frame: &mut Frame, app: &App) {
+fn render(frame: &mut Frame, app: &App, profile: UiProfile) {
     let area = frame.area();
 
     // Layout: Truth HUD at bottom (4 lines: 2 borders + status line + version line)
@@ -311,21 +363,26 @@ fn render(frame: &mut Frame, app: &App) {
 
     // Render main content based on active lens
     match app.active_lens {
-        ActiveLens::Incident => incident_lens::render_incident_lens(
+        ActiveLens::Incident => incident_lens::render_incident_lens_with_profile(
             frame,
             main_area,
             &app.state,
             &app.eventlog_path,
             app.total_events,
             app.show_onboarding,
+            profile,
         ),
-        ActiveLens::Forensic => {
-            forensic_lens::render_forensic_lens(frame, main_area, &app.events, &app.forensic_state)
-        }
+        ActiveLens::Forensic => forensic_lens::render_forensic_lens_with_profile(
+            frame,
+            main_area,
+            &app.events,
+            &app.forensic_state,
+            profile,
+        ),
     }
 
     // Render Truth HUD (always visible, in both lenses)
-    truth_hud::render_truth_hud(frame, hud_area, &app.viewmodel);
+    truth_hud::render_truth_hud_with_profile(frame, hud_area, &app.viewmodel, profile);
 }
 
 #[cfg(test)]
@@ -498,7 +555,9 @@ mod tests {
 
         let backend = TestBackend::new(120, 20);
         let mut terminal = Terminal::new(backend).unwrap();
-        terminal.draw(|frame| render(frame, &app)).unwrap();
+        terminal
+            .draw(|frame| render(frame, &app, UiProfile::Standard))
+            .unwrap();
 
         let hud_text = buffer_text(&terminal, Rect::new(0, 16, 120, 4));
         assert!(
@@ -524,7 +583,9 @@ mod tests {
         let backend = TestBackend::new(120, 20);
         let mut terminal = Terminal::new(backend).unwrap();
 
-        terminal.draw(|frame| render(frame, &app)).unwrap();
+        terminal
+            .draw(|frame| render(frame, &app, UiProfile::Standard))
+            .unwrap();
 
         // The Truth HUD occupies the bottom 4 rows (index 16..20)
         let hud_text = buffer_text(&terminal, Rect::new(0, 16, 120, 4));

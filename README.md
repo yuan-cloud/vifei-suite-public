@@ -74,6 +74,15 @@ cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-e
 
 Run in a real interactive terminal (TTY).
 
+### Showcase profile (visual demo mode)
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- \
+  view docs/assets/readme/sample-eventlog.jsonl --profile showcase
+```
+
+`showcase` only changes presentation chrome and emphasis; truth ordering and proof semantics remain unchanged.
+
 ### Export with share-safe checks
 
 ```bash
@@ -218,8 +227,11 @@ Treat as determinism regression. Re-run on an idle machine, then inspect recent 
 Reference captures and visuals live under `docs/assets/readme/`:
 
 - `docs/assets/readme/incident-lens.txt`
+- `docs/assets/readme/incident-lens-showcase.txt`
 - `docs/assets/readme/forensic-lens.txt`
+- `docs/assets/readme/forensic-lens-showcase.txt`
 - `docs/assets/readme/truth-hud-degraded.txt`
+- `docs/assets/readme/truth-hud-showcase.txt`
 - `docs/assets/readme/export-refusal.txt`
 - `docs/assets/readme/architecture.mmd`
 

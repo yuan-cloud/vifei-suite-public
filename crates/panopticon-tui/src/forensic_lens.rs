@@ -12,13 +12,13 @@
 //! See `PLANS.md` § D5: "Correctness target: Deep investigation."
 //! Events ordered by commit_index (NEVER by timestamp — D6).
 
-use crate::visual_tone;
+use crate::{visual_tone, UiProfile};
 use panopticon_core::event::{CommittedEvent, EventPayload};
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, BorderType, Borders, Paragraph, Wrap},
     Frame,
 };
 
@@ -55,16 +55,34 @@ impl ForensicState {
 }
 
 /// Render the Forensic Lens into the given area.
+#[allow(dead_code)] // Compatibility wrapper; default profile path for direct tests.
 pub fn render_forensic_lens(
     frame: &mut Frame,
     area: Rect,
     events: &[CommittedEvent],
     forensic: &ForensicState,
 ) {
+    render_forensic_lens_with_profile(frame, area, events, forensic, UiProfile::Standard);
+}
+
+pub fn render_forensic_lens_with_profile(
+    frame: &mut Frame,
+    area: Rect,
+    events: &[CommittedEvent],
+    forensic: &ForensicState,
+    profile: UiProfile,
+) {
     let block = Block::default()
-        .title(" Forensic Lens (Tab to toggle) ")
+        .title(match profile {
+            UiProfile::Standard => " Forensic Lens (Tab to toggle) ",
+            UiProfile::Showcase => " Forensic Lens · Showcase (Tab to toggle) ",
+        })
         .borders(Borders::ALL)
-        .border_style(visual_tone::warning());
+        .border_type(match profile {
+            UiProfile::Standard => BorderType::Plain,
+            UiProfile::Showcase => BorderType::Rounded,
+        })
+        .border_style(visual_tone::warning_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -72,7 +90,7 @@ pub fn render_forensic_lens(
     if events.is_empty() {
         let empty = Paragraph::new(Line::from(Span::styled(
             "  (no events)",
-            visual_tone::muted(),
+            visual_tone::muted_for(profile),
         )));
         frame.render_widget(empty, inner);
         return;
@@ -84,8 +102,8 @@ pub fn render_forensic_lens(
         .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(inner);
 
-    render_timeline(frame, columns[0], events, forensic);
-    render_inspector(frame, columns[1], events, forensic);
+    render_timeline(frame, columns[0], events, forensic, profile);
+    render_inspector(frame, columns[1], events, forensic, profile);
 }
 
 /// Render the timeline scrubber (left pane).
@@ -94,11 +112,16 @@ fn render_timeline(
     area: Rect,
     events: &[CommittedEvent],
     forensic: &ForensicState,
+    profile: UiProfile,
 ) {
     let block = Block::default()
         .title(" Timeline ")
         .borders(Borders::ALL)
-        .border_style(visual_tone::muted());
+        .border_type(match profile {
+            UiProfile::Standard => BorderType::Plain,
+            UiProfile::Showcase => BorderType::Rounded,
+        })
+        .border_style(visual_tone::muted_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -127,8 +150,11 @@ fn render_timeline(
 
         lines.push(Line::from(vec![
             Span::styled(prefix, line_style),
-            Span::styled(format!("{:>4} ", ev.commit_index), visual_tone::muted()),
-            Span::styled(synth_marker, visual_tone::accent()),
+            Span::styled(
+                format!("{:>4} ", ev.commit_index),
+                visual_tone::muted_for(profile),
+            ),
+            Span::styled(synth_marker, visual_tone::accent_for(profile)),
             Span::styled(type_name, Style::default().fg(type_color)),
         ]));
     }
@@ -149,7 +175,10 @@ fn render_timeline(
         )
     };
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled(next_action, visual_tone::muted())));
+    lines.push(Line::from(Span::styled(
+        next_action,
+        visual_tone::muted_for(profile),
+    )));
 
     let paragraph = Paragraph::new(lines);
     frame.render_widget(paragraph, inner);
@@ -161,11 +190,16 @@ fn render_inspector(
     area: Rect,
     events: &[CommittedEvent],
     forensic: &ForensicState,
+    profile: UiProfile,
 ) {
     let block = Block::default()
         .title(" Inspector ")
         .borders(Borders::ALL)
-        .border_style(visual_tone::muted());
+        .border_type(match profile {
+            UiProfile::Standard => BorderType::Plain,
+            UiProfile::Showcase => BorderType::Rounded,
+        })
+        .border_style(visual_tone::muted_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -182,7 +216,7 @@ fn render_inspector(
         Span::styled("Event #", Style::default().fg(Color::White)),
         Span::styled(
             format!("{}", ev.commit_index),
-            visual_tone::info().add_modifier(Modifier::BOLD),
+            visual_tone::info_for(profile).add_modifier(Modifier::BOLD),
         ),
         Span::raw("  "),
         Span::styled(
@@ -190,7 +224,7 @@ fn render_inspector(
             Style::default().fg(event_type_color(ev.payload.event_type_name())),
         ),
         if ev.synthesized {
-            Span::styled("  [SYNTHESIZED]", visual_tone::accent())
+            Span::styled("  [SYNTHESIZED]", visual_tone::accent_for(profile))
         } else {
             Span::raw("")
         },
@@ -199,21 +233,21 @@ fn render_inspector(
 
     // Metadata
     lines.push(Line::from(vec![
-        Span::styled("  run_id:   ", visual_tone::muted()),
+        Span::styled("  run_id:   ", visual_tone::muted_for(profile)),
         Span::raw(&ev.run_id),
     ]));
     lines.push(Line::from(vec![
-        Span::styled("  event_id: ", visual_tone::muted()),
+        Span::styled("  event_id: ", visual_tone::muted_for(profile)),
         Span::raw(&ev.event_id),
     ]));
     lines.push(Line::from(vec![
-        Span::styled("  tier:     ", visual_tone::muted()),
+        Span::styled("  tier:     ", visual_tone::muted_for(profile)),
         Span::raw(format!("{}", ev.tier)),
     ]));
 
     if let Some(ref pr) = ev.payload_ref {
         lines.push(Line::from(vec![
-            Span::styled("  blob_ref: ", visual_tone::muted()),
+            Span::styled("  blob_ref: ", visual_tone::muted_for(profile)),
             Span::styled(pr, Style::default().fg(Color::Blue)),
         ]));
     }
