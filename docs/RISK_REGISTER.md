@@ -1612,3 +1612,16 @@ Context:
 3. Nondeterminism: Removed another potential nondeterminism source by making duplicate-index resolution independent of caller-provided slice order.
 4. Security: No new secret surface introduced; tie-break logic runs on already-ingested committed events.
 5. Performance cliffs: Tie-break key generation incurs extra serialization only when duplicate indices are present; normal unique streams are unaffected.
+
+## bd-eymy · D1: fixed-fixture replay benchmark harness (latency + RSS) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4 (deterministic artifact contract and measurable replay behavior)
+- Constitution touched: none
+
+1. Coupling: `bench_tour` now couples to `TourMetrics.event_count_total` and fixed fixture path semantics; schema/version and fixture fields are explicit in artifact output.
+2. Untested claims: Peak RSS collection is Linux-specific (`/proc/self/status`) and currently degrades to `null` on non-Linux hosts; cross-platform RSS parity remains future work.
+3. Nondeterminism: Bench artifact shape is deterministic; measured latency/RSS values are intentionally environment-dependent metrics, and this is explicit in artifact provenance fields.
+4. Security: Artifact contains local path and command metadata; this is expected for local/CI diagnostics and should not be treated as a public redaction-safe export artifact.
+5. Performance cliffs: Running benchmark with high iteration counts can be expensive; guardrails remain via configurable `PANOPTICON_TOUR_BENCH_ITERS` and fixed fixture scope.
