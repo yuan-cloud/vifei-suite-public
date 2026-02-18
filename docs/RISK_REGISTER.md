@@ -1339,3 +1339,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced; this bead only updates docs and checklist state.
 4. Security: Reduced risk of accidental public leakage by replacing strategy-style wording with neutral release-language in launch planning docs.
 5. Performance cliffs: No runtime impact; process overhead is limited to periodic manual checklist reconciliation before public flips/releases.
+
+## bd-1wc1 · DOCS-2 full audit matrix for planning/checklist docs · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: docs/process only
+- Constitution touched: none
+
+1. Coupling: Audit matrix now couples release-readiness review to a single summary artifact (`docs/DOCS_AUDIT_MATRIX_2026-02-18.md`); future doc-set changes should refresh this matrix.
+2. Untested claims: Manual GitHub UI settings cannot be proven from local repo state and remain explicitly marked as manual pending.
+3. Nondeterminism: No runtime behavior changes; documentation-only update.
+4. Security: Clarifies what remains platform-side and prevents accidental over-claiming of public-readiness state.
+5. Performance cliffs: None; no code-path or runtime changes introduced.
