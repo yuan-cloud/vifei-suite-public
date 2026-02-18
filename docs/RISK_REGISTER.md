@@ -1794,3 +1794,16 @@ Context:
 3. Nondeterminism: No runtime nondeterminism introduced. Invocation style changed only how scripts are launched, not script logic.
 4. Security: No new secret/PII handling changes. Direct invocation keeps interpreter choice explicit in shebang and avoids shell-wrapper drift.
 5. Performance: No material runtime impact; invocation normalization is a devex/process hardening change.
+
+## bd-cbip · TRACK-A: process integrity hardening (bead closure evidence + script execution consistency) · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4, I5
+- Constitution touched: none
+
+1. Coupling: Governance confidence now depends on a coordinated set of audit script + CI guard + exemption ledger + invocation policy. This is intended process coupling for auditability.
+2. Untested claims: We rely on end-to-end script runs and CI wiring checks rather than isolated script unit tests.
+3. Nondeterminism: None added in runtime pipeline; process artifacts are deterministically generated from repo state.
+4. Security: No new secrets surface. Main risk remains process misuse (stale exemptions), mitigated by explicit ledger and guard output.
+5. Performance: Negligible runtime impact; small CI overhead from additional governance checks.
