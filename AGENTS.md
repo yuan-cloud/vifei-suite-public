@@ -91,6 +91,19 @@ Parser authority rule for robot mode:
 - Normalization must never rewrite positional tokens and must stop at `--`.
 - Any change to parser/normalization behavior must include updates to CLI contract tests (`crates/panopticon-tui/tests/cli_robot_mode_contract.rs` and related unit tests) in the same commit.
 
+Two-layer failure contract (required):
+
+| Layer | Condition | Allowed behavior | Required contract |
+|---|---|---|---|
+| Parser-repair boundary | Unambiguous syntax repair (for example `--output_dir`) | Normalize and continue | Success/error envelope may include `notes` with the applied repair |
+| Parser boundary | Ambiguous or invalid syntax | Do not guess | Fail `INVALID_ARGS` with actionable suggestions |
+| Execution boundary | Runtime write/serialize/artifact generation failure | Never fallback to placeholder/default artifact content | Fail `RUNTIME_ERROR` with stable `code` + `exit_code` |
+| Execution boundary | Secret scanner refusal during share-safe export | Never continue with partial success | Fail `EXPORT_REFUSED` and keep refusal details explicit |
+
+Contract tests that must remain aligned:
+- `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`
+- `crates/panopticon-tui/src/main.rs` CLI normalization/parse guidance tests
+
 ---
 
 ## MULTI-AGENT REALITY

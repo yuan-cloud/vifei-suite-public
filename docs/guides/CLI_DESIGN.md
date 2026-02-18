@@ -209,6 +209,21 @@ Not allowed:
 
 If intent is not unambiguous, fail with structured guidance and examples.
 
+### Two-layer failure contract
+
+Use this matrix as the authoritative behavior split between parsing and execution:
+
+| Layer | Condition | Behavior | Expected envelope |
+|---|---|---|---|
+| Parser-repair boundary | Unambiguous normalization (`--output_dir` -> `--output-dir`, known alias) | Repair is allowed, but must be explicit | `OK`/error with `notes` entry describing normalization |
+| Parser boundary | Ambiguous/invalid syntax | No guessing | `INVALID_ARGS` with actionable suggestions |
+| Execution boundary | Runtime artifact write/serialize failure | No placeholder fallback, no silent downgrade | `RUNTIME_ERROR` with stable `exit_code` |
+| Execution boundary | Share-safe export scanner findings | Hard refusal path | `EXPORT_REFUSED` with refusal-report guidance |
+
+Reference contract tests:
+- `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`
+- `crates/panopticon-tui/src/main.rs` (`parse_error_guidance_*`, normalization tests)
+
 ---
 
 ## Argument validation

@@ -1690,3 +1690,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; tie-break ordering remains deterministic and no longer silently collapses payload component to empty string on serialization error.
 4. Security: No new secret/PII handling surface; this change only affects internal deterministic comparison keys and test harness assertions.
 5. Performance cliffs: Added match-based error handling and one extra unit test; runtime cost is negligible and only on tie-break key construction path.
+
+## bd-2cj9.4 · E4: codify CLI repair vs execution-failure contract · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I5, D7 fail-closed boundary discipline
+- Constitution touched: none
+
+1. Coupling: `AGENTS.md` and `docs/guides/CLI_DESIGN.md` now explicitly couple CLI behavior expectations to specific contract test files.
+2. Untested claims: Wording alignment is tested indirectly via existing CLI contract tests, but no dedicated docs-lint enforces matrix text consistency yet.
+3. Nondeterminism: No runtime nondeterminism introduced; changes are documentation policy only.
+4. Security: Clarified that runtime artifact/serialize failures and export scanner findings must fail closed; this reduces ambiguity risk for future security regressions.
+5. Performance cliffs: No runtime cost; only documentation maintenance overhead when contract files move or rename.
