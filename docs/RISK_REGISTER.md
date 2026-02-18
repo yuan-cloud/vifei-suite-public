@@ -1855,7 +1855,7 @@ Context:
 - Constitution touched: none
 
 1. Coupling: Bakeoff harness composes multiple demo scripts and CLI commands; output contract now depends on these surfaces staying stable.
-2. Untested claims: Full mode (`--full`) remains unexecuted in this pass, but fast-mode bakeoff is now exercised through `scripts/testing/demo_smoke.sh` as an end-to-end contract check.
+2. Untested claims: `--full` bakeoff was executed successfully on 2026-02-18 (`.tmp/competitor-bakeoff/run-20260218T223620Z`); remaining gap is ongoing coverage against broader fixture diversity and external environment variance.
 3. Nondeterminism: Report schema and required checks are deterministic for fixed inputs; runtime duration is informational only.
 4. Security: Harness reuses share-safe refusal flow and synthetic fixtures; no new secret exposure path introduced.
 5. Performance: Adds one more fast-demo smoke path and optional full bakeoff runtime overhead; acceptable for demo/GTM proof value.
@@ -1911,3 +1911,16 @@ Context:
 3. Nondeterminism: Path labels derive from filename components only and remain deterministic for identical input arguments.
 4. Security: Eliminates local path disclosure in shareable incident-pack manifests, reducing operator and environment metadata leakage risk.
 5. Performance: Negligible overhead; string extraction from path components during manifest serialization.
+
+## bd-1bpl · AUDIT: cassette temp cleanup hardening + share-safe path edge tests · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Cassette normalization now explicitly scopes append-writer lifecycle so temporary canonicalization artifacts are cleaned on all successful return paths.
+2. Untested claims: Cleanup on catastrophic process termination is still OS-dependent; this bead hardens normal/error return behavior in process, not crash-recovery semantics.
+3. Nondeterminism: No truth-path nondeterminism added; test additions only validate deterministic label derivation fallback behavior.
+4. Security: Keeps incident-pack privacy guarantees current by correcting stale risk language and verifying share-safe label behavior with unit tests.
+5. Performance: Negligible; small control-flow restructuring and two light unit tests.

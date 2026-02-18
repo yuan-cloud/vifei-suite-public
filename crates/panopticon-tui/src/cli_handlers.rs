@@ -113,24 +113,26 @@ fn load_committed_events(
                 "panopticon-cassette-canonical-{}-{temp_id}.jsonl",
                 std::process::id()
             ));
-            let mut writer = EventLogWriter::open(&eventlog_path).map_err(|e| {
-                format!(
-                    "failed to initialize append writer for {}: {e}",
-                    path.display()
-                )
-            })?;
-            let mut committed = Vec::with_capacity(imported.len() * 2);
-            for import in imported {
-                let result = writer.append(import).map_err(|e| {
+            let committed = {
+                let mut writer = EventLogWriter::open(&eventlog_path).map_err(|e| {
                     format!(
-                        "failed to append cassette event for {}: {e}",
+                        "failed to initialize append writer for {}: {e}",
                         path.display()
                     )
                 })?;
-                committed.extend(result.detection_events().iter().cloned());
-                committed.push(result.committed_event().clone());
-            }
-            drop(writer);
+                let mut committed = Vec::with_capacity(imported.len() * 2);
+                for import in imported {
+                    let result = writer.append(import).map_err(|e| {
+                        format!(
+                            "failed to append cassette event for {}: {e}",
+                            path.display()
+                        )
+                    })?;
+                    committed.extend(result.detection_events().iter().cloned());
+                    committed.push(result.committed_event().clone());
+                }
+                committed
+            };
             let _ = fs::remove_file(&eventlog_path);
             Ok(committed)
         }
@@ -1270,4 +1272,22 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
     }
 
     AppExit::Success
+}
+
+#[cfg(test)]
+mod tests {
+    use super::share_safe_input_label;
+    use std::path::Path;
+
+    #[test]
+    fn share_safe_input_label_uses_file_name_when_present() {
+        let path = Path::new("/tmp/demo/left.jsonl");
+        assert_eq!(share_safe_input_label(path), "left.jsonl");
+    }
+
+    #[test]
+    fn share_safe_input_label_falls_back_for_root_like_paths() {
+        let path = Path::new("/");
+        assert_eq!(share_safe_input_label(path), "input");
+    }
 }
