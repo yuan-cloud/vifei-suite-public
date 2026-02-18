@@ -1755,3 +1755,16 @@ Context:
 3. Nondeterminism: Perf metrics are inherently environment-sensitive; phase-1 is warn-only calibration to avoid false hard-fails during baseline stabilization.
 4. Security: No auth or secret handling changes; perf artifact paths and optional git SHA remain CI diagnostics only.
 5. Performance cliffs: `bench_tour --release` in full-confidence increases CI runtime; accepted for calibration and surfaced via non-blocking warnings.
+
+## bd-110f · A2: enforce bead-closure evidence guard in CI · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4 (testable determinism), I5 (loud failure for governance drift)
+- Constitution touched: none
+
+1. Coupling: CI now depends on parity-audit outputs plus `docs/testing/bead-closure-evidence-exemptions-v0.1.json`. This coupling is intentional and auditable; it keeps closure evidence policy executable instead of narrative-only.
+2. Untested claims: The guard script is validated with positive and negative local runs, but there is no separate unit-test harness for Python scripts in this repo. CI execution is the primary regression check for script behavior.
+3. Nondeterminism: Guard output is deterministic for a fixed tracker/risk state; IDs are sorted and replay commands are static. The parity report timestamp remains fixed by the underlying audit script (`generated_at` constant), so no wall-clock instability is introduced by this bead.
+4. Security: No secrets or PII introduced. The exemption ledger contains bead IDs and rationale only. Main risk is process misuse (over-broad exemptions), mitigated by explicit ID-based entries and stale-exemption warnings.
+5. Performance: Added guard is lightweight (single JSONL/markdown scan + JSON parse) and runs quickly in fastlane/full-confidence. No meaningful runtime cliff expected.

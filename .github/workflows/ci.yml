@@ -59,6 +59,13 @@ jobs:
       - name: Validate defer register
         run: python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
 
+      - name: Bead closure evidence guard
+        run: |
+          python3 scripts/testing/check_bead_closure_evidence.py \
+            --audit-output-json .tmp/fastlane/bead-risk-parity-audit.json \
+            --audit-output-markdown .tmp/fastlane/bead-risk-parity-audit.md \
+            2>&1 | tee .tmp/fastlane/bead-closure-evidence.log
+
       - name: Upload fastlane evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,6 +103,13 @@ jobs:
         run: |
           python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json \
             2>&1 | tee .tmp/full-confidence/logs/defer-register.log
+
+      - name: Bead closure evidence guard
+        run: |
+          python3 scripts/testing/check_bead_closure_evidence.py \
+            --audit-output-json .tmp/full-confidence/logs/bead-risk-parity-audit.json \
+            --audit-output-markdown .tmp/full-confidence/logs/bead-risk-parity-audit.md \
+            2>&1 | tee .tmp/full-confidence/logs/bead-closure-evidence.log
 
       - name: Format check
         run: cargo fmt --check 2>&1 | tee .tmp/full-confidence/logs/fmt.log

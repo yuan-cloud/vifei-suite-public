@@ -42,6 +42,30 @@ python3 scripts/testing/audit_bead_risk_parity.py \
 3. Re-run audit and confirm no unresolved critical gaps for targeted closure scope.
 4. Enforce in CI via closure-evidence guard (follow-up bead).
 
+## CI enforcement guard
+
+Guard command (fails on unresolved non-exempt gaps):
+
+```bash
+python3 scripts/testing/check_bead_closure_evidence.py \
+  --audit-output-json .tmp/bead-closure-evidence/bead-risk-parity-audit.json \
+  --audit-output-markdown .tmp/bead-closure-evidence/bead-risk-parity-audit.md
+```
+
+Guard behavior:
+
+- Re-runs the parity audit deterministically.
+- Loads explicit temporary exemptions from:
+  - `docs/testing/bead-closure-evidence-exemptions-v0.1.json`
+- Fails with `CONTRACT_FAIL[CLOSE-001]` when any `gap_requires_entry` bead is not listed in that exemption ledger.
+- Emits replay and fix guidance in output.
+
+Policy constraints:
+
+- Exemptions must be explicit, ID-based, and include rationale.
+- Exemption ledger is temporary and must shrink as `bd-25a0` backfills historical gaps.
+- New closure gaps must never be silently tolerated.
+
 ## Notes
 
 - This policy governs process evidence only. It does not replace code/test quality gates.
