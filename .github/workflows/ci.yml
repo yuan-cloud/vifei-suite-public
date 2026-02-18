@@ -51,6 +51,11 @@ jobs:
           bash scripts/testing/check_coverage_contract.sh \
             2>&1 | tee .tmp/fastlane/coverage-contract.log
 
+      - name: Adapter conformance drift gate
+        run: |
+          scripts/testing/check_adapter_drift.sh .tmp/fastlane/adapter-conformance \
+            2>&1 | tee .tmp/fastlane/adapter-conformance.log
+
       - name: Validate defer register
         run: python3 scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
 
@@ -122,6 +127,11 @@ jobs:
         run: |
           bash scripts/testing/check_coverage_contract.sh \
             2>&1 | tee .tmp/full-confidence/logs/coverage-contract.log
+
+      - name: Adapter conformance drift gate
+        run: |
+          scripts/testing/check_adapter_drift.sh .tmp/full-confidence/adapter-conformance \
+            2>&1 | tee .tmp/full-confidence/logs/adapter-conformance.log
 
       - name: CLI E2E suite
         run: |

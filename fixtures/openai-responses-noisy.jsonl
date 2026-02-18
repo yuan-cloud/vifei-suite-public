@@ -1,0 +1,5 @@
+{"type":"response.created","schema_version":"openai-responses-v1","response_id":"resp_noise_001","event_id":"nev_001","created_at_ms":1739701000000,"model":"gpt-5-mini","status":"in_progress"}
+{this line is intentionally malformed json
+{"type":"response.output_item.added","schema_version":"openai-responses-v1","response_id":"resp_noise_001","event_id":"nev_002","created_at_ms":1739701000100,"item":{"id":"nitem_001","type":"function_call","name":"web_search","arguments":{"q":"audit replay drift"}}}
+{"type":"response.output_item.done","schema_version":"openai-responses-v1","response_id":"resp_noise_001","event_id":"nev_003","created_at_ms":1739701000200,"item":{"id":"nitem_002","type":"function_call_output","name":"web_search","output":"noisy but deterministic"}}
+{"type":"response.completed","schema_version":"openai-responses-v1","response_id":"resp_noise_001","event_id":"nev_004","created_at_ms":1739701000300,"status":"completed"}

@@ -1560,3 +1560,16 @@ Context:
 3. Nondeterminism: Parser is line-ordered, uses deterministic fallback IDs, and avoids unordered containers in payload data, so replay ordering and serialization remain stable.
 4. Security: Contract checks reject source-owned `commit_index` and schema mismatch is surfaced as explicit contract errors, preserving trust boundary between importer input and canonical ordering.
 5. Performance cliffs: Request argument synthesis includes source length metadata; very large source texts increase per-record string processing but remain linear and bounded by input line size.
+
+## bd-eoat · B5: cross-adapter replay conformance corpus + deterministic drift gate · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I4, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: CI now depends on adapter drift script and test names; if test target or script path changes, workflow steps must be updated together.
+2. Untested claims: The conformance corpus currently covers representative small/noisy fixtures; larger and provider-edge corpora should be expanded in future perf/governance tracks.
+3. Nondeterminism: Drift gate reruns the same fixtures repeatedly and asserts byte-equal serialized ImportEvent outputs, directly detecting ordering/serialization instability.
+4. Security: Corpus fixtures are synthetic and local; no secrets are introduced, and drift gate validates importer contract boundary (no source commit_index ownership).
+5. Performance cliffs: CI adds an extra adapter-conformance test step; runtime cost is low now but may grow with corpus size and should remain bounded.
