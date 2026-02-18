@@ -318,6 +318,19 @@ Context:
 1. Coupling: Added `render_to_buffer` public function to panopticon-tui, exposing a `#[doc(hidden)]` test helper. Integration test depends on panopticon-core's EventLogWriter and panopticon-tui's render pipeline. Coupling is appropriate for an end-to-end test.
 2. Untested claims: None. All 6 required HUD fields are asserted. Empty eventlog edge case covered. Version string exact-match tested.
 3. Nondeterminism: None. render_to_buffer is deterministic (same EventLog → same output). TestBackend produces deterministic buffer content.
+
+## bd-2cj9.1 · E1: masking-pattern audit (last-5-commits + HEAD) · 2026-02-18
+
+Context:
+- Bead owner: Codex GPT-5
+- Invariants referenced: I4, I5
+- Constitution touched: none
+
+1. Coupling: The audit introduces process coupling between CLI/runtime changes and explicit masking-risk review criteria. This is intentional and scoped to TRACK-E.
+2. Untested claims: The audit itself does not execute runtime fault-injection paths; it classifies code patterns and commit diffs. Follow-up beads (`bd-2cj9.2`, `bd-2cj9.3`) own executable proof.
+3. Nondeterminism: No runtime behavior changed in this bead. The audit identified one remaining nondeterminism-adjacent masking risk (`delta.rs` payload serialization fallback) for explicit remediation.
+4. Security: No new secret/PII surface introduced. The audit reduces security/quality risk by identifying where silent fallbacks can hide failures.
+5. Performance: No performance impact from this bead; documentation-only changes.
 4. Security: No security implications. Test-only code, read-only rendering.
 5. Performance: 4 integration tests add ~0.02s. render_to_buffer creates a TestBackend per call — acceptable for test use only.
 
