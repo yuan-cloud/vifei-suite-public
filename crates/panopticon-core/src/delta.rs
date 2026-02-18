@@ -123,7 +123,11 @@ fn index_events_by_commit_index(events: &[CommittedEvent]) -> BTreeMap<u64, &Com
 }
 
 fn event_stable_tiebreak_key(event: &CommittedEvent) -> String {
-    let payload = serde_json::to_string(&event.payload).unwrap_or_default();
+    let payload = match serde_json::to_string(&event.payload) {
+        Ok(value) => value,
+        // Never silently downgrade to an empty payload key segment.
+        Err(error) => format!("__payload_serialize_error__:{error}"),
+    };
     format!(
         "{}|{}|{}|{}|{}|{}|{}|{}|{}",
         event.run_id,
@@ -525,5 +529,24 @@ mod tests {
 
         assert_eq!(delta_ab, delta_ba);
         assert!(delta_ab.divergences.is_empty());
+    }
+
+    #[test]
+    fn tie_break_key_uses_explicit_payload_component() {
+        let event = committed(
+            7,
+            EventPayload::ToolResult {
+                tool: "search".to_string(),
+                result: Some("ok".to_string()),
+                status: Some("success".to_string()),
+            },
+        );
+        let key = event_stable_tiebreak_key(&event);
+        let payload_json = serde_json::to_string(&event.payload).expect("payload serializable");
+
+        assert!(
+            key.ends_with(&payload_json),
+            "payload component should be explicit and non-empty in tie-break key"
+        );
     }
 }

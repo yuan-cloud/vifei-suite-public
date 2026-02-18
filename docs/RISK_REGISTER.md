@@ -1677,3 +1677,16 @@ Context:
 3. Nondeterminism: No nondeterminism introduced; tests assert deterministic envelope/artifact shapes and do not alter runtime ordering/hash logic.
 4. Security: New assertions inspect generated local artifacts only; no secret-handling behavior changed and refusal behavior remains fail-closed.
 5. Performance cliffs: Added contract assertions slightly increase test runtime and filesystem I/O during CLI integration tests; impact is bounded and acceptable for v0.1.
+
+## bd-2cj9.3 · E2: remove masking fallback in deterministic runtime path · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4, D7 fail-closed execution boundary
+- Constitution touched: none
+
+1. Coupling: `event_stable_tiebreak_key` now encodes serialization failures explicitly in its payload component string, coupling duplicate-index tie-break semantics to this sentinel format.
+2. Untested claims: We added a direct proof test for explicit payload inclusion in tie-break keys, but we still cannot naturally trigger payload serialization failure from current `EventPayload` variants.
+3. Nondeterminism: No new nondeterminism introduced; tie-break ordering remains deterministic and no longer silently collapses payload component to empty string on serialization error.
+4. Security: No new secret/PII handling surface; this change only affects internal deterministic comparison keys and test harness assertions.
+5. Performance cliffs: Added match-based error handling and one extra unit test; runtime cost is negligible and only on tie-break key construction path.

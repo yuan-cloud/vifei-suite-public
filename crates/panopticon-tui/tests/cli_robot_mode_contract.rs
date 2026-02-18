@@ -25,12 +25,8 @@ fn canonical_json(value: &Value) -> String {
 }
 
 fn read_json_file(path: &Path) -> Value {
-    let body = fs::read_to_string(path).unwrap_or_else(|e| {
-        panic!("expected readable JSON file at {}: {e}", path.display());
-    });
-    serde_json::from_str(&body).unwrap_or_else(|e| {
-        panic!("expected valid JSON at {}: {e}", path.display());
-    })
+    let body = fs::read_to_string(path).expect("expected readable JSON file");
+    serde_json::from_str(&body).expect("expected valid JSON file")
 }
 
 fn assert_robot_envelope_shape(value: &Value) {
@@ -322,10 +318,9 @@ fn incident_pack_success_emits_manifest_and_hashes() {
         "export/left.bundle.tar.zst",
         "export/right.bundle.tar.zst",
     ] {
-        let hash = files
-            .get(required)
-            .and_then(Value::as_str)
-            .unwrap_or_else(|| panic!("missing hash entry for {required}"));
+        let hash_entry = files.get(required);
+        assert!(hash_entry.is_some(), "missing hash entry for {required}");
+        let hash = hash_entry.and_then(Value::as_str).unwrap_or("");
         assert!(
             !hash.trim().is_empty(),
             "hash for {required} must be non-empty"
