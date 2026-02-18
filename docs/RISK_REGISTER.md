@@ -1352,3 +1352,16 @@ Context:
 3. Nondeterminism: No runtime behavior changes; documentation-only update.
 4. Security: Clarifies what remains platform-side and prevents accidental over-claiming of public-readiness state.
 5. Performance cliffs: None; no code-path or runtime changes introduced.
+
+## bd-3gxs · SHOWCASE-1 detailed research for showcase UX profile · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: docs/research only; no truth-path code changes
+- Constitution touched: none
+
+1. Coupling: Showcase profile direction now couples launch media and capture assets to a named UI profile contract (`showcase`) that must remain presentation-only.
+2. Untested claims: Research recommends style/layout changes and static showcase page strategy; implementation and no-drift proof tests are still required in follow-up beads.
+3. Nondeterminism: No runtime changes in this bead; risk lies in future implementation if visual effects accidentally alter deterministic capture pathways.
+4. Security: No new security surface from research itself; future showcase page must avoid introducing unverifiable marketing claims.
+5. Performance cliffs: Potential extra render overhead in showcase mode is currently unmeasured and should be bounded during implementation.
