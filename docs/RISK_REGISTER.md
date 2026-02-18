@@ -1404,3 +1404,16 @@ Context:
 3. Nondeterminism: None introduced; docs and generated assets are deterministic artifacts.
 4. Security: No secret surface added; page only references fixture-based captures and deterministic commands.
 5. Performance cliffs: None in runtime; minor docs footprint increase only.
+
+## bd-3ly8 · PRODUCT-1 foundational product and GTM docs · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: docs/product strategy only; no runtime behavior changes
+- Constitution touched: none
+
+1. Coupling: Product docs now establish a baseline messaging system; future launch copy should stay aligned with these files to avoid narrative drift.
+2. Untested claims: GTM and business model assumptions are strategic hypotheses; they require market validation post-launch.
+3. Nondeterminism: No runtime changes introduced.
+4. Security: No additional secret or trust boundary surface; docs avoid hardcoded credentials and unverifiable claims.
+5. Performance cliffs: None; documentation-only change.

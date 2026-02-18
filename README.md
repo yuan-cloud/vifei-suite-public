@@ -196,6 +196,13 @@ Workspace crates:
 - `PLANS.md`
 - `AGENTS.md`
 
+## Product Docs
+
+- `docs/product/positioning.md`
+- `docs/product/messaging.md`
+- `docs/product/go-to-market-checklist.md`
+- `docs/product/business-model-v1.md`
+
 ## Community and Security
 
 - `CONTRIBUTING.md`: contribution expectations and report quality checklist
