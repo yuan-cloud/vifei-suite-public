@@ -1768,3 +1768,16 @@ Context:
 3. Nondeterminism: Guard output is deterministic for a fixed tracker/risk state; IDs are sorted and replay commands are static. The parity report timestamp remains fixed by the underlying audit script (`generated_at` constant), so no wall-clock instability is introduced by this bead.
 4. Security: No secrets or PII introduced. The exemption ledger contains bead IDs and rationale only. Main risk is process misuse (over-broad exemptions), mitigated by explicit ID-based entries and stale-exemption warnings.
 5. Performance: Added guard is lightweight (single JSONL/markdown scan + JSON parse) and runs quickly in fastlane/full-confidence. No meaningful runtime cliff expected.
+
+## bd-25a0 · A3: reconcile historical closure gaps and backfill evidence · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4 (testable governance evidence), I5 (loud failure posture for process drift)
+- Constitution touched: none
+
+1. Coupling: Historical closure parity is now explicitly coupled to the temporary exemption ledger. This is intentional for auditability, but it creates maintenance pressure to prune exemptions as exact entries are backfilled.
+2. Untested claims: We assert reconciliation correctness through guard output (`unresolved=0`) and generated audit artifacts; there is still no standalone Python unit-test harness for governance scripts.
+3. Nondeterminism: No runtime nondeterminism added; reconciliation artifacts are deterministically generated from current tracker/risk state. The underlying parity report keeps a fixed generated timestamp, avoiding wall-clock drift in output shape.
+4. Security: No new data exposure. Risk is governance misuse if exemptions become permanent; mitigated by explicit rationale entries and stale-exemption warnings.
+5. Performance: Reconciliation step is lightweight and CI-safe. Main cliff would be unbounded growth of historical exemptions, addressed by future pruning/backfill work.
