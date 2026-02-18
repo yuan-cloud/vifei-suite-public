@@ -90,7 +90,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Prepare output directories
-        run: mkdir -p .tmp/full-confidence/logs .tmp/full-confidence/coverage
+        run: mkdir -p .tmp/full-confidence/logs .tmp/full-confidence/coverage .tmp/full-confidence/perf
 
       - name: Validate defer register
         run: |
@@ -137,6 +137,26 @@ jobs:
         run: |
           OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
             2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
+
+      - name: Replay benchmark artifact (warn-only calibration)
+        run: |
+          PANOPTICON_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json \
+          PANOPTICON_PERF_TREND_DIR=.tmp/full-confidence/perf/trends \
+          PANOPTICON_GIT_SHA=${{ github.sha }} \
+          cargo run -q -p panopticon-tour --bin bench_tour --release \
+            2>&1 | tee .tmp/full-confidence/logs/bench-tour.log
+
+      - name: Perf regression warning gate (phase-1)
+        run: |
+          scripts/testing/check_perf_regression_warn.sh \
+            .tmp/full-confidence/perf/bench_tour_metrics.json \
+            docs/testing/perf-baseline-candidate-v1.json \
+            2>&1 | tee .tmp/full-confidence/logs/perf-warn.log
+
+      - name: Snapshot baseline candidate artifact
+        run: |
+          cp .tmp/full-confidence/perf/bench_tour_metrics.json \
+            .tmp/full-confidence/perf/bench_tour_metrics.${{ github.sha }}.json
 
       - name: Demo smoke suite (fast)
         run: |

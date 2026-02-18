@@ -1742,3 +1742,16 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism introduced; new artifacts are derived diagnostics. Trend append order reflects invocation order, intentionally outside canonical EventLog semantics.
 4. Security: Trend records may include optional git SHA and fixture path metadata; this is operational telemetry and not share-safe export data.
 5. Performance cliffs: Trend append adds one file-open + one line write per benchmark run; overhead is negligible compared with replay benchmark execution.
+
+## bd-1wx1 · D3: CI perf regression policy phase-1 (warn-only) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4 (derived perf diagnostics only)
+- Constitution touched: none
+
+1. Coupling: `full_confidence` CI now depends on `bench_tour` artifact outputs and `scripts/testing/check_perf_regression_warn.sh` warning semantics.
+2. Untested claims: CI workflow changes are validated via local script execution and workspace tests, but not yet exercised in a live GitHub Actions run in this session.
+3. Nondeterminism: Perf metrics are inherently environment-sensitive; phase-1 is warn-only calibration to avoid false hard-fails during baseline stabilization.
+4. Security: No auth or secret handling changes; perf artifact paths and optional git SHA remain CI diagnostics only.
+5. Performance cliffs: `bench_tour --release` in full-confidence increases CI runtime; accepted for calibration and surfaced via non-blocking warnings.

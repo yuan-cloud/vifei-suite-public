@@ -69,3 +69,11 @@ Validator requirements:
 - Field ordering is declaration-order stable (Rust `struct` + `serde`).
 - Trend storage is append-only JSONL for diff-friendly longitudinal review.
 - Perf artifacts are advisory/derived diagnostics; they do not alter truth-path ordering, hashing, or EventLog semantics.
+
+## CI phase-1 policy (warn-only)
+
+- Workflow step runs:
+  - `cargo run -q -p panopticon-tour --bin bench_tour --release`
+  - `scripts/testing/check_perf_regression_warn.sh`
+- Regression checks emit warnings, not merge-blocking failures, during calibration.
+- Baseline-candidate snapshots are archived under `.tmp/full-confidence/perf/` for lock-in decision in phase-2.
