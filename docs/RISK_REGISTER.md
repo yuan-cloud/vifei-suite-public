@@ -1807,3 +1807,16 @@ Context:
 3. Nondeterminism: None added in runtime pipeline; process artifacts are deterministically generated from repo state.
 4. Security: No new secrets surface. Main risk remains process misuse (stale exemptions), mitigated by explicit ledger and guard output.
 5. Performance: Negligible runtime impact; small CI overhead from additional governance checks.
+
+## bd-32uc · D4: CI perf regression policy phase-2 (fail gate after baseline lock) · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4 (deterministic evidence and enforceability)
+- Constitution touched: none
+
+1. Coupling: Full-confidence CI now couples to `docs/testing/perf-baseline-lock-v1.json` and `scripts/testing/check_perf_regression_fail.sh`. Baseline maintenance is now an operational responsibility.
+2. Untested claims: Fail-gate behavior was validated locally with pass/fail/override scenarios, but CI-host variance behavior is still monitored post-merge.
+3. Nondeterminism: Perf data remains environment-sensitive by nature; deterministic enforcement is achieved through locked baseline schema + explicit thresholds + explicit override reason requirement.
+4. Security: No secrets introduced. Override path can be misused if left on; mitigated by required `PANOPTICON_PERF_GATE_OVERRIDE_REASON` and documented incident-only policy.
+5. Performance: CI may fail more often on noisy runners once phase-2 is active; rollback path is documented and reversible by switching back to warn gate.

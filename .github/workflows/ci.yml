@@ -160,12 +160,12 @@ jobs:
           cargo run -q -p panopticon-tour --bin bench_tour --release \
             2>&1 | tee .tmp/full-confidence/logs/bench-tour.log
 
-      - name: Perf regression warning gate (phase-1)
+      - name: Perf regression fail gate (phase-2)
         run: |
-          scripts/testing/check_perf_regression_warn.sh \
+          scripts/testing/check_perf_regression_fail.sh \
             .tmp/full-confidence/perf/bench_tour_metrics.json \
-            docs/testing/perf-baseline-candidate-v1.json \
-            2>&1 | tee .tmp/full-confidence/logs/perf-warn.log
+            docs/testing/perf-baseline-lock-v1.json \
+            2>&1 | tee .tmp/full-confidence/logs/perf-gate.log
 
       - name: Snapshot baseline candidate artifact
         run: |
