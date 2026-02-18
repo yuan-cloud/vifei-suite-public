@@ -1313,3 +1313,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; parser remains line-order deterministic.
 4. Security: No new secret surface; no changes to refusal logic or export pathways.
 5. Performance: Evidence shows parse-share reduction and p95 improvement; occasional p99 variance remains and should be monitored in future rounds.
+
+## bd-qhgs · A4-2 zero-allocation fractional timestamp parsing · 2026-02-17
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4
+- Constitution touched: none
+
+1. Coupling: Timestamp parsing logic is now more explicit and low-level; future format expansion must keep truncate/pad semantics in sync with historical importer behavior.
+2. Untested claims: Current tests cover key fractional edge cases; broader malformed timestamp families still rely on existing parser fallback behavior.
+3. Nondeterminism: No new nondeterminism introduced; parsing remains pure and source-order deterministic.
+4. Security: No new trust-boundary or secret-handling surface introduced.
+5. Performance: Small but measurable parse-share reduction observed; append remains dominant hotspot for future rounds.

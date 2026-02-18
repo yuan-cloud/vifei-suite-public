@@ -283,13 +283,7 @@ fn parse_iso8601_ns(s: &str) -> Option<u64> {
 
     // Fractional seconds → nanoseconds.
     let frac_ns: u64 = if let Some(f) = frac_str {
-        // Pad or truncate to 9 digits.
-        let mut padded = f.to_string();
-        while padded.len() < 9 {
-            padded.push('0');
-        }
-        padded.truncate(9);
-        padded.parse().unwrap_or(0)
+        parse_fractional_ns(f).unwrap_or(0)
     } else {
         0
     };
@@ -326,6 +320,34 @@ fn days_from_epoch(year: u64, month: u64, day: u64) -> Option<u64> {
 
 fn is_leap(year: u64) -> bool {
     (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
+}
+
+/// Parse fractional seconds to nanoseconds with no heap allocation.
+///
+/// Accepts 1..N decimal digits. Uses the first 9 digits and ignores extra
+/// precision, matching the previous truncate-to-9 behavior.
+fn parse_fractional_ns(s: &str) -> Option<u64> {
+    if s.is_empty() {
+        return Some(0);
+    }
+
+    let mut value: u64 = 0;
+    let mut digits_seen: usize = 0;
+
+    for b in s.bytes() {
+        if !b.is_ascii_digit() {
+            return None;
+        }
+        if digits_seen < 9 {
+            value = value * 10 + u64::from(b - b'0');
+        }
+        digits_seen += 1;
+    }
+
+    if digits_seen < 9 {
+        value *= 10_u64.pow((9 - digits_seen) as u32);
+    }
+    Some(value)
 }
 
 /// Create an Error ImportEvent for parse failures.
@@ -620,6 +642,27 @@ mod tests {
     #[test]
     fn parse_timestamp_missing_returns_zero() {
         assert_eq!(parse_timestamp_ns(None), 0);
+    }
+
+    #[test]
+    fn parse_timestamp_fraction_truncates_after_9_digits() {
+        let ns = parse_timestamp_ns(Some("2026-02-16T10:00:01.123456789987Z"));
+        assert!(ns > 0);
+        assert_eq!(ns % 1_000_000_000, 123_456_789);
+    }
+
+    #[test]
+    fn parse_timestamp_fraction_pads_to_9_digits() {
+        let ns = parse_timestamp_ns(Some("2026-02-16T10:00:01.12Z"));
+        assert!(ns > 0);
+        assert_eq!(ns % 1_000_000_000, 120_000_000);
+    }
+
+    #[test]
+    fn parse_timestamp_fraction_invalid_returns_zero() {
+        let with_invalid_fraction = parse_timestamp_ns(Some("2026-02-16T10:00:01.12xZ"));
+        let with_no_fraction = parse_timestamp_ns(Some("2026-02-16T10:00:01Z"));
+        assert_eq!(with_invalid_fraction, with_no_fraction);
     }
 
     // -------------------------------------------------------------------
