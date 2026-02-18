@@ -70,6 +70,16 @@ fn write_compare_eventlogs() -> (tempfile::TempDir, PathBuf, PathBuf, PathBuf) {
     (dir, left, right_same, right_diff)
 }
 
+fn write_clock_skew_cassette(dir: &Path) -> PathBuf {
+    let fixture = dir.join("clock-skew-cassette.jsonl");
+    let body = r#"{"type":"session_start","session_id":"run-1","timestamp":"2026-01-01T00:00:00Z","agent":"test"}
+{"type":"tool_use","session_id":"run-1","timestamp":"2026-01-01T00:00:02Z","tool":"Read","id":"t1","args":{}}
+{"type":"tool_result","session_id":"run-1","timestamp":"2026-01-01T00:00:01Z","tool":"Read","id":"t1","result":"ok"}
+{"type":"session_end","session_id":"run-1","timestamp":"2026-01-01T00:00:03Z"}"#;
+    fs::write(&fixture, body).expect("write clock skew cassette");
+    fixture
+}
+
 #[test]
 fn no_args_auto_json_envelope_in_non_tty_mode() {
     let (code, stdout, _stderr) = run_panopticon(&[]);
@@ -368,6 +378,30 @@ fn incident_pack_success_emits_manifest_and_hashes() {
             "{name}: queue_pressure"
         );
     }
+}
+
+#[test]
+fn compare_cassette_uses_append_writer_semantics_for_detection_events() {
+    let dir = tempdir().expect("tempdir");
+    let cassette = write_clock_skew_cassette(dir.path());
+    let cassette_str = cassette.display().to_string();
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "compare",
+        &cassette_str,
+        &cassette_str,
+        "--left-format",
+        "cassette",
+        "--right-format",
+        "cassette",
+    ]);
+    assert_eq!(code, 0, "identical cassette inputs should compare cleanly");
+    let value = parse_json(&stdout);
+    let delta = &value["data"]["delta"];
+    assert_eq!(delta["left_event_count"], 5);
+    assert_eq!(delta["right_event_count"], 5);
+    assert_eq!(delta["divergences"], serde_json::json!([]));
 }
 
 #[test]

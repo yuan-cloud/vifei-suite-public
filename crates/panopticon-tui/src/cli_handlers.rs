@@ -4,7 +4,7 @@ use crate::cli_contract::{
 use crate::cli_normalize::format_cli_failure;
 use panopticon_core::delta::diff_runs;
 use panopticon_core::event::CommittedEvent;
-use panopticon_core::eventlog::read_eventlog;
+use panopticon_core::eventlog::{read_eventlog, EventLogWriter};
 use panopticon_core::projection::{project, viewmodel_hash, ProjectionInvariants};
 use panopticon_core::reducer::{replay, state_hash};
 use panopticon_export::{ExportConfig, ExportResult};
@@ -16,6 +16,9 @@ use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::BufReader;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static CASSETTE_APPEND_TEMP_ID: AtomicU64 = AtomicU64::new(0);
 
 fn emit_json(value: Value) {
     match serde_json::to_string(&value) {
@@ -105,11 +108,30 @@ fn load_committed_events(
                 .map_err(|e| format!("failed to open cassette {}: {e}", path.display()))?;
             let reader = BufReader::new(file);
             let imported = cassette::parse_cassette(reader);
-            let committed = imported
-                .into_iter()
-                .enumerate()
-                .map(|(idx, import)| CommittedEvent::commit(import, idx as u64))
-                .collect();
+            let temp_id = CASSETTE_APPEND_TEMP_ID.fetch_add(1, Ordering::Relaxed);
+            let eventlog_path = std::env::temp_dir().join(format!(
+                "panopticon-cassette-canonical-{}-{temp_id}.jsonl",
+                std::process::id()
+            ));
+            let mut writer = EventLogWriter::open(&eventlog_path).map_err(|e| {
+                format!(
+                    "failed to initialize append writer for {}: {e}",
+                    path.display()
+                )
+            })?;
+            let mut committed = Vec::with_capacity(imported.len() * 2);
+            for import in imported {
+                let result = writer.append(import).map_err(|e| {
+                    format!(
+                        "failed to append cassette event for {}: {e}",
+                        path.display()
+                    )
+                })?;
+                committed.extend(result.detection_events().iter().cloned());
+                committed.push(result.committed_event().clone());
+            }
+            drop(writer);
+            let _ = fs::remove_file(&eventlog_path);
             Ok(committed)
         }
     }

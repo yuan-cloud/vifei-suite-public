@@ -1885,3 +1885,16 @@ Context:
 3. Nondeterminism: Canonical ordering, hash contracts, and deterministic replay checks remain enforced; no new nondeterministic inputs were introduced by closure work.
 4. Security: Fail-closed export behavior, scanner refusal semantics, and integrity-oriented evidence contracts were preserved across all completed tracks.
 5. Performance: Governance and proof checks add overhead but improve reliability and explainability; perf-gate phase-2 fail policy now contains regression risk.
+
+## bd-22sa · AUDIT: random deep-code trace and fresh-eye bugfix pass · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I4
+- Constitution touched: none
+
+1. Coupling: Cassette compare/incident-pack now rely on append-writer canonicalization semantics, intentionally coupling cassette normalization to the single writer path used elsewhere.
+2. Untested claims: Full-path parity between cassette and eventlog inputs is now tested for clock-skew detection injection in compare mode; broader malformed-cassette edge corpus remains future work.
+3. Nondeterminism: Temporary path generation uses process-id + monotonic counter only for local staging; committed output semantics remain deterministic and ordered by writer-assigned `commit_index`.
+4. Security: No new secret surfaces introduced; change is confined to internal normalization path before existing export/refusal checks.
+5. Performance: Cassette normalization now performs append-writer work (including detection checks), increasing compare/incident-pack cost slightly but restoring canonical truth semantics.
