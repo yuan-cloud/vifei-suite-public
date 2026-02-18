@@ -1833,3 +1833,16 @@ Context:
 3. Nondeterminism: Performance metrics remain host-sensitive; deterministic guard behavior is enforced through pinned fixture, schema, and explicit threshold policy.
 4. Security: No new secret handling introduced. Override pathway requires explicit reason to reduce silent bypass risk.
 5. Performance: Adds CI runtime cost from benchmark generation and gate checks; accepted tradeoff for enterprise-grade regression visibility.
+
+## bd-25c5 · TRACK-B: cross-provider canonical replay adapters + conformance · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I4
+- Constitution touched: none
+
+1. Coupling: Adapter compatibility now spans OpenAI/Anthropic/Cohere fixture contracts and conformance drift checks. This increases schema-coupling intentionally for deterministic replay confidence.
+2. Untested claims: Real-world API schema drift outside current fixture corpus remains possible; corpus updates should continue as provider contracts evolve.
+3. Nondeterminism: Drift gate enforces deterministic replay/hash behavior across adapters for current fixtures; no new runtime nondeterminism introduced.
+4. Security: Additional adapter fixtures increase potential secret-containing sample risk; mitigated by synthetic fixture policy and share-safe scanning downstream.
+5. Performance: Conformance checks add CI runtime but are bounded and justified by cross-provider correctness guarantees.
