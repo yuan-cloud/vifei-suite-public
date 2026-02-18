@@ -68,6 +68,12 @@ cat tour-output-rerun/viewmodel.hash
 
 Expected result: both hash files match.
 
+Shortcut demo script:
+
+```bash
+scripts/demo/determinism_duel.sh
+```
+
 ### View an EventLog in TUI
 
 ```bash

@@ -1443,3 +1443,16 @@ Context:
 3. Nondeterminism: No runtime changes introduced.
 4. Security: No new data-handling surface; plan explicitly preserves share-safe and truth-path guardrails.
 5. Performance cliffs: None; docs-only planning artifact.
+
+## bd-q1la · SHOWCASE-6 Determinism Duel demo script and docs wiring · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I1/I2/I4
+- Constitution touched: none
+
+1. Coupling: Demo script depends on tour CLI flags and artifact paths; future CLI contract changes must keep script and docs in sync.
+2. Untested claims: Script is validated manually and by full test suite context, but lacks a dedicated automated shell test.
+3. Nondeterminism: The script explicitly checks deterministic replay via hash equality and fails loudly on mismatch.
+4. Security: Uses local fixture data only and does not introduce new secret-handling surfaces.
+5. Performance cliffs: Runs two stress tours; intended for demo/proof workflows, not tight inner-loop development usage.

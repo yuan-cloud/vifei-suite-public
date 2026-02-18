@@ -34,10 +34,10 @@ Truth HUD (showcase):
 ## Proof track (determinism)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir out-a
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir out-b
-cat out-a/viewmodel.hash
-cat out-b/viewmodel.hash
+scripts/demo/determinism_duel.sh
 ```
 
-Expected result: both hashes match.
+Expected result:
+
+- `[duel] PASS: hashes match`
+- both hash lines are identical.
