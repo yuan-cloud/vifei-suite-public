@@ -1430,3 +1430,16 @@ Context:
 3. Nondeterminism: No runtime changes introduced.
 4. Security: No new secret surface or sensitive operational detail exposure.
 5. Performance cliffs: None; documentation-only updates.
+
+## bd-1kt1 · SHOWCASE-5 three-demo track plan · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: planning/docs only
+- Constitution touched: none
+
+1. Coupling: Demo plan now defines sequence and naming for showcase tracks; follow-up implementation beads should preserve these IDs for traceability.
+2. Untested claims: The plan outlines implementation intent; no runtime behavior or measurable outcomes changed in this bead.
+3. Nondeterminism: No runtime changes introduced.
+4. Security: No new data-handling surface; plan explicitly preserves share-safe and truth-path guardrails.
+5. Performance cliffs: None; docs-only planning artifact.

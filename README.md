@@ -204,6 +204,7 @@ Workspace crates:
 - `docs/product/business-model-v1.md`
 - `docs/product/founder-one-pager.md`
 - `docs/product/roadmap-30-60-90.md`
+- `docs/product/showcase-three-demo-plan.md`
 
 ## Community and Security
 
