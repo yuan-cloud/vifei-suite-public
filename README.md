@@ -6,7 +6,7 @@
 
 Deterministic, local-first run evidence for AI agent workflows.
 
-Panopticon records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can re-run and verify.
+Panopticon records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can rerun and verify.
 
 Presentation showcase: `docs/showcase/index.md`
 
@@ -339,7 +339,7 @@ Workspace crates:
 
 ## Status
 
-Panopticon v0.1 implements the core truth pipeline. Release and public-facing documentation tracks continue in parallel.
+Panopticon v0.1 implements the core truth pipeline. Release and public documentation work continues.
 
 Track current work:
 

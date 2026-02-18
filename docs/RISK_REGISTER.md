@@ -1950,3 +1950,16 @@ Context:
 3. Nondeterminism: No runtime changes; docs describe deterministic outputs and stable command contracts.
 4. Security: Documentation clarifies that incident-pack manifest input labels are share-safe and does not advertise host-path-bearing outputs.
 5. Performance: No runtime impact; slight documentation maintenance overhead as command surfaces evolve.
+
+## bd-a9nk · DOCS: manual public-facing copy polish pass · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: Public-facing docs remain coupled to exact CLI headings and command contracts; copy edits must preserve test-bound phrases where contract tests assert literal headings.
+2. Untested claims: No new product claims introduced; this pass focused on wording quality and retained existing verifiable command paths.
+3. Nondeterminism: None introduced; documentation-only changes with no logic or artifact-shape modifications.
+4. Security: No new sensitive content was added; wording remains aligned with share-safe and private-reporting guidance.
+5. Performance: No runtime impact; only editorial maintenance overhead for future documentation refreshes.

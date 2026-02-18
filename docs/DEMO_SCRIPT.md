@@ -7,7 +7,7 @@ This is the reproducible demo flow for launch media (`bd-3qq.1`).
 Show four proof moments, in order:
 
 1. Deterministic stress tour produces stable proof artifacts.
-2. Trust challenge check: Tier A drops are zero and hash is stable.
+2. Trust check: Tier A drops are zero and hash is stable.
 3. Share-safe export succeeds on clean input and refuses unsafe input.
 4. Competitor bakeoff report summarizes deterministic comparison signals.
 

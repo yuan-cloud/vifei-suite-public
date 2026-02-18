@@ -16,7 +16,7 @@
 ### AI platform teams
 
 - Keep run history auditable and reproducible.
-- Investigate incidents with deterministic replay, not guesswork.
+- Investigate incidents with deterministic replay instead of guesswork.
 - Maintain operator trust under load with explicit degradation posture.
 
 ### Security and governance
@@ -29,7 +29,7 @@
 
 - Run one command and verify outputs directly.
 - Use machine-readable CLI mode for automation.
-- Use showcase profile for premium presentation without changing truth semantics.
+- Use the showcase profile for premium presentation without changing truth semantics.
 
 ## Trust claims (only claim what can be verified)
 

@@ -23,7 +23,7 @@ Agent adoption is accelerating; teams have visibility tools, but they still stru
 
 ## Why we win
 
-Most tools optimize for observability convenience; Panopticon optimizes for deterministic evidence. That distinction matters when teams need to verify, compare, and safely share run outcomes.
+Most tools optimize for observability convenience; Panopticon prioritizes deterministic evidence. That distinction matters when teams need to verify, compare, and safely share run outcomes.
 
 ## Product surface today
 

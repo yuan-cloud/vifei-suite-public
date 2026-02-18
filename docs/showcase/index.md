@@ -1,6 +1,6 @@
 # Panopticon Showcase
 
-Presentation-first preview for the project’s premium visual profile.
+Presentation-first preview for the project's premium visual profile.
 
 ## One-command visual demo
 
@@ -9,9 +9,9 @@ cargo run -p panopticon-tui --bin panopticon -- \
   view docs/assets/readme/sample-eventlog.jsonl --profile showcase
 ```
 
-## Why this matters
+## What this demonstrates
 
-Panopticon keeps truth deterministic while allowing a higher-end presentation layer for demos and public-facing storytelling.
+Panopticon keeps truth deterministic while supporting a higher-end presentation layer for demos and public storytelling.
 
 - Truth path is unchanged.
 - `commit_index` ordering remains canonical.
