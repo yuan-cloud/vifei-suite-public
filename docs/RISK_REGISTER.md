@@ -1924,3 +1924,16 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism added; test additions only validate deterministic label derivation fallback behavior.
 4. Security: Keeps incident-pack privacy guarantees current by correcting stale risk language and verifying share-safe label behavior with unit tests.
 5. Performance: Negligible; small control-flow restructuring and two light unit tests.
+
+## bd-bru3 · DOCS: publish final verification evidence workflow · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: README and bakeoff doc now explicitly couple public verification steps to `.tmp/final-audit` artifact paths and existing validation scripts.
+2. Untested claims: Documentation points to reproducible commands verified locally, but does not itself enforce fresh timestamps or path existence in CI.
+3. Nondeterminism: No runtime behavior changes; docs describe deterministic proof surfaces and command flow only.
+4. Security: Improves audit transparency by routing evidence into one known path; no new secret exposure introduced.
+5. Performance: No runtime cost; minor maintenance overhead if script names or output paths change.

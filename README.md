@@ -170,6 +170,27 @@ Latest run summary (`2026-02-18T22:36:20Z`):
 - explainability tokens present: `Level`, `Agg`, `Pressure`, `Drops`, `Export`, `Version`
 - incident pack artifacts validated: `manifest.json` and `compare/delta.json`
 
+### Final verification evidence bundle
+
+Generate governance + demo evidence in one place:
+
+```bash
+mkdir -p .tmp/final-audit
+scripts/testing/check_bead_closure_evidence.py \
+  --audit-output-json .tmp/final-audit/bead-risk-parity.json \
+  --audit-output-markdown .tmp/final-audit/bead-risk-parity.md
+scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+scripts/testing/check_coverage_contract.sh
+scripts/testing/demo_smoke.sh .tmp/final-audit/demo-smoke
+```
+
+Primary outputs:
+- `.tmp/final-audit/bead-risk-parity.json`
+- `.tmp/final-audit/bead-risk-parity.md`
+- `.tmp/final-audit/demo-smoke/duel/*/viewmodel.hash`
+- `.tmp/final-audit/demo-smoke/radar/refusal-report.json`
+- `.tmp/final-audit/demo-smoke/bakeoff/*/bakeoff-report.json`
+
 ### Live Incident Wall assets
 
 ```bash
