@@ -1534,3 +1534,16 @@ Context:
 3. Nondeterminism: Parser preserves source line order, uses stable fallbacks for IDs, and emits deterministic payload maps (`BTreeMap`), so no new ordering nondeterminism is introduced.
 4. Security: Source-provided `commit_index` is rejected and schema mismatches are surfaced as contract errors, reducing risk of untrusted canonical-order injection.
 5. Performance cliffs: Parsing is line-by-line and non-stream-buffered beyond input reader semantics; very large `item` payloads may increase allocation overhead, mitigated by existing payload-ref/blob boundaries in downstream append path.
+
+## bd-cpa2 · B3: Anthropic messages/tool-use adapter v1 · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: Anthropic adapter shares normalization and contract helpers with other importers; schema/version upgrades should continue through shared `contract.rs` to avoid divergent trust rules.
+2. Untested claims: The adapter currently targets common message/tool-use envelopes; additional Anthropic variants may need fixture expansion in B5 conformance work.
+3. Nondeterminism: Output ordering is source-line driven, IDs have deterministic fallbacks, and generic payload maps use `BTreeMap`, so no new nondeterministic iteration is introduced.
+4. Security: Source-supplied `commit_index` is rejected and schema drift is converted to explicit contract errors, preserving append-writer ownership of canonical order.
+5. Performance cliffs: Tool candidate extraction traverses a small list of possible fields per record; this remains bounded and linear per line for current schemas.

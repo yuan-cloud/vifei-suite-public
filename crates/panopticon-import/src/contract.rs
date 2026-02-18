@@ -16,6 +16,9 @@ pub const AGENT_CASSETTE_SCHEMA_VERSION: &str = "agent-cassette-v1";
 /// Current OpenAI Responses record schema version.
 pub const OPENAI_RESPONSES_SCHEMA_VERSION: &str = "openai-responses-v1";
 
+/// Current Anthropic messages/tool-use record schema version.
+pub const ANTHROPIC_MESSAGES_SCHEMA_VERSION: &str = "anthropic-messages-v1";
+
 /// Deterministically normalize run identity.
 ///
 /// Returns `(run_id, synthesized)` where synthesized is true when fallback is used.
@@ -80,6 +83,7 @@ mod tests {
         assert_eq!(ADAPTER_CONTRACT_VERSION, "adapter-contract-v1");
         assert_eq!(AGENT_CASSETTE_SCHEMA_VERSION, "agent-cassette-v1");
         assert_eq!(OPENAI_RESPONSES_SCHEMA_VERSION, "openai-responses-v1");
+        assert_eq!(ANTHROPIC_MESSAGES_SCHEMA_VERSION, "anthropic-messages-v1");
     }
 
     #[test]
