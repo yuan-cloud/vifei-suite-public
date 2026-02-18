@@ -8,6 +8,8 @@ Deterministic, local-first run evidence for AI agent workflows.
 
 Panopticon records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can re-run and verify.
 
+Presentation showcase: `docs/showcase/index.md`
+
 ## Why This Exists
 
 Most agent workflows have logs but weak replay guarantees under stress. Panopticon keeps truth auditable when pressure rises.
@@ -82,6 +84,24 @@ cargo run -p panopticon-tui --bin panopticon -- \
 ```
 
 `showcase` only changes presentation chrome and emphasis; truth ordering and proof semantics remain unchanged.
+
+### Showcase gallery
+
+Incident Lens (standard):
+
+![Incident Lens](docs/assets/readme/incident-lens.svg)
+
+Incident Lens (showcase):
+
+![Incident Lens Showcase](docs/assets/readme/incident-lens-showcase.svg)
+
+Forensic Lens (showcase):
+
+![Forensic Lens Showcase](docs/assets/readme/forensic-lens-showcase.svg)
+
+Truth HUD (showcase):
+
+![Truth HUD Showcase](docs/assets/readme/truth-hud-showcase.svg)
 
 ### Export with share-safe checks
 
@@ -227,11 +247,17 @@ Treat as determinism regression. Re-run on an idle machine, then inspect recent 
 Reference captures and visuals live under `docs/assets/readme/`:
 
 - `docs/assets/readme/incident-lens.txt`
+- `docs/assets/readme/incident-lens.svg`
 - `docs/assets/readme/incident-lens-showcase.txt`
+- `docs/assets/readme/incident-lens-showcase.svg`
 - `docs/assets/readme/forensic-lens.txt`
+- `docs/assets/readme/forensic-lens.svg`
 - `docs/assets/readme/forensic-lens-showcase.txt`
+- `docs/assets/readme/forensic-lens-showcase.svg`
 - `docs/assets/readme/truth-hud-degraded.txt`
+- `docs/assets/readme/truth-hud-degraded.svg`
 - `docs/assets/readme/truth-hud-showcase.txt`
+- `docs/assets/readme/truth-hud-showcase.svg`
 - `docs/assets/readme/export-refusal.txt`
 - `docs/assets/readme/architecture.mmd`
 

@@ -22,29 +22,56 @@ fn main() -> io::Result<()> {
     write_sample_export_clean_eventlog(&out_dir.join("sample-export-clean-eventlog.jsonl"))?;
 
     let incident = render_incident_multiline(&eventlog_path, 120, 36)?;
-    fs::write(out_dir.join("incident-lens.txt"), incident)?;
+    fs::write(out_dir.join("incident-lens.txt"), &incident)?;
+    fs::write(
+        out_dir.join("incident-lens.svg"),
+        render_terminal_svg("Incident Lens", &incident),
+    )?;
 
     let incident_narrow = render_incident_multiline(&eventlog_path, 72, 28)?;
-    fs::write(out_dir.join("incident-lens-narrow-72.txt"), incident_narrow)?;
+    fs::write(
+        out_dir.join("incident-lens-narrow-72.txt"),
+        &incident_narrow,
+    )?;
+    fs::write(
+        out_dir.join("incident-lens-narrow-72.svg"),
+        render_terminal_svg("Incident Lens Narrow", &incident_narrow),
+    )?;
 
     let forensic = render_forensic_multiline(&eventlog_path, 120, 36)?;
-    fs::write(out_dir.join("forensic-lens.txt"), forensic)?;
+    fs::write(out_dir.join("forensic-lens.txt"), &forensic)?;
+    fs::write(
+        out_dir.join("forensic-lens.svg"),
+        render_terminal_svg("Forensic Lens", &forensic),
+    )?;
 
     let degraded = render_degraded_incident_multiline(&eventlog_path, 120, 36, LadderLevel::L3)?;
-    fs::write(out_dir.join("truth-hud-degraded.txt"), degraded)?;
+    fs::write(out_dir.join("truth-hud-degraded.txt"), &degraded)?;
+    fs::write(
+        out_dir.join("truth-hud-degraded.svg"),
+        render_terminal_svg("Truth HUD Degraded", &degraded),
+    )?;
 
     let incident_showcase =
         render_incident_multiline_with_profile(&eventlog_path, 120, 36, UiProfile::Showcase)?;
     fs::write(
         out_dir.join("incident-lens-showcase.txt"),
-        incident_showcase,
+        &incident_showcase,
+    )?;
+    fs::write(
+        out_dir.join("incident-lens-showcase.svg"),
+        render_terminal_svg("Incident Lens Showcase", &incident_showcase),
     )?;
 
     let forensic_showcase =
         render_forensic_multiline_with_profile(&eventlog_path, 120, 36, UiProfile::Showcase)?;
     fs::write(
         out_dir.join("forensic-lens-showcase.txt"),
-        forensic_showcase,
+        &forensic_showcase,
+    )?;
+    fs::write(
+        out_dir.join("forensic-lens-showcase.svg"),
+        render_terminal_svg("Forensic Lens Showcase", &forensic_showcase),
     )?;
 
     let degraded_showcase = render_degraded_incident_multiline_with_profile(
@@ -54,7 +81,11 @@ fn main() -> io::Result<()> {
         LadderLevel::L3,
         UiProfile::Showcase,
     )?;
-    fs::write(out_dir.join("truth-hud-showcase.txt"), degraded_showcase)?;
+    fs::write(out_dir.join("truth-hud-showcase.txt"), &degraded_showcase)?;
+    fs::write(
+        out_dir.join("truth-hud-showcase.svg"),
+        render_terminal_svg("Truth HUD Showcase", &degraded_showcase),
+    )?;
 
     let refusal = generate_export_refusal(&out_dir)?;
     fs::write(out_dir.join("export-refusal.txt"), refusal)?;
@@ -340,12 +371,19 @@ fn asset_index_markdown() -> String {
         "",
         "Files:",
         "- incident-lens.txt",
+        "- incident-lens.svg",
         "- incident-lens-showcase.txt",
+        "- incident-lens-showcase.svg",
         "- incident-lens-narrow-72.txt",
+        "- incident-lens-narrow-72.svg",
         "- forensic-lens.txt",
+        "- forensic-lens.svg",
         "- forensic-lens-showcase.txt",
+        "- forensic-lens-showcase.svg",
         "- truth-hud-degraded.txt",
+        "- truth-hud-degraded.svg",
         "- truth-hud-showcase.txt",
+        "- truth-hud-showcase.svg",
         "- export-refusal.txt",
         "- refusal-report.json",
         "- sample-export-clean-eventlog.jsonl",
@@ -373,6 +411,124 @@ fn architecture_mermaid() -> String {
         "    I --> M[timetravel.capture]",
     ]
     .join("\n")
+}
+
+fn render_terminal_svg(title: &str, content: &str) -> String {
+    const CHAR_WIDTH: usize = 8;
+    const LINE_HEIGHT: usize = 18;
+    const H_PADDING: usize = 24;
+    const V_PADDING: usize = 30;
+
+    let lines: Vec<&str> = content.lines().collect();
+    let max_cols = lines
+        .iter()
+        .map(|line| line.chars().count())
+        .max()
+        .unwrap_or(0);
+    let width = (max_cols * CHAR_WIDTH) + (H_PADDING * 2);
+    let height = (lines.len() * LINE_HEIGHT) + (V_PADDING * 2) + 46;
+
+    let mut out = String::new();
+    out.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
+    out.push('\n');
+    out.push_str(&format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{}">"#,
+        escape_xml(title)
+    ));
+    out.push('\n');
+    out.push_str(&format!(
+        "  <title>{}</title>\n",
+        escape_xml(&format!("Panopticon {title}"))
+    ));
+    out.push_str(
+        "  <defs>\n\
+    <linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">\n\
+      <stop offset=\"0%\" stop-color=\"#0b1220\"/>\n\
+      <stop offset=\"55%\" stop-color=\"#111827\"/>\n\
+      <stop offset=\"100%\" stop-color=\"#1f2937\"/>\n\
+    </linearGradient>\n\
+    <linearGradient id=\"frame\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">\n\
+      <stop offset=\"0%\" stop-color=\"#22d3ee\"/>\n\
+      <stop offset=\"50%\" stop-color=\"#c084fc\"/>\n\
+      <stop offset=\"100%\" stop-color=\"#60a5fa\"/>\n\
+    </linearGradient>\n\
+    <filter id=\"glow\" x=\"-50%\" y=\"-50%\" width=\"200%\" height=\"200%\">\n\
+      <feGaussianBlur stdDeviation=\"1.6\" result=\"blur\"/>\n\
+      <feMerge>\n\
+        <feMergeNode in=\"blur\"/>\n\
+        <feMergeNode in=\"SourceGraphic\"/>\n\
+      </feMerge>\n\
+    </filter>\n\
+  </defs>\n",
+    );
+    out.push_str(&format!(
+        "  <rect x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" fill=\"url(#bg)\"/>\n"
+    ));
+    out.push_str(&format!(
+        "  <rect x=\"8\" y=\"8\" width=\"{}\" height=\"{}\" fill=\"#0f172a\" stroke=\"url(#frame)\" filter=\"url(#glow)\" stroke-width=\"1.2\" rx=\"10\" ry=\"10\"/>\n",
+        width.saturating_sub(16),
+        height.saturating_sub(16)
+    ));
+    out.push_str(&format!(
+        "  <rect x=\"12\" y=\"12\" width=\"{}\" height=\"24\" fill=\"#0b1020\" rx=\"8\" ry=\"8\"/>\n",
+        width.saturating_sub(24)
+    ));
+    out.push_str(
+        "  <circle cx=\"28\" cy=\"24\" r=\"4\" fill=\"#f87171\"/>\n\
+  <circle cx=\"44\" cy=\"24\" r=\"4\" fill=\"#fbbf24\"/>\n\
+  <circle cx=\"60\" cy=\"24\" r=\"4\" fill=\"#34d399\"/>\n",
+    );
+    out.push_str(&format!(
+        "  <text x=\"80\" y=\"28\" fill=\"#93c5fd\" font-size=\"12\" font-family=\"ui-sans-serif, system-ui, sans-serif\">{}</text>\n",
+        escape_xml(&format!("panopticon · {title}"))
+    ));
+    out.push_str(
+        "  <g font-family=\"ui-monospace, SFMono-Regular, Menlo, Consolas, monospace\" font-size=\"14\">\n",
+    );
+
+    for (idx, line) in lines.iter().enumerate() {
+        let y = V_PADDING + (idx * LINE_HEIGHT) + 28;
+        let color = line_color(line);
+        out.push_str(&format!(
+            "    <text x=\"{H_PADDING}\" y=\"{y}\" fill=\"{color}\" xml:space=\"preserve\">{}</text>\n",
+            escape_xml(line),
+        ));
+    }
+    out.push_str("  </g>\n");
+    out.push_str("</svg>\n");
+    out
+}
+
+fn line_color(line: &str) -> &'static str {
+    if line.contains("ERROR") || line.contains("Error") || line.contains("REFUSED") {
+        "#fda4af"
+    } else if line.contains("POLICY") || line.contains("SYNTHESIZED") || line.contains("Redaction")
+    {
+        "#e9d5ff"
+    } else if line.contains("Next action") || line.contains("Action Now") {
+        "#fde68a"
+    } else if line.contains("Truth HUD") || line.contains("Level:") || line.contains("Pressure:") {
+        "#67e8f9"
+    } else if line.contains("Forensic Lens") || line.contains("Incident Lens") {
+        "#bfdbfe"
+    } else {
+        "#e2e8f0"
+    }
+}
+
+fn escape_xml(input: &str) -> String {
+    let mut escaped = String::with_capacity(input.len());
+    for ch in input.chars() {
+        match ch {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&apos;"),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
 }
 
 #[cfg(test)]
@@ -406,13 +562,31 @@ mod tests {
     fn asset_index_lists_expected_files() {
         let index = asset_index_markdown();
         assert!(index.contains("incident-lens.txt"));
+        assert!(index.contains("incident-lens.svg"));
         assert!(index.contains("incident-lens-showcase.txt"));
+        assert!(index.contains("incident-lens-showcase.svg"));
         assert!(index.contains("incident-lens-narrow-72.txt"));
+        assert!(index.contains("incident-lens-narrow-72.svg"));
         assert!(index.contains("forensic-lens.txt"));
+        assert!(index.contains("forensic-lens.svg"));
         assert!(index.contains("forensic-lens-showcase.txt"));
+        assert!(index.contains("forensic-lens-showcase.svg"));
         assert!(index.contains("truth-hud-degraded.txt"));
+        assert!(index.contains("truth-hud-degraded.svg"));
         assert!(index.contains("truth-hud-showcase.txt"));
+        assert!(index.contains("truth-hud-showcase.svg"));
         assert!(index.contains("tour-artifacts/"));
+    }
+
+    #[test]
+    fn render_terminal_svg_escapes_and_wraps_content() {
+        let svg = render_terminal_svg("Lens", "x < y & z\n\"quote\"");
+        assert!(svg.contains("<svg"));
+        assert!(svg.contains("linearGradient"));
+        assert!(svg.contains("&lt;"));
+        assert!(svg.contains("&amp;"));
+        assert!(svg.contains("&quot;"));
+        assert!(svg.contains("</svg>"));
     }
 
     #[test]

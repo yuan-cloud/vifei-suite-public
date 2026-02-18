@@ -1378,3 +1378,29 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced; profile selection changes styles/border types only and keeps event ordering/hash computation untouched.
 4. Security: No secret-handling or export-safety logic changed; README/demo updates remain command-accurate and verifiable.
 5. Performance cliffs: Showcase profile introduces additional style modifiers and rounded borders, with expected negligible overhead; if expanded with heavier effects later, capture and tour paths should be benchmarked.
+
+## bd-233m · SHOWCASE-3 deterministic screenshot artifacts from README captures · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: I2/I4 (presentation artifacts only)
+- Constitution touched: none
+
+1. Coupling: README visuals now depend on the capture generator’s SVG renderer; visual style updates should be centralized in that renderer to avoid drift.
+2. Untested claims: SVG output format is tested for escaping and presence, but no pixel-diff snapshot testing is in place yet.
+3. Nondeterminism: SVG generation is deterministic from deterministic text captures; no time/random inputs are used in rendering.
+4. Security: SVG text is XML-escaped to avoid markup injection from fixture content.
+5. Performance cliffs: Asset generation does extra file writes; impact is limited to docs asset refresh, not runtime hot paths.
+
+## bd-2kni · SHOWCASE-4 presentation showcase page from deterministic assets · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: docs-only; no truth-path changes
+- Constitution touched: none
+
+1. Coupling: Showcase page currently references local asset paths under `docs/assets/readme`; path changes require synchronized updates.
+2. Untested claims: Page content is static and command references are validated manually; no dedicated link-check job yet for the new docs page.
+3. Nondeterminism: None introduced; docs and generated assets are deterministic artifacts.
+4. Security: No secret surface added; page only references fixture-based captures and deterministic commands.
+5. Performance cliffs: None in runtime; minor docs footprint increase only.
