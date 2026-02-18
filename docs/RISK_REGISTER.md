@@ -1664,3 +1664,16 @@ Context:
 3. Nondeterminism: Pack artifacts are derived from committed events in canonical order; manifest file map uses deterministic key ordering and BLAKE3 file hashes.
 4. Security: Incident pack intentionally writes local file paths and normalized eventlogs to output directory for operator handoff; these artifacts are not treated as redacted public exports by default.
 5. Performance cliffs: Incident pack performs replay+projection twice and executes two share-safe export scans; very large traces can incur higher CPU and I/O, but work is bounded to explicit operator invocation.
+
+## bd-2cj9.2 · E3: strengthen contract tests for incident-pack artifact integrity · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I2, I4, I5, D7 boundary (execution fail-closed)
+- Constitution touched: none
+
+1. Coupling: CLI contract tests now couple directly to `incident-pack` artifact schema fields (`compare/delta.json`, `replay/*.json`, and manifest `files` entries). Schema changes will require coordinated test updates.
+2. Untested claims: We now assert required keys/types and non-placeholder JSON objects, but we still do not inject all possible filesystem fault classes (e.g., partial write failures after directory creation).
+3. Nondeterminism: No nondeterminism introduced; tests assert deterministic envelope/artifact shapes and do not alter runtime ordering/hash logic.
+4. Security: New assertions inspect generated local artifacts only; no secret-handling behavior changed and refusal behavior remains fail-closed.
+5. Performance cliffs: Added contract assertions slightly increase test runtime and filesystem I/O during CLI integration tests; impact is bounded and acceptable for v0.1.

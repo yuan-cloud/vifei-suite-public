@@ -24,6 +24,15 @@ fn canonical_json(value: &Value) -> String {
     serde_json::to_string(value).expect("json serialize")
 }
 
+fn read_json_file(path: &Path) -> Value {
+    let body = fs::read_to_string(path).unwrap_or_else(|e| {
+        panic!("expected readable JSON file at {}: {e}", path.display());
+    });
+    serde_json::from_str(&body).unwrap_or_else(|e| {
+        panic!("expected valid JSON at {}: {e}", path.display());
+    })
+}
+
 fn assert_robot_envelope_shape(value: &Value) {
     let obj = value.as_object().expect("root object");
     assert!(obj.contains_key("schema_version"));
@@ -299,11 +308,71 @@ fn incident_pack_success_emits_manifest_and_hashes() {
     let manifest_path = value["data"]["manifest_path"]
         .as_str()
         .expect("manifest path string");
-    let manifest_json =
-        fs::read_to_string(manifest_path).expect("incident pack must write manifest.json");
-    let manifest: Value = serde_json::from_str(&manifest_json).expect("manifest json");
+    let manifest = read_json_file(Path::new(manifest_path));
     assert_eq!(manifest["schema_version"], "panopticon-incident-pack-v1");
-    assert!(manifest["files"].is_object());
+    let files = manifest["files"]
+        .as_object()
+        .expect("manifest files must be object");
+    for required in [
+        "normalized/left.eventlog.jsonl",
+        "normalized/right.eventlog.jsonl",
+        "compare/delta.json",
+        "replay/left.replay.json",
+        "replay/right.replay.json",
+        "export/left.bundle.tar.zst",
+        "export/right.bundle.tar.zst",
+    ] {
+        let hash = files
+            .get(required)
+            .and_then(Value::as_str)
+            .unwrap_or_else(|| panic!("missing hash entry for {required}"));
+        assert!(
+            !hash.trim().is_empty(),
+            "hash for {required} must be non-empty"
+        );
+    }
+
+    let delta = read_json_file(&output_dir.join("compare").join("delta.json"));
+    assert!(
+        delta.as_object().is_some_and(|obj| !obj.is_empty()),
+        "delta.json must not be an empty placeholder object"
+    );
+    assert!(delta["left_run_id"].is_string());
+    assert!(delta["right_run_id"].is_string());
+    assert!(delta["left_event_count"].is_number());
+    assert!(delta["right_event_count"].is_number());
+    assert!(delta["divergences"].is_array());
+
+    let left_replay = read_json_file(&output_dir.join("replay").join("left.replay.json"));
+    let right_replay = read_json_file(&output_dir.join("replay").join("right.replay.json"));
+    for (name, replay) in [
+        ("left.replay.json", left_replay),
+        ("right.replay.json", right_replay),
+    ] {
+        assert!(
+            replay.as_object().is_some_and(|obj| !obj.is_empty()),
+            "{name} must not be an empty placeholder object"
+        );
+        assert!(replay["event_count"].is_number(), "{name}: event_count");
+        assert!(replay["state_hash"].is_string(), "{name}: state_hash");
+        assert!(
+            replay["viewmodel_hash"].is_string(),
+            "{name}: viewmodel_hash"
+        );
+        assert!(
+            replay["projection_invariants_version"].is_string(),
+            "{name}: projection_invariants_version"
+        );
+        assert!(
+            replay["degradation_level"].is_string(),
+            "{name}: degradation_level"
+        );
+        assert!(replay["tier_a_drops"].is_number(), "{name}: tier_a_drops");
+        assert!(
+            replay["queue_pressure"].is_number(),
+            "{name}: queue_pressure"
+        );
+    }
 }
 
 #[test]
@@ -334,6 +403,39 @@ fn incident_pack_refuses_when_secrets_detected() {
     assert_eq!(value["ok"], false);
     assert_eq!(value["code"], "EXPORT_REFUSED");
     assert_eq!(value["exit_code"], 3);
+}
+
+#[test]
+fn incident_pack_human_reports_runtime_error_when_output_dir_invalid() {
+    let tmp = tempdir().expect("tempdir");
+    let (_dir, left, right_same, _right_diff) = write_compare_eventlogs();
+    let blocked_path = tmp.path().join("already-a-file");
+    fs::write(&blocked_path, "occupied").expect("create blocking file");
+
+    let (code, stdout, stderr) = run_panopticon(&[
+        "--human",
+        "incident-pack",
+        &left.display().to_string(),
+        &right_same.display().to_string(),
+        "--output-dir",
+        &blocked_path.display().to_string(),
+    ]);
+    assert_eq!(
+        code, 4,
+        "invalid output-dir target should fail as runtime error"
+    );
+    assert!(
+        stdout.trim().is_empty(),
+        "human-mode errors should not emit JSON/text payload to stdout"
+    );
+    assert!(
+        stderr.contains("incident-pack failed"),
+        "stderr should include failure headline"
+    );
+    assert!(
+        stderr.contains("panopticon incident-pack"),
+        "stderr should include actionable suggested command"
+    );
 }
 
 #[test]
