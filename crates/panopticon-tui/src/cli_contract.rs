@@ -25,6 +25,12 @@ pub(crate) enum UiProfileArg {
     Showcase,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+pub(crate) enum CompareInputFormat {
+    Eventlog,
+    Cassette,
+}
+
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// View an EventLog in the TUI.
@@ -71,6 +77,23 @@ pub(crate) enum Commands {
         #[arg(long, default_value = "tour-output")]
         output_dir: PathBuf,
     },
+
+    /// Deterministically compare two run inputs and report causal divergences.
+    Compare {
+        /// Left input path (EventLog JSONL or cassette JSONL).
+        left: PathBuf,
+
+        /// Right input path (EventLog JSONL or cassette JSONL).
+        right: PathBuf,
+
+        /// Input format for the left side.
+        #[arg(long, value_enum, default_value = "eventlog")]
+        left_format: CompareInputFormat,
+
+        /// Input format for the right side.
+        #[arg(long, value_enum, default_value = "eventlog")]
+        right_format: CompareInputFormat,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -86,6 +109,7 @@ pub(crate) enum AppExit {
     InvalidArgs = 2,
     ExportRefused = 3,
     RuntimeError = 4,
+    DiffFound = 5,
 }
 
 impl AppExit {
@@ -101,6 +125,7 @@ Commands:
   view <eventlog.jsonl> [--profile standard|showcase]
   export <eventlog.jsonl> --share-safe --output <bundle.tar.zst> [--refusal-report <path>]
   tour <fixture.jsonl> --stress [--output-dir <dir>]
+  compare <left.jsonl> <right.jsonl> [--left-format eventlog|cassette] [--right-format eventlog|cassette]
 Tips:
   panopticon --help
   panopticon <command> --help";
@@ -109,7 +134,7 @@ pub(crate) const ROBOT_SCHEMA_VERSION: &str = "panopticon-cli-robot-v1.1";
 
 #[cfg(test)]
 mod tests {
-    use super::{Cli, Commands, UiProfileArg};
+    use super::{Cli, Commands, CompareInputFormat, UiProfileArg};
     use clap::Parser;
 
     #[test]
@@ -147,6 +172,29 @@ mod tests {
             cli.command,
             Commands::View {
                 profile: UiProfileArg::Showcase,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn compare_formats_parse_from_flags() {
+        let cli = Cli::try_parse_from([
+            "panopticon",
+            "compare",
+            "left.jsonl",
+            "right.jsonl",
+            "--left-format",
+            "cassette",
+            "--right-format",
+            "eventlog",
+        ])
+        .expect("parse");
+        assert!(matches!(
+            cli.command,
+            Commands::Compare {
+                left_format: CompareInputFormat::Cassette,
+                right_format: CompareInputFormat::Eventlog,
                 ..
             }
         ));

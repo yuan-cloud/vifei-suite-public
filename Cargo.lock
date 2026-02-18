@@ -591,6 +591,7 @@ dependencies = [
  "crossterm",
  "panopticon-core",
  "panopticon-export",
+ "panopticon-import",
  "panopticon-tour",
  "ratatui",
  "serde_json",

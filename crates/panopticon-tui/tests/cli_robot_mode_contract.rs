@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::tempdir;
@@ -39,6 +40,29 @@ fn workspace_root() -> PathBuf {
         .and_then(Path::parent)
         .expect("workspace root must exist")
         .to_path_buf()
+}
+
+fn write_compare_eventlogs() -> (tempfile::TempDir, PathBuf, PathBuf, PathBuf) {
+    let dir = tempdir().expect("tempdir");
+    let source = workspace_root()
+        .join("docs")
+        .join("assets")
+        .join("readme")
+        .join("sample-export-clean-eventlog.jsonl");
+    let baseline = fs::read_to_string(&source).expect("read sample eventlog");
+
+    let left = dir.path().join("left.jsonl");
+    let right_same = dir.path().join("right-same.jsonl");
+    let right_diff = dir.path().join("right-diff.jsonl");
+
+    fs::write(&left, &baseline).expect("write left");
+    fs::write(&right_same, &baseline).expect("write right same");
+
+    let mutated = baseline.replace("\"result\":\"ok\"", "\"result\":\"different\"");
+    assert_ne!(baseline, mutated, "fixture mutation must change eventlog");
+    fs::write(&right_diff, mutated).expect("write right diff");
+
+    (dir, left, right_same, right_diff)
 }
 
 #[test]
@@ -205,6 +229,55 @@ fn tour_success_emits_structured_json_contract() {
 }
 
 #[test]
+fn compare_no_diff_emits_ok_contract() {
+    let (_dir, left, right_same, _right_diff) = write_compare_eventlogs();
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "compare",
+        &left.display().to_string(),
+        &right_same.display().to_string(),
+    ]);
+    assert_eq!(code, 0, "identical runs should return success");
+    let value = parse_json(&stdout);
+    assert_eq!(value["schema_version"], "panopticon-cli-robot-v1.1");
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["code"], "OK");
+    assert_eq!(value["command"], "compare");
+    assert_eq!(value["exit_code"], 0);
+    assert_eq!(value["data"]["status"], "NO_DIFF");
+    assert_eq!(value["data"]["delta"]["divergences"], serde_json::json!([]));
+    assert!(value["data"]["replay_commands"].is_array());
+}
+
+#[test]
+fn compare_divergence_emits_diff_found_contract() {
+    let (_dir, left, _right_same, right_diff) = write_compare_eventlogs();
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "compare",
+        &left.display().to_string(),
+        &right_diff.display().to_string(),
+    ]);
+    assert_eq!(code, 5, "divergence should map to DiffFound exit code");
+    let value = parse_json(&stdout);
+    assert_eq!(value["schema_version"], "panopticon-cli-robot-v1.1");
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "DIFF_FOUND");
+    assert_eq!(value["command"], "compare");
+    assert_eq!(value["exit_code"], 5);
+    assert_eq!(value["data"]["status"], "DIFF_FOUND");
+    assert!(
+        value["data"]["divergence_count"]
+            .as_u64()
+            .is_some_and(|v| v >= 1),
+        "expected at least one divergence"
+    );
+    assert!(value["data"]["delta"]["divergences"].is_array());
+}
+
+#[test]
 fn alias_viewer_matches_view_contract_for_missing_file() {
     let (code, stdout, _stderr) = run_panopticon(&["--json", "viewer", "does-not-exist.jsonl"]);
     assert_eq!(code, 1, "viewer alias should route through view handler");
@@ -334,7 +407,7 @@ fn invalid_subcommand_envelope_matches_golden_shape() {
         "code": "INVALID_ARGS",
         "message": "Unknown subcommand.",
         "suggestions": [
-            "Use one of: `panopticon view`, `panopticon export`, or `panopticon tour`.",
+            "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, or `panopticon compare`.",
             "Run `panopticon --help` for full command syntax."
         ],
         "exit_code": 2

@@ -1625,3 +1625,16 @@ Context:
 3. Nondeterminism: Bench artifact shape is deterministic; measured latency/RSS values are intentionally environment-dependent metrics, and this is explicit in artifact provenance fields.
 4. Security: Artifact contains local path and command metadata; this is expected for local/CI diagnostics and should not be treated as a public redaction-safe export artifact.
 5. Performance cliffs: Running benchmark with high iteration counts can be expensive; guardrails remain via configurable `PANOPTICON_TOUR_BENCH_ITERS` and fixed fixture scope.
+
+## bd-9jsl · C2: CLI compare command + machine contract for incident diffs · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I4, D6, D7 ownership constraint
+- Constitution touched: none
+
+1. Coupling: `panopticon-tui` CLI now couples to `panopticon-core::delta` and `panopticon-import::cassette` parsing for compare-mode input normalization.
+2. Untested claims: Compare contract tests now cover no-diff and divergence envelopes for eventlog inputs; cassette-vs-cassette compare parity is implemented but not yet covered with a dedicated fixture-pair contract test.
+3. Nondeterminism: Compare loads events in source order then computes diffs by canonical `commit_index`; output envelopes and divergence payloads are serialized deterministically.
+4. Security: Compare output includes local input paths and replay command suggestions; this is expected for local operator diagnostics and not a share-safe export artifact.
+5. Performance cliffs: Compare flattens payload JSON for both sides during diffing, which is linear in payload size and can be expensive for very large traces; this is now isolated behind one command for targeted optimization.

@@ -1,9 +1,17 @@
-use crate::cli_contract::{AppExit, Cli, Commands, OutputMode, UiProfileArg, ROBOT_SCHEMA_VERSION};
+use crate::cli_contract::{
+    AppExit, Cli, Commands, CompareInputFormat, OutputMode, UiProfileArg, ROBOT_SCHEMA_VERSION,
+};
 use crate::cli_normalize::format_cli_failure;
+use panopticon_core::delta::diff_runs;
+use panopticon_core::event::CommittedEvent;
+use panopticon_core::eventlog::read_eventlog;
 use panopticon_export::{ExportConfig, ExportResult};
+use panopticon_import::cassette;
 use panopticon_tour::TourConfig;
 use panopticon_tui::{run_viewer, UiProfile};
 use serde_json::{json, Value};
+use std::fs::File;
+use std::io::BufReader;
 use std::path::Path;
 
 fn emit_json(value: Value) {
@@ -80,6 +88,51 @@ fn ensure_file_exists(path: &Path, label: &str) -> Result<(), String> {
     } else {
         Err(format!("{} not found: {}", label, path.display()))
     }
+}
+
+fn load_committed_events(
+    path: &Path,
+    format: CompareInputFormat,
+) -> Result<Vec<CommittedEvent>, String> {
+    match format {
+        CompareInputFormat::Eventlog => read_eventlog(path)
+            .map_err(|e| format!("failed to read eventlog {}: {e}", path.display())),
+        CompareInputFormat::Cassette => {
+            let file = File::open(path)
+                .map_err(|e| format!("failed to open cassette {}: {e}", path.display()))?;
+            let reader = BufReader::new(file);
+            let imported = cassette::parse_cassette(reader);
+            let committed = imported
+                .into_iter()
+                .enumerate()
+                .map(|(idx, import)| CommittedEvent::commit(import, idx as u64))
+                .collect();
+            Ok(committed)
+        }
+    }
+}
+
+fn compare_replay_suggestions(
+    left: &Path,
+    right: &Path,
+    left_format: CompareInputFormat,
+    right_format: CompareInputFormat,
+) -> Vec<String> {
+    let left_view = match left_format {
+        CompareInputFormat::Eventlog => format!("panopticon view {}", left.display()),
+        CompareInputFormat::Cassette => format!(
+            "panopticon tour {} --stress --output-dir left-tour-output",
+            left.display()
+        ),
+    };
+    let right_view = match right_format {
+        CompareInputFormat::Eventlog => format!("panopticon view {}", right.display()),
+        CompareInputFormat::Cassette => format!(
+            "panopticon tour {} --stress --output-dir right-tour-output",
+            right.display()
+        ),
+    };
+    vec![left_view, right_view]
 }
 
 pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]) -> AppExit {
@@ -462,6 +515,191 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                     return AppExit::RuntimeError;
                 }
             }
+        }
+        Commands::Compare {
+            left,
+            right,
+            left_format,
+            right_format,
+        } => {
+            if let Err(msg) = ensure_file_exists(&left, "left input file") {
+                let suggestions =
+                    compare_replay_suggestions(&left, &right, left_format, right_format);
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "NOT_FOUND",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::NotFound as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("compare failed: {msg}"),
+                            "Left input path does not exist.",
+                            &suggestions,
+                            &[left.display().to_string(), right.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::NotFound;
+            }
+            if let Err(msg) = ensure_file_exists(&right, "right input file") {
+                let suggestions =
+                    compare_replay_suggestions(&left, &right, left_format, right_format);
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "NOT_FOUND",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::NotFound as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("compare failed: {msg}"),
+                            "Right input path does not exist.",
+                            &suggestions,
+                            &[left.display().to_string(), right.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::NotFound;
+            }
+
+            let left_events = match load_committed_events(&left, left_format) {
+                Ok(events) => events,
+                Err(msg) => {
+                    let suggestions =
+                        compare_replay_suggestions(&left, &right, left_format, right_format);
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("compare failed: {msg}"),
+                                "Failed to parse left input using the selected format.",
+                                &suggestions,
+                                &[left.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+            let right_events = match load_committed_events(&right, right_format) {
+                Ok(events) => events,
+                Err(msg) => {
+                    let suggestions =
+                        compare_replay_suggestions(&left, &right, left_format, right_format);
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &format!("compare failed: {msg}"),
+                                "Failed to parse right input using the selected format.",
+                                &suggestions,
+                                &[right.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+
+            let delta = diff_runs(&left_events, &right_events);
+            let divergence_count = delta.divergences.len();
+            let replay = compare_replay_suggestions(&left, &right, left_format, right_format);
+            if divergence_count == 0 {
+                if mode == OutputMode::Json {
+                    emit_json_success(
+                        "OK",
+                        "No divergence detected.",
+                        Some("compare"),
+                        AppExit::Success as u8,
+                        repair_notes,
+                        json!({
+                            "status": "NO_DIFF",
+                            "left_path": left,
+                            "right_path": right,
+                            "left_format": format!("{left_format:?}").to_lowercase(),
+                            "right_format": format!("{right_format:?}").to_lowercase(),
+                            "delta": delta,
+                            "replay_commands": replay,
+                        }),
+                    );
+                } else {
+                    println!("Compare completed: no divergence.");
+                    println!("  Left:  {}", left.display());
+                    println!("  Right: {}", right.display());
+                    println!("Next command(s):");
+                    for (idx, cmd) in replay.iter().enumerate() {
+                        println!("  {}. {}", idx + 1, cmd);
+                    }
+                }
+                return AppExit::Success;
+            }
+
+            if mode == OutputMode::Json {
+                let mut response = json!({
+                    "schema_version": ROBOT_SCHEMA_VERSION,
+                    "ok": false,
+                    "code": "DIFF_FOUND",
+                    "message": format!("Detected {} divergence(s).", divergence_count),
+                    "suggestions": replay,
+                    "exit_code": AppExit::DiffFound as u8,
+                    "command": "compare",
+                    "data": {
+                        "status": "DIFF_FOUND",
+                        "left_path": left,
+                        "right_path": right,
+                        "left_format": format!("{left_format:?}").to_lowercase(),
+                        "right_format": format!("{right_format:?}").to_lowercase(),
+                        "divergence_count": divergence_count,
+                        "delta": delta,
+                    }
+                });
+                if !repair_notes.is_empty() {
+                    response["notes"] = json!(repair_notes);
+                }
+                emit_json(response);
+            } else {
+                println!("Compare completed: divergence detected.");
+                println!("  Left:        {}", left.display());
+                println!("  Right:       {}", right.display());
+                println!("  Divergences: {}", divergence_count);
+                println!("Top divergences:");
+                for divergence in delta.divergences.iter().take(10) {
+                    println!(
+                        "  - commit={} path={} class={:?}",
+                        divergence.commit_index, divergence.path, divergence.change_class
+                    );
+                }
+                println!("Next command(s):");
+                for (idx, cmd) in replay.iter().enumerate() {
+                    println!("  {}. {}", idx + 1, cmd);
+                }
+            }
+            return AppExit::DiffFound;
         }
     }
 
