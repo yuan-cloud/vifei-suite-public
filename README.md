@@ -202,6 +202,8 @@ Workspace crates:
 - `docs/product/messaging.md`
 - `docs/product/go-to-market-checklist.md`
 - `docs/product/business-model-v1.md`
+- `docs/product/founder-one-pager.md`
+- `docs/product/roadmap-30-60-90.md`
 
 ## Community and Security
 

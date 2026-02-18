@@ -1417,3 +1417,16 @@ Context:
 3. Nondeterminism: No runtime changes introduced.
 4. Security: No additional secret or trust boundary surface; docs avoid hardcoded credentials and unverifiable claims.
 5. Performance cliffs: None; documentation-only change.
+
+## bd-224u · PRODUCT-2 founder one-pager and 30/60/90 roadmap · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: strategy/docs only
+- Constitution touched: none
+
+1. Coupling: Roadmap priorities now reference current showcase and proof posture; major product direction changes should update these docs to avoid stale planning.
+2. Untested claims: Market and conversion assumptions are directional and require validation through launch and user interviews.
+3. Nondeterminism: No runtime changes introduced.
+4. Security: No new secret surface or sensitive operational detail exposure.
+5. Performance cliffs: None; documentation-only updates.
