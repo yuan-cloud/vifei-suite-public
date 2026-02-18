@@ -1586,3 +1586,16 @@ Context:
 3. Nondeterminism: No new nondeterminism introduced. Diff traversal is keyed by `BTreeMap/BTreeSet`, paths are sorted deterministically, and matching is by canonical `commit_index` only.
 4. Security: No new secret-handling surface was added; this bead computes metadata-only divergence records from already-ingested committed events.
 5. Performance cliffs: Current implementation flattens payload JSON for both sides per matching index, which is linear in payload size and could become expensive on very large payloads; acceptable for v0.1 and now isolated for future targeted optimization.
+
+## bd-dvmi · C1 post-close fresh-eye corrections (run-id/payload_ref determinism) · 2026-02-18
+
+Context:
+- Bead owner: ubuntu (codex-cli)
+- Invariants referenced: I1, I2, I4, D6 ownership boundary
+- Constitution touched: none
+
+1. Coupling: Delta summary metadata now derives run IDs from canonical lowest `commit_index` event, coupling summary semantics to canonical ordering rather than input slice order.
+2. Untested claims: We still assume committed streams do not intentionally mix multiple run IDs under one comparison side; if mixed, summary reflects the canonical-first run id.
+3. Nondeterminism: Removed a real nondeterminism source where unsorted input could change selected `left_run_id`/`right_run_id`; payload_ref comparison now preserves None-vs-empty distinction deterministically.
+4. Security: No new security surface added; change is deterministic comparison semantics only.
+5. Performance cliffs: No measurable cliff introduced; comparisons remain linear in event and payload-path count.

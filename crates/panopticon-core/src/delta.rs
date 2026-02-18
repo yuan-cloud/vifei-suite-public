@@ -51,9 +51,6 @@ pub struct RunDelta {
 /// - order of output divergences is deterministic by construction.
 /// - input order does not matter; all access is via `BTreeMap` keyed by index.
 pub fn diff_runs(left: &[CommittedEvent], right: &[CommittedEvent]) -> RunDelta {
-    let left_run_id = left.first().map(|e| e.run_id.clone()).unwrap_or_default();
-    let right_run_id = right.first().map(|e| e.run_id.clone()).unwrap_or_default();
-
     let left_by_index: BTreeMap<u64, &CommittedEvent> = left
         .iter()
         .map(|event| (event.commit_index, event))
@@ -62,6 +59,16 @@ pub fn diff_runs(left: &[CommittedEvent], right: &[CommittedEvent]) -> RunDelta 
         .iter()
         .map(|event| (event.commit_index, event))
         .collect();
+    let left_run_id = left_by_index
+        .iter()
+        .next()
+        .map(|(_, e)| e.run_id.clone())
+        .unwrap_or_default();
+    let right_run_id = right_by_index
+        .iter()
+        .next()
+        .map(|(_, e)| e.run_id.clone())
+        .unwrap_or_default();
 
     let all_indices: BTreeSet<u64> = left_by_index
         .keys()
@@ -146,11 +153,11 @@ fn compare_event(
         &right.tier.to_string(),
         out,
     );
-    compare_scalar(
+    compare_scalar_opt(
         commit_index,
         "$.payload_ref",
-        &left.payload_ref.clone().unwrap_or_default(),
-        &right.payload_ref.clone().unwrap_or_default(),
+        &left.payload_ref,
+        &right.payload_ref,
         out,
     );
     compare_scalar(
@@ -405,5 +412,60 @@ mod tests {
         assert_eq!(json_a, json_b);
         assert!(!delta_a.divergences.is_empty());
         assert_eq!(delta_a.divergences[0].commit_index, 2);
+    }
+
+    #[test]
+    fn run_id_is_selected_by_lowest_commit_index_not_input_order() {
+        let left = vec![
+            committed(
+                2,
+                EventPayload::RunEnd {
+                    exit_code: Some(0),
+                    reason: None,
+                },
+            ),
+            committed(
+                0,
+                EventPayload::RunStart {
+                    agent: "a".to_string(),
+                    args: None,
+                },
+            ),
+        ];
+        let right = left.clone();
+
+        let mut left_shuffled = left.clone();
+        left_shuffled.reverse();
+        let delta_a = diff_runs(&left, &right);
+        let delta_b = diff_runs(&left_shuffled, &right);
+
+        assert_eq!(delta_a.left_run_id, delta_b.left_run_id);
+    }
+
+    #[test]
+    fn payload_ref_presence_mismatch_is_reported() {
+        let mut left = committed(
+            0,
+            EventPayload::RunStart {
+                agent: "a".to_string(),
+                args: None,
+            },
+        );
+        left.payload_ref = None;
+
+        let mut right = committed(
+            0,
+            EventPayload::RunStart {
+                agent: "a".to_string(),
+                args: None,
+            },
+        );
+        right.payload_ref = Some(String::new());
+
+        let delta = diff_runs(&[left], &[right]);
+        assert!(delta
+            .divergences
+            .iter()
+            .any(|d| d.path == "$.payload_ref" && d.change_class == ChangeClass::ValueMismatch));
     }
 }
