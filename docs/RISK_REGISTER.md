@@ -1872,3 +1872,16 @@ Context:
 3. Nondeterminism: Outputs are anchored to canonical ordering and deterministic hash paths; no wall-clock values are used in truth comparisons.
 4. Security: Evidence-pack flow remains fail-closed through refusal semantics and scanner checks before export artifacts are consumed in demos.
 5. Performance: New evidence workflows add CLI work per run but are bounded and optional; fast smoke coverage contains routine regression cost.
+
+## bd-1zlb · PROGRAM: Deterministic Forensics Differentiation (enterprise execution track) · 2026-02-18
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I2, I3, I4, I5
+- Constitution touched: none
+
+1. Coupling: Program-level closure consolidates multiple tracks that now depend on shared evidence and governance contracts; future changes must preserve these contracts across tracks.
+2. Untested claims: Core contracts are covered in CI and smoke paths; long-tail provider format drift and large-corpus performance remain ongoing validation domains.
+3. Nondeterminism: Canonical ordering, hash contracts, and deterministic replay checks remain enforced; no new nondeterministic inputs were introduced by closure work.
+4. Security: Fail-closed export behavior, scanner refusal semantics, and integrity-oriented evidence contracts were preserved across all completed tracks.
+5. Performance: Governance and proof checks add overhead but improve reliability and explainability; perf-gate phase-2 fail policy now contains regression risk.
