@@ -34,10 +34,10 @@ cargo test -p panopticon-tour --all-targets -- --list > /tmp/tour-tests.txt
 cargo test -p panopticon-tui --all-targets -- --list > /tmp/tui-tests.txt
 ```
 
-Observed during this audit (refresh: 2026-02-17 after `bd-2fp.5`):
+Observed during this audit (refresh: 2026-02-18 after `bd-im6j`):
 
-- `cargo llvm-cov` is not installed in this environment (`error: no such command: llvm-cov`).
-- Fallback method used: explicit test inventory + risk-ranked uncovered-path mapping.
+- Numeric coverage is produced in CI via `scripts/testing/coverage_numeric.sh` and uploaded in full-confidence artifacts.
+- Local environments without `cargo llvm-cov` still use the inventory fallback plus risk-ranked uncovered-path mapping.
 
 ## Baseline Snapshot
 
@@ -152,7 +152,7 @@ Failure diagnostics minimums:
 ## Notes
 
 - This audit is the baseline for `TEST-HARDEN` sequencing; downstream beads should update this file when gaps close.
-- Once `cargo llvm-cov` is available, add numeric line/function coverage percentages as an additive section without replacing risk-ranked analysis.
+- Numeric line/function coverage is additive and does not replace risk-ranked analysis.
 
 ## Progress updates (post-baseline)
 

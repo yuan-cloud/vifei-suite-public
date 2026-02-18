@@ -18,13 +18,8 @@ Purpose: final pre-public summary of what is complete, what is intentionally def
 
 ## Intentionally deferred (tracked)
 
-- Numeric line/function coverage reporting via `cargo llvm-cov` remains deferred.
-- Canonical defer ledger entry:
-  - `docs/testing/defer-register-v0.1.json`
-  - id: `waiver-coverage-numeric-metrics`
-  - status: `active`
-  - revisit: `2026-02-24`
-  - expires: `2026-03-31`
+- No active defer entry remains for numeric coverage.
+- `waiver-coverage-numeric-metrics` is closed in `docs/testing/defer-register-v0.1.json` after CI coverage enablement.
 
 ## Manual GitHub admin actions still required
 

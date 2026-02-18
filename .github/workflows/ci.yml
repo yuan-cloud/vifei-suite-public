@@ -110,6 +110,14 @@ jobs:
           cp docs/testing/defer-register-v0.1.json .tmp/full-confidence/coverage/defer-register-v0.1.json
           cp docs/testing/FASTLANE.md .tmp/full-confidence/coverage/FASTLANE.md
 
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Numeric coverage report
+        run: |
+          scripts/testing/coverage_numeric.sh .tmp/full-confidence/coverage/numeric \
+            2>&1 | tee .tmp/full-confidence/logs/coverage-numeric.log
+
       - name: Validate coverage contract references
         run: |
           bash scripts/testing/check_coverage_contract.sh \

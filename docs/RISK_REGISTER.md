@@ -1482,3 +1482,16 @@ Context:
 3. Nondeterminism: No runtime or projection logic changed; docs and waiver metadata only.
 4. Security: No new data-handling surface; waiver text avoids secrets and records only tool availability facts.
 5. Performance cliffs: None; this pass adds no runtime work and no new hot-path behavior.
+
+## bd-im6j · Numeric coverage enablement and waiver retirement · 2026-02-18
+
+Context:
+- Bead owner: GreenEagle (codex-cli)
+- Invariants referenced: process/testing only
+- Constitution touched: none
+
+1. Coupling: Full-confidence CI now depends on `taiki-e/install-action@cargo-llvm-cov` and `scripts/testing/coverage_numeric.sh`; future CI platform changes must preserve this toolchain path.
+2. Untested claims: Local environments without llvm-cov still cannot produce numeric reports; this is now acceptable because release gating is CI-backed, not local-only.
+3. Nondeterminism: Coverage outputs are informational artifacts and do not feed truth-path hashing; no reducer/projection ordering behavior changed.
+4. Security: Coverage artifacts can expose source file path structure; they should remain in CI artifacts and not be treated as secret-free export payloads by default.
+5. Performance cliffs: Coverage jobs are heavier than regular tests; scoped to full-confidence lane to avoid slowing fastlane/PR iteration.

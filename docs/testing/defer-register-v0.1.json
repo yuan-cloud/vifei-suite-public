@@ -8,7 +8,7 @@
       "surface": "Numeric line/function coverage percentages (cargo llvm-cov unavailable in baseline environment)",
       "risk_rank": "P1",
       "owner": "maintainer",
-      "rationale": "Current coverage matrix is risk-ranked and command-backed, but lacks numeric line/function percentages until llvm-cov is available in CI and local dev images. Revalidated on 2026-02-18: `cargo llvm-cov --version` is unavailable in this environment.",
+      "rationale": "Closed by bd-im6j. CI now installs cargo-llvm-cov and emits numeric line/function coverage artifacts via scripts/testing/coverage_numeric.sh. Local environments may still lack llvm-cov, but release gating no longer depends on local-only availability.",
       "compensating_controls": [
         "docs/testing/coverage-matrix-v0.1.md tracks uncovered paths and owners",
         "PR fastlane and full quality gates must remain green",
@@ -17,7 +17,7 @@
       "created_on": "2026-02-17",
       "revisit_on": "2026-02-24",
       "expires_on": "2026-03-31",
-      "status": "active",
+      "status": "closed",
       "linked_beads": [
         "bd-2yv.6",
         "bd-2yv"

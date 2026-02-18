@@ -17,9 +17,13 @@
 - `cargo test --workspace --all-targets -- --list`
 - captures `docs/testing/coverage-matrix-v0.1.md`
 - captures `docs/testing/defer-register-v0.1.json`
-4. CLI E2E
+4. Numeric coverage report
+- installs `cargo-llvm-cov` in CI
+- runs `scripts/testing/coverage_numeric.sh`
+- emits text summary, JSON summary, and `lcov.info`
+5. CLI E2E
 - `scripts/e2e/cli_e2e.sh`
-5. PTY preflight
+6. PTY preflight
 - `scripts/e2e/pty_preflight.sh`
  - capability probe only; emits deterministic reason codes and gates PTY-only checks by capability
 6. Interactive TUI E2E
@@ -38,6 +42,9 @@ The lane uploads `full-confidence-<sha>` containing:
 - `.tmp/full-confidence/coverage/test-inventory.txt`
 - `.tmp/full-confidence/coverage/coverage-matrix-v0.1.md`
 - `.tmp/full-confidence/coverage/defer-register-v0.1.json`
+- `.tmp/full-confidence/coverage/numeric/summary.txt`
+- `.tmp/full-confidence/coverage/numeric/summary.json`
+- `.tmp/full-confidence/coverage/numeric/lcov.info`
 - `.tmp/full-confidence/cli-e2e/*` (structured transcripts and summaries)
 
 ## Relationship to fastlane
