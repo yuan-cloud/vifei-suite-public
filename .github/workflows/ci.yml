@@ -205,15 +205,15 @@ jobs:
           cat .tmp/full-confidence/pty-preflight.log | tee .tmp/full-confidence/logs/pty-preflight.log
 
           status="$(python3 - <<'PY'
-import json
-import pathlib
+          import json
+          import pathlib
 
-path = pathlib.Path(".tmp/full-confidence/pty-preflight.log")
-line = path.read_text(encoding="utf-8").strip()
-payload = json.loads(line) if line else {}
-status = payload.get("status")
-print(status if status in {"pass", "fail"} else "invalid")
-PY
+          path = pathlib.Path(".tmp/full-confidence/pty-preflight.log")
+          line = path.read_text(encoding="utf-8").strip()
+          payload = json.loads(line) if line else {}
+          status = payload.get("status")
+          print(status if status in {"pass", "fail"} else "invalid")
+          PY
           )"
 
           echo "status=$status" >> "$GITHUB_OUTPUT"
