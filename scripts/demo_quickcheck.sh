@@ -13,7 +13,14 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR/export"
 
 echo "[demo] CLI help"
+set +e
 cargo run -p panopticon-tui --bin panopticon -- --help > "$OUT_DIR/help.txt"
+help_rc=$?
+set -e
+if [[ "$help_rc" -ne 0 && "$help_rc" -ne 2 ]]; then
+  echo "[demo] ERROR: help command failed with unexpected exit code: $help_rc" >&2
+  exit 1
+fi
 
 echo "[demo] stress tour"
 cargo run -p panopticon-tui --bin panopticon -- \
@@ -67,5 +74,8 @@ cargo run -p panopticon-tour --bin media_provenance -- \
   --asset "$OUT_DIR/export-success.txt::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output $OUT_DIR/export/bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report.json" \
   --asset "$OUT_DIR/export-refused.txt::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-refusal-eventlog.jsonl --share-safe --output $OUT_DIR/export/refusal-bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report-refused.json" \
   --asset "$OUT_DIR/export/refusal-report-refused.json::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-refusal-eventlog.jsonl --share-safe --output $OUT_DIR/export/refusal-bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report-refused.json"
+
+echo "[demo] media hygiene scan"
+scripts/testing/check_media_hygiene.sh "$OUT_DIR"
 
 echo "[demo] done: outputs in $OUT_DIR"

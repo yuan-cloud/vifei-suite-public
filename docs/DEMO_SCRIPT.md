@@ -41,6 +41,19 @@ cargo run -p panopticon-tour --bin media_provenance -- \
   --base-dir /tmp/panopticon_demo_run
 ```
 
+Run media hygiene scan:
+
+```bash
+scripts/testing/check_media_hygiene.sh /tmp/panopticon_demo_run
+```
+
+False-positive and override policy:
+
+- Add narrow allowlist rules in `scripts/testing/media_hygiene_allowlist.txt` for known synthetic fixtures.
+- Keep allowlist entries scoped to pattern + file context.
+- Emergency override is explicit only: `PANOPTICON_HYGIENE_ALLOW_UNSAFE=1`.
+- Do not use override in release publishing unless incident commander approval is recorded.
+
 ## Objective bakeoff check
 
 ```bash

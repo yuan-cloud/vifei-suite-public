@@ -2093,3 +2093,16 @@ Context:
 3. Nondeterminism: No nondeterministic behavior introduced; normalization and sorting remain deterministic.
 4. Security: Maintains path safety by requiring manifest paths to be strict relative paths with no traversal components while removing an over-strict false-positive rejection.
 5. Performance: Negligible impact; same path checks with corrected predicate ordering.
+
+## bd-rl89 · SECURITY-1: media/output secret hygiene gate · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Demo quickcheck now includes an explicit dependency on the media hygiene scanner; launch/demo output workflows fail closed when secret-like tokens are detected.
+2. Untested claims: We added a contract script validating pass/fail/allowlist behavior, but the scanner remains heuristic and cannot prove absence of all secret classes.
+3. Nondeterminism: Scanner output ordering is deterministic by file traversal order and per-line scanning; no truth-path hashing or event ordering behavior changed.
+4. Security: Introduces pre-publish secret hygiene controls with allowlist-based false-positive handling and an explicit emergency override path.
+5. Performance: Adds modest extra I/O for demo/release checks only; no impact on runtime ingest/reducer/projection paths.

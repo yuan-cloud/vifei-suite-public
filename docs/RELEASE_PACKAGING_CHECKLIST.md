@@ -41,6 +41,17 @@ cargo run -p panopticon-tour --bin media_provenance -- \
   --base-dir /tmp/panopticon_demo_run
 ```
 
+And pass media hygiene scanning:
+
+```bash
+scripts/testing/check_media_hygiene.sh /tmp/panopticon_demo_run
+```
+
+False-positive handling and safe override:
+- Add precise regex entries to `scripts/testing/media_hygiene_allowlist.txt` only for known synthetic content.
+- Keep entries narrow (pattern + file context), with a comment explaining why.
+- `PANOPTICON_HYGIENE_ALLOW_UNSAFE=1` is emergency-only and requires explicit release approval.
+
 Trust verification details are in `docs/RELEASE_TRUST_VERIFICATION.md`.
 
 ## Go/No-Go Checklist

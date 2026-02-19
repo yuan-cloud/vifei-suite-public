@@ -1,0 +1,8 @@
+# Regex allowlist entries for synthetic demo fixtures.
+# Match format during scanning is:
+#   <pattern_id>|<path>:<line>|<line contents>
+#
+# Keep entries narrow and comment the reason.
+
+# sample-refusal fixture intentionally contains synthetic OpenAI-like token for refusal testing
+openai_key\|.*sample-refusal-eventlog\.jsonl.*sk-[A-Za-z0-9]{20,}
