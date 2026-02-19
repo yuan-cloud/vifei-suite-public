@@ -2067,3 +2067,16 @@ Context:
 3. Nondeterminism: No runtime code changed, and the plan explicitly preserves canonical ordering and hash-surface invariants during proposed refactors.
 4. Security: No new exposure surfaces were introduced; the plan prioritizes isolation of security-sensitive export/refusal logic in smaller modules.
 5. Performance: No runtime impact from this bead; minor documentation maintenance overhead as implementation phases progress.
+
+## bd-lld3 · SECURITY-2: artifact provenance manifest for media bundle · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: Demo quickcheck now depends on `panopticon-tour --bin media_provenance` for provenance generation/verification, creating an explicit and auditable link between demo outputs and manifest integrity checks.
+2. Untested claims: Unit tests cover argument parsing, deterministic ordering, and tamper detection for the provenance manifest; full end-to-end cast bundle verification is still script-driven rather than a dedicated integration test.
+3. Nondeterminism: Manifest serialization is deterministic by schema and path ordering; `generated_at` is intentionally wall-clock metadata and does not feed truth-path ordering or hash contracts.
+4. Security: Provenance manifest adds tamper-evident BLAKE3 checks for launch media artifacts and improves auditability of source-command lineage per asset.
+5. Performance: Additional manifest generation and verification adds minor I/O and hashing overhead only during demo/release workflows, not during core runtime paths.

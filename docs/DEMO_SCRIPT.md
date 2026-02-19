@@ -31,6 +31,15 @@ Outputs:
 - `/tmp/panopticon_demo_run/tour/viewmodel.hash`
 - `/tmp/panopticon_demo_run/export-success.txt`
 - `/tmp/panopticon_demo_run/export-refused.txt`
+- `/tmp/panopticon_demo_run/media-provenance.json`
+
+Verify provenance quickly:
+
+```bash
+cargo run -p panopticon-tour --bin media_provenance -- \
+  --verify /tmp/panopticon_demo_run/media-provenance.json \
+  --base-dir /tmp/panopticon_demo_run
+```
 
 ## Objective bakeoff check
 

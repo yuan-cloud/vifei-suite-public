@@ -32,6 +32,15 @@ scripts/release_artifacts.sh dist
 scripts/verify_release_artifacts.sh dist
 ```
 
+Launch/demo media outputs should include a provenance manifest:
+
+```bash
+scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
+cargo run -p panopticon-tour --bin media_provenance -- \
+  --verify /tmp/panopticon_demo_run/media-provenance.json \
+  --base-dir /tmp/panopticon_demo_run
+```
+
 Trust verification details are in `docs/RELEASE_TRUST_VERIFICATION.md`.
 
 ## Go/No-Go Checklist

@@ -55,4 +55,17 @@ if [[ "$rc" -eq 0 ]]; then
   exit 1
 fi
 
+echo "[demo] media provenance manifest"
+generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+cargo run -p panopticon-tour --bin media_provenance -- \
+  --output "$OUT_DIR/media-provenance.json" \
+  --generated-at "$generated_at" \
+  --base-dir "$OUT_DIR" \
+  --asset "$OUT_DIR/help.txt::cargo run -p panopticon-tui --bin panopticon -- --help" \
+  --asset "$OUT_DIR/tour/metrics.json::cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir $OUT_DIR/tour" \
+  --asset "$OUT_DIR/tour/viewmodel.hash::cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir $OUT_DIR/tour" \
+  --asset "$OUT_DIR/export-success.txt::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output $OUT_DIR/export/bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report.json" \
+  --asset "$OUT_DIR/export-refused.txt::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-refusal-eventlog.jsonl --share-safe --output $OUT_DIR/export/refusal-bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report-refused.json" \
+  --asset "$OUT_DIR/export/refusal-report-refused.json::cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-refusal-eventlog.jsonl --share-safe --output $OUT_DIR/export/refusal-bundle.tar.zst --refusal-report $OUT_DIR/export/refusal-report-refused.json"
+
 echo "[demo] done: outputs in $OUT_DIR"

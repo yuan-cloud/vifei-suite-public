@@ -8,6 +8,7 @@ name = "gen-large-stress"
 path = "src/bin/gen_large_stress.rs"
 
 [dependencies]
+blake3 = "1"
 panopticon-core = { path = "../panopticon-core" }
 panopticon-import = { path = "../panopticon-import" }
 serde = { version = "1", features = ["derive"] }

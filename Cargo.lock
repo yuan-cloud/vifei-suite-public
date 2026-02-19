@@ -576,6 +576,7 @@ dependencies = [
 name = "panopticon-tour"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "panopticon-core",
  "panopticon-import",
  "serde",
