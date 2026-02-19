@@ -5,8 +5,8 @@ This checklist tracks the next visible upgrades after the current showcase profi
 ## Priority 1 (next)
 
 1. Scripted terminal video capture lane
-- Add `scripts/capture_showcase_cast.sh` using `asciinema` when installed.
-- Add optional `scripts/capture_showcase_gif.sh` using `vhs` when installed.
+- Use `scripts/capture_showcase_cast.sh` with `asciinema` when installed.
+- Capture lane standard is cast-first (`.cast`) for replayable fidelity and fast iteration.
 - Keep SVG/TXT outputs as canonical deterministic artifacts.
 
 2. Showcase microsite

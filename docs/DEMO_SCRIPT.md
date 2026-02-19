@@ -98,12 +98,10 @@ Use these canonical static assets for README/social cards:
 If `asciinema` is installed:
 
 ```bash
-asciinema rec -i 1 /tmp/panopticon_demo_run/demo.cast
+scripts/capture_showcase_cast.sh --fast /tmp/panopticon_demo_run/cast
 ```
 
-Then run the presenter script commands and stop recording with `Ctrl-D`.
-
-If `vhs` is preferred, use a tape that executes `scripts/demo_quickcheck.sh` and trims pauses.
+This captures the deterministic demo flow with replayable terminal output.
 
 ## Failure Handling
 

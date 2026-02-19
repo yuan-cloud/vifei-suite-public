@@ -234,6 +234,14 @@ scripts/demo/live_incident_wall.sh --fast
 
 This prepares premium showcase wall assets under `docs/assets/readme/`.
 
+### Record a showcase cast
+
+```bash
+scripts/capture_showcase_cast.sh --fast /tmp/panopticon-showcase-cast
+```
+
+Requires `asciinema`; output is a replayable `.cast` file for launch/demo channels.
+
 ### Robot mode for AI agents
 
 Use machine-readable mode for automation:

@@ -1963,3 +1963,16 @@ Context:
 3. Nondeterminism: None introduced; documentation-only changes with no logic or artifact-shape modifications.
 4. Security: No new sensitive content was added; wording remains aligned with share-safe and private-reporting guidance.
 5. Performance: No runtime impact; only editorial maintenance overhead for future documentation refreshes.
+
+## bd-3dv9 · SHOWCASE: asciinema capture lane (no VHS) · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: Demo/media docs now couple to `scripts/capture_showcase_cast.sh` and `asciinema` availability for optional recording.
+2. Untested claims: Script behavior is validated indirectly by existing demo/test commands; no dedicated shell-level unit harness was added for cast script argument parsing.
+3. Nondeterminism: Cast playback timing can vary by terminal/runtime; canonical truth artifacts remain deterministic and unchanged.
+4. Security: No new secret surfaces introduced; script records existing demo commands and uses local output paths.
+5. Performance: Full mode capture can be expensive due to multiple demo flows; fast mode is default to keep iteration responsive.

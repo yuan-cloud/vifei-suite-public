@@ -25,13 +25,7 @@ This command regenerates:
 `asciinema` (replayable terminal cast):
 
 ```bash
-asciinema rec -i 1 /tmp/panopticon-readme.cast
-```
-
-`vhs` (scripted terminal capture):
-
-```bash
-vhs path/to/readme-demo.tape
+scripts/capture_showcase_cast.sh --fast /tmp/panopticon-readme-cast
 ```
 
 Use recordings only when they map to real commands in this repo.

@@ -16,8 +16,8 @@ Goal: make `README.md` visually strong, clear, and trustworthy without AI-genera
 |---|---|---|---|---|
 | `shields.io` | concise status badges (tests, release, license) | fast scanability; standard OSS pattern | badge clutter and rainbow noise if overused | **Adopt with strict cap** (3-5 badges max) |
 | GitHub Mermaid | architecture and flow diagrams | source-controlled text diagrams; no image editor required | can become busy if oversized | **Adopt** for one architecture block |
-| `vhs` | deterministic terminal GIF/video capture from `.tape` | scripted and repeatable visuals; high polish | extra dependencies (`ttyd`, `ffmpeg`) | **Adopt as optional asset generator** |
-| `asciinema` | terminal session recording and replay | lightweight, authentic terminal proof | playback integration choices vary by channel | **Adopt as optional evidence/demo capture** |
+| `vhs` | scripted terminal GIF/video capture from `.tape` | polished output in some workflows | extra dependencies (`ttyd`, `ffmpeg`); visual style does not fit current project direction | **Do not adopt for current lane** |
+| `asciinema` | terminal session recording and replay | lightweight, authentic terminal proof; straightforward CI/dev usage | playback integration choices vary by channel | **Adopt as the standard capture lane** |
 | `markdownlint-cli2` | README style and structure consistency | catches readability drift; CI-friendly | can be noisy if over-configured | **Adopt with small focused ruleset** |
 
 ## Specific standards for this repo
