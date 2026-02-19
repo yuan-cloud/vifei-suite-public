@@ -1,7 +1,6 @@
 # Vifei Suite
 
-[![CI](https://img.shields.io/github/actions/workflow/status/yuan-cloud/vifei-suite/ci.yml?branch=main&label=ci)](https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml)
-[![Tag](https://img.shields.io/github/v/tag/yuan-cloud/vifei-suite?sort=semver&label=tag)](https://github.com/yuan-cloud/vifei-suite/releases)
+[![CI](https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Deterministic, local-first run evidence for AI agent workflows.

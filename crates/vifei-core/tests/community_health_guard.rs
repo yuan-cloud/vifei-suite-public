@@ -17,6 +17,7 @@ fn workspace_root() -> PathBuf {
 fn required_community_health_files_exist() {
     let root = workspace_root();
     let required = [
+        "LICENSE",
         "CONTRIBUTING.md",
         "SECURITY.md",
         "SUPPORT.md",
@@ -86,10 +87,8 @@ fn readme_badges_target_canonical_repo() {
     let readme = std::fs::read_to_string(&readme_path).expect("cannot read README.md");
 
     let required_fragments = [
-        "https://img.shields.io/github/actions/workflow/status/yuan-cloud/vifei-suite/ci.yml",
+        "https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml/badge.svg",
         "https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml",
-        "https://img.shields.io/github/v/tag/yuan-cloud/vifei-suite",
-        "https://github.com/yuan-cloud/vifei-suite/releases",
     ];
 
     for fragment in required_fragments {
