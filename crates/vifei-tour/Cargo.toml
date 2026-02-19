@@ -2,6 +2,7 @@
 name = "vifei-tour"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [[bin]]
 name = "gen-large-stress"
