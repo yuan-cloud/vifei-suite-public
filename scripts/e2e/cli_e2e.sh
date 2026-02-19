@@ -95,7 +95,12 @@ assert_contains() {
   local stage="$1"
   local path="$2"
   local pattern="$3"
-  if rg -q "$pattern" "$path"; then
+  if command -v rg >/dev/null 2>&1; then
+    rg -q "$pattern" "$path"
+  else
+    grep -Eq "$pattern" "$path"
+  fi
+  if [[ $? -eq 0 ]]; then
     log_json "info" "$stage" "ok" 0 "pattern '$pattern' found in $path" "$path"
     echo "[$stage] pattern ok: $pattern" >> "$SUMMARY_TXT"
   else
