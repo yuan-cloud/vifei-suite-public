@@ -313,6 +313,15 @@ cargo run -p panopticon-tui --bin panopticon -- \
   --human --help
 ```
 
+Strict trust verification command:
+
+```bash
+cargo run -p panopticon-tui --bin panopticon -- \
+  --json verify --strict --full --output-dir verify-output
+```
+
+This emits a single structured result that checks determinism stability, Tier A drop safety, refusal semantics, and explainability token presence.
+
 Robot JSON contract keys (`schema_version=panopticon-cli-robot-v1.1`):
 
 | Key | Type | Notes |

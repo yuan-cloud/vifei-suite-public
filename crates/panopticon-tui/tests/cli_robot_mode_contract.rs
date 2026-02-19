@@ -177,6 +177,43 @@ fn missing_export_input_maps_not_found_contract() {
 }
 
 #[test]
+fn verify_requires_strict_flag() {
+    let (code, stdout, _stderr) = run_panopticon(&["--json", "verify"]);
+    assert_eq!(code, 2, "verify without --strict must be invalid args");
+    let value = parse_json(&stdout);
+    assert_eq!(value["ok"], false);
+    assert_eq!(value["code"], "INVALID_ARGS");
+    assert_eq!(value["exit_code"], 2);
+}
+
+#[test]
+fn verify_strict_emits_structured_success_contract() {
+    let dir = tempdir().expect("tempdir");
+    let output_dir = dir.path().join("verify-output");
+
+    let (code, stdout, _stderr) = run_panopticon(&[
+        "--json",
+        "verify",
+        "--strict",
+        "--output-dir",
+        &output_dir.display().to_string(),
+    ]);
+    assert_eq!(code, 0, "verify --strict should pass on default fixture");
+
+    let value = parse_json(&stdout);
+    assert_eq!(value["schema_version"], "panopticon-cli-robot-v1.1");
+    assert_eq!(value["ok"], true);
+    assert_eq!(value["code"], "OK");
+    assert_eq!(value["command"], "verify");
+    assert_eq!(value["exit_code"], 0);
+    assert_eq!(value["data"]["strict"], true);
+    assert!(value["data"]["checks"]["determinism_stability"]["pass"].is_boolean());
+    assert!(value["data"]["checks"]["tier_a_no_drop"]["pass"].is_boolean());
+    assert!(value["data"]["checks"]["refusal_semantics"]["pass"].is_boolean());
+    assert!(value["data"]["checks"]["explainability_surface"]["pass"].is_boolean());
+}
+
+#[test]
 fn export_success_emits_structured_json_contract() {
     let dir = tempdir().expect("tempdir");
     let output = dir.path().join("bundle.tar.zst");
@@ -599,7 +636,7 @@ fn invalid_subcommand_envelope_matches_golden_shape() {
         "code": "INVALID_ARGS",
         "message": "Unknown subcommand.",
         "suggestions": [
-            "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, `panopticon compare`, or `panopticon incident-pack`.",
+            "Use one of: `panopticon view`, `panopticon export`, `panopticon tour`, `panopticon compare`, `panopticon incident-pack`, or `panopticon verify`.",
             "Run `panopticon --help` for full command syntax."
         ],
         "exit_code": 2

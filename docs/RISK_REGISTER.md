@@ -2210,3 +2210,29 @@ Context:
 3. Nondeterminism: No runtime changes and no new deterministic surfaces were introduced.
 4. Security: Security posture communication improved by making refusal and runtime safety behaviors a first-class demo track, reducing operator ambiguity in public demos.
 5. Performance: No runtime impact; small maintenance overhead from keeping three track docs aligned with CLI contracts.
+
+## bd-1kji · DECISION RECORD: six-point feature priorities and counter-argument outcomes · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Product roadmap choices are now explicitly coupled to trust-proof outcomes (determinism/refusal/explainability) instead of ad-hoc feature voting.
+2. Untested claims: Decision record itself is docs-only; no new runtime claims were introduced without existing executable evidence.
+3. Nondeterminism: None introduced; documentation and planning only.
+4. Security: Prioritization explicitly favors fail-closed and explainable trust surfaces, reducing risk of adding growth features that weaken safety posture.
+5. Performance: No runtime impact; planning overhead is minimal and reduces priority churn.
+
+## bd-2f50 · FEATURE: add panopticon verify --strict command · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I2, I3, I4
+- Constitution touched: none
+
+1. Coupling: CLI now has a first-class trust gate command that couples `panopticon-tui`, `panopticon-tour`, and `panopticon-export` verification paths under one operator surface.
+2. Untested claims: We added contract tests for strict-required and strict-success envelopes; command-level behavior is covered, but we did not add a dedicated chaos/fault-injection matrix yet.
+3. Nondeterminism: Verify command compares deterministic replay hashes and checks exported refusal semantics; no new randomness or ordering surfaces were introduced in truth paths.
+4. Security: Strict verify validates refusal behavior against secret-bearing fixture and checks explainability token presence, improving operator confidence in fail-closed posture.
+5. Performance: Verify runs two Tour passes and one refusal export check, which is heavier than single commands; this cost is intentional for trust verification workflows.

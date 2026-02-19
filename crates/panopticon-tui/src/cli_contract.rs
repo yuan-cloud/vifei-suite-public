@@ -116,6 +116,25 @@ pub(crate) enum Commands {
         #[arg(long, default_value = "incident-pack")]
         output_dir: PathBuf,
     },
+
+    /// Run strict trust verification checks and emit an auditable summary.
+    Verify {
+        /// Enable strict mode (fails non-zero if any required check fails).
+        #[arg(long)]
+        strict: bool,
+
+        /// Use full fixture/profile verification lane.
+        #[arg(long)]
+        full: bool,
+
+        /// Optional fixture override for determinism replay checks.
+        #[arg(long)]
+        fixture: Option<PathBuf>,
+
+        /// Output directory for verification artifacts.
+        #[arg(long, default_value = "verify-output")]
+        output_dir: PathBuf,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -149,6 +168,7 @@ Commands:
   tour <fixture.jsonl> --stress [--output-dir <dir>]
   compare <left.jsonl> <right.jsonl> [--left-format eventlog|cassette] [--right-format eventlog|cassette]
   incident-pack <left.jsonl> <right.jsonl> [--left-format eventlog|cassette] [--right-format eventlog|cassette] [--output-dir <dir>]
+  verify --strict [--full] [--fixture <fixture.jsonl>] [--output-dir <dir>]
 Tips:
   panopticon --help
   panopticon <command> --help";
@@ -235,5 +255,26 @@ mod tests {
         ])
         .expect("parse");
         assert!(matches!(cli.command, Commands::IncidentPack { .. }));
+    }
+
+    #[test]
+    fn verify_parses_strict_and_full_flags() {
+        let cli = Cli::try_parse_from([
+            "panopticon",
+            "verify",
+            "--strict",
+            "--full",
+            "--output-dir",
+            "verify-dir",
+        ])
+        .expect("parse");
+        assert!(matches!(
+            cli.command,
+            Commands::Verify {
+                strict: true,
+                full: true,
+                ..
+            }
+        ));
     }
 }

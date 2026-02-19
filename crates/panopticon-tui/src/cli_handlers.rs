@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::BufReader;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static CASSETTE_APPEND_TEMP_ID: AtomicU64 = AtomicU64::new(0);
@@ -222,6 +222,43 @@ fn replay_summary(events: &[CommittedEvent]) -> Value {
         "tier_a_drops": vm.tier_a_drops,
         "queue_pressure": vm.queue_pressure(),
     })
+}
+
+#[derive(Debug)]
+struct StrictVerifyChecks {
+    determinism_stability: bool,
+    tier_a_no_drop: bool,
+    refusal_semantics: bool,
+    explainability_surface: bool,
+    hash_a: String,
+    hash_b: String,
+    blocked_count: usize,
+}
+
+fn strict_verify_fixture(full: bool, fixture: Option<PathBuf>) -> PathBuf {
+    fixture.unwrap_or_else(|| {
+        let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("workspace root");
+        if full {
+            workspace_root.join("fixtures/large-stress.jsonl")
+        } else {
+            workspace_root.join("fixtures/small-session.jsonl")
+        }
+    })
+}
+
+fn strict_verify_tokens_present(ansi_capture: &str) -> bool {
+    const TOKENS: [&str; 6] = [
+        "Level:",
+        "Agg:",
+        "Pressure:",
+        "Drops:",
+        "Export:",
+        "Version:",
+    ];
+    TOKENS.iter().all(|token| ansi_capture.contains(token))
 }
 
 pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]) -> AppExit {
@@ -789,6 +826,308 @@ pub(crate) fn handle_command(cli: Cli, mode: OutputMode, repair_notes: &[String]
                 }
             }
             return AppExit::DiffFound;
+        }
+        Commands::Verify {
+            strict,
+            full,
+            fixture,
+            output_dir,
+        } => {
+            if !strict {
+                let suggestions = vec![
+                    "panopticon verify --strict".to_string(),
+                    "panopticon verify --strict --full".to_string(),
+                ];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "INVALID_ARGS",
+                        "--strict is required for verify in v0.1.",
+                        &suggestions,
+                        repair_notes,
+                        AppExit::InvalidArgs as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            "--strict is required for verify in v0.1.",
+                            "Verify is a trust gate and must run in strict mode.",
+                            &suggestions,
+                            &[output_dir.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::InvalidArgs;
+            }
+
+            let fixture_path = strict_verify_fixture(full, fixture);
+            if let Err(msg) = ensure_file_exists(&fixture_path, "verify fixture file") {
+                let suggestions = vec![
+                    "panopticon verify --strict --fixture fixtures/small-session.jsonl".to_string(),
+                    "panopticon verify --strict --full --fixture fixtures/large-stress.jsonl"
+                        .to_string(),
+                ];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "NOT_FOUND",
+                        &msg,
+                        &suggestions,
+                        repair_notes,
+                        AppExit::NotFound as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("verify failed: {msg}"),
+                            "Fixture path does not exist.",
+                            &suggestions,
+                            &[fixture_path.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::NotFound;
+            }
+
+            let verify_dir = output_dir;
+            let duel_a_dir = verify_dir.join("duel").join("a");
+            let duel_b_dir = verify_dir.join("duel").join("b");
+            let refusal_dir = verify_dir.join("refusal");
+            let refusal_report = refusal_dir.join("refusal-report.json");
+            let refusal_bundle = refusal_dir.join("refused.tar.zst");
+
+            if let Err(e) = fs::create_dir_all(&duel_a_dir)
+                .and_then(|_| fs::create_dir_all(&duel_b_dir))
+                .and_then(|_| fs::create_dir_all(&refusal_dir))
+            {
+                let suggestions = vec![format!(
+                    "panopticon verify --strict --output-dir {}",
+                    verify_dir.display()
+                )];
+                if mode == OutputMode::Json {
+                    emit_json_error(
+                        "RUNTIME_ERROR",
+                        &format!("failed to create verify output directories: {e}"),
+                        &suggestions,
+                        repair_notes,
+                        AppExit::RuntimeError as u8,
+                    );
+                } else {
+                    eprintln!(
+                        "{}",
+                        format_cli_failure(
+                            &format!("verify failed: {e}"),
+                            "Output directory is not writable.",
+                            &suggestions,
+                            &[verify_dir.display().to_string()],
+                        )
+                    );
+                }
+                return AppExit::RuntimeError;
+            }
+
+            let run_tour_once = |target_dir: &Path| {
+                let config = TourConfig::new(&fixture_path).with_output_dir(target_dir);
+                panopticon_tour::run_tour(&config)
+                    .map_err(|e| format!("verify tour failed for {}: {e}", target_dir.display()))
+            };
+            let tour_a = match run_tour_once(&duel_a_dir) {
+                Ok(result) => result,
+                Err(msg) => {
+                    let suggestions = vec![format!(
+                        "panopticon tour {} --stress --output-dir {}",
+                        fixture_path.display(),
+                        duel_a_dir.display()
+                    )];
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &msg,
+                                "Tour execution failed during strict verification.",
+                                &suggestions,
+                                &[fixture_path.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+            let tour_b = match run_tour_once(&duel_b_dir) {
+                Ok(result) => result,
+                Err(msg) => {
+                    let suggestions = vec![format!(
+                        "panopticon tour {} --stress --output-dir {}",
+                        fixture_path.display(),
+                        duel_b_dir.display()
+                    )];
+                    if mode == OutputMode::Json {
+                        emit_json_error(
+                            "RUNTIME_ERROR",
+                            &msg,
+                            &suggestions,
+                            repair_notes,
+                            AppExit::RuntimeError as u8,
+                        );
+                    } else {
+                        eprintln!(
+                            "{}",
+                            format_cli_failure(
+                                &msg,
+                                "Tour execution failed during strict verification.",
+                                &suggestions,
+                                &[fixture_path.display().to_string()],
+                            )
+                        );
+                    }
+                    return AppExit::RuntimeError;
+                }
+            };
+
+            let sample_refusal_eventlog = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .and_then(Path::parent)
+                .expect("workspace root")
+                .join("docs/assets/readme/sample-refusal-eventlog.jsonl");
+            let refusal_result = panopticon_export::run_export(
+                &ExportConfig::new(&sample_refusal_eventlog, &refusal_bundle)
+                    .with_refusal_report(refusal_report.clone()),
+            );
+            let (refusal_semantics, blocked_count) = match refusal_result {
+                Ok(ExportResult::Refused(report)) => {
+                    (!report.blocked_items.is_empty(), report.blocked_items.len())
+                }
+                Ok(ExportResult::Success(_)) => (false, 0),
+                Err(_) => (false, 0),
+            };
+
+            let ansi_capture_path = duel_a_dir.join("ansi.capture");
+            let explainability_surface = fs::read_to_string(&ansi_capture_path)
+                .ok()
+                .map(|content| strict_verify_tokens_present(&content))
+                .unwrap_or(false);
+
+            let checks = StrictVerifyChecks {
+                determinism_stability: tour_a.viewmodel_hash == tour_b.viewmodel_hash,
+                tier_a_no_drop: tour_a.metrics.tier_a_drops == 0
+                    && tour_b.metrics.tier_a_drops == 0,
+                refusal_semantics,
+                explainability_surface,
+                hash_a: tour_a.viewmodel_hash.clone(),
+                hash_b: tour_b.viewmodel_hash.clone(),
+                blocked_count,
+            };
+            let all_pass = checks.determinism_stability
+                && checks.tier_a_no_drop
+                && checks.refusal_semantics
+                && checks.explainability_surface;
+
+            if mode == OutputMode::Json {
+                if all_pass {
+                    emit_json_success(
+                        "OK",
+                        "Strict verification checks passed.",
+                        Some("verify"),
+                        AppExit::Success as u8,
+                        repair_notes,
+                        json!({
+                            "strict": true,
+                            "mode": if full { "full" } else { "fast" },
+                            "fixture": fixture_path,
+                            "output_dir": verify_dir,
+                            "checks": {
+                                "determinism_stability": {"pass": checks.determinism_stability, "hash_a": checks.hash_a, "hash_b": checks.hash_b},
+                                "tier_a_no_drop": {"pass": checks.tier_a_no_drop},
+                                "refusal_semantics": {"pass": checks.refusal_semantics, "blocked_count": checks.blocked_count},
+                                "explainability_surface": {"pass": checks.explainability_surface}
+                            }
+                        }),
+                    );
+                    return AppExit::Success;
+                }
+                emit_json_error(
+                    "RUNTIME_ERROR",
+                    "Strict verification checks failed.",
+                    &[
+                        format!("Inspect verify artifacts at {}", verify_dir.display()),
+                        "Run `panopticon verify --strict --full` for stress-grade verification."
+                            .to_string(),
+                    ],
+                    repair_notes,
+                    AppExit::RuntimeError as u8,
+                );
+                return AppExit::RuntimeError;
+            }
+
+            println!("Strict verification summary");
+            println!("  mode: {}", if full { "full" } else { "fast" });
+            println!("  fixture: {}", fixture_path.display());
+            println!("  output: {}", verify_dir.display());
+            println!(
+                "  determinism: {}",
+                if checks.determinism_stability {
+                    "PASS"
+                } else {
+                    "FAIL"
+                }
+            );
+            println!("    hash_a: {}", checks.hash_a);
+            println!("    hash_b: {}", checks.hash_b);
+            println!(
+                "  tier_a_no_drop: {}",
+                if checks.tier_a_no_drop {
+                    "PASS"
+                } else {
+                    "FAIL"
+                }
+            );
+            println!(
+                "  refusal_semantics: {} (blocked_count={})",
+                if checks.refusal_semantics {
+                    "PASS"
+                } else {
+                    "FAIL"
+                },
+                checks.blocked_count
+            );
+            println!(
+                "  explainability_surface: {}",
+                if checks.explainability_surface {
+                    "PASS"
+                } else {
+                    "FAIL"
+                }
+            );
+
+            if all_pass {
+                println!("verify status: PASS");
+                return AppExit::Success;
+            }
+
+            eprintln!(
+                "{}",
+                format_cli_failure(
+                    "verify failed: strict checks did not pass.",
+                    "One or more trust checks failed; inspect generated artifacts for details.",
+                    &[
+                        format!(
+                            "panopticon verify --strict --output-dir {}",
+                            verify_dir.display()
+                        ),
+                        "panopticon verify --strict --full".to_string(),
+                    ],
+                    &[verify_dir.display().to_string()],
+                )
+            );
+            return AppExit::RuntimeError;
         }
         Commands::IncidentPack {
             left,
