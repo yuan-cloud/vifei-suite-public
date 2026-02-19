@@ -2197,3 +2197,16 @@ Context:
 3. Nondeterminism: No runtime changes and no new ordering/hash surfaces were introduced.
 4. Security: The new track strengthens operator guidance for fail-closed export and runtime failure visibility; it does not introduce new data paths or secret surfaces.
 5. Performance: No runtime performance impact; only documentation navigation surface changed.
+
+## bd-2hwx · SHOWCASE: adapter-facing demo tracks · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Showcase navigation now depends on three adapter track docs (human CLI, robot JSON, refusal/safety), which creates an explicit documentation contract for demo coverage.
+2. Untested claims: This bead consolidates docs-level pathways; command behavior is validated by existing CLI/export/test harnesses rather than a new snippet runner.
+3. Nondeterminism: No runtime changes and no new deterministic surfaces were introduced.
+4. Security: Security posture communication improved by making refusal and runtime safety behaviors a first-class demo track, reducing operator ambiguity in public demos.
+5. Performance: No runtime impact; small maintenance overhead from keeping three track docs aligned with CLI contracts.
