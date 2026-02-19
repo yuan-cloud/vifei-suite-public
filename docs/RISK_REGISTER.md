@@ -2054,3 +2054,16 @@ Context:
 3. Nondeterminism: No runtime logic changed by the audit itself; changes spawned by the audit preserved deterministic contracts.
 4. Security: Audit surfaced and removed a real publish-safety leak (absolute paths in generated artifacts), improving operational privacy posture.
 5. Performance: No direct runtime cost from audit process; replacement of placeholder benchmark lane adds only minimal maintenance overhead.
+
+## bd-eyhh · ARCH-PLAN: refresh code-file reorganization plan with dependency-safe migration · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I1, I3, I4
+- Constitution touched: none
+
+1. Coupling: The plan introduces a documented coupling between future module refactors and explicit import-path migration checklists; this is intentional to reduce hidden breakage risk.
+2. Untested claims: This bead is plan-only; no structural refactor was executed yet, so migration claims still require phased implementation validation.
+3. Nondeterminism: No runtime code changed, and the plan explicitly preserves canonical ordering and hash-surface invariants during proposed refactors.
+4. Security: No new exposure surfaces were introduced; the plan prioritizes isolation of security-sensitive export/refusal logic in smaller modules.
+5. Performance: No runtime impact from this bead; minor documentation maintenance overhead as implementation phases progress.

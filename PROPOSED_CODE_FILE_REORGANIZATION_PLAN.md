@@ -1,165 +1,183 @@
-# Proposed Code File Reorganization Plan
+# PROPOSED CODE FILE REORGANIZATION PLAN
 
-Status: plan-only. No file moves or module splits are executed in this document.
+Status: plan-only. No file moves, renames, API changes, or behavior changes are executed in this document.
 
-## 1) Scope and intent
+## 1) Purpose
 
-This plan targets structural clarity, onboarding speed, and safer long-term maintenance.
-It focuses on no-brainer improvements first, with minimal disruption and explicit rollback points.
+This plan adapts your request to the actual Panopticon Suite structure.
 
-Goals:
-- Keep crate-level boundaries stable and intuitive.
-- Reduce single-file cognitive load in oversized modules.
-- Improve discoverability for new contributors and coding agents.
-- Avoid deep nesting and avoid broad churn.
+Key finding up front:
+- The repo is **not** suffering from top-level folder chaos.
+- The main risk is **oversized, mixed-concern files inside otherwise good crate boundaries**.
 
-Non-goals:
-- No architecture rewrite.
-- No behavior changes in truth-path logic.
-- No constitutional content duplication.
+So the right move is targeted internal module decomposition, not broad directory churn.
 
-## 2) Current-state assessment
+## 2) Current architecture (what exists today)
 
-The top-level crate structure is already strong:
-- `panopticon-core`: truth model, reducer, projection, event log
-- `panopticon-import`: cassette ingestion
-- `panopticon-export`: share-safe export + scanner
-- `panopticon-tour`: deterministic stress harness
-- `panopticon-tui`: CLI + terminal UI lenses
+Workspace crates are already clear and product-aligned:
+- `crates/panopticon-core`: truth model, append writer, reducer, projection, hashing
+- `crates/panopticon-import`: adapter ingestion and importer contracts
+- `crates/panopticon-export`: discovery, secret scanning, refusal reports, bundle output
+- `crates/panopticon-tour`: deterministic replay/tour pipeline and artifact generation
+- `crates/panopticon-tui`: interactive viewer, lenses, CLI entry/handlers
 
-Primary pain points are file size and mixed concerns within single files, not folder chaos.
-
-Largest files (approximate line counts):
+Largest current files (high cognitive-load candidates):
 - `crates/panopticon-core/src/projection.rs` (~1698)
-- `crates/panopticon-core/src/reducer.rs` (~1262)
+- `crates/panopticon-core/src/reducer.rs` (~1331)
+- `crates/panopticon-tui/src/cli_handlers.rs` (~1293)
+- `crates/panopticon-export/src/lib.rs` (~1180)
 - `crates/panopticon-core/src/event.rs` (~1044)
-- `crates/panopticon-export/src/lib.rs` (~1361)
-- `crates/panopticon-tour/src/lib.rs` (~775)
-- `crates/panopticon-tui/src/main.rs` (~768)
-- `crates/panopticon-tui/src/forensic_lens.rs` (~883)
+- `crates/panopticon-tui/src/forensic_lens.rs` (~928)
 
-Conclusion:
-- Directory layout is acceptable.
-- Internal module decomposition should be the first optimization target.
+## 3) Dependency and execution-flow map (condensed)
 
-## 3) No-brainer reorganization candidates
+### A) CLI path
+- `panopticon-tui/src/main.rs`
+- `panopticon-tui/src/cli_handlers.rs`
+- Depends on `panopticon-core`, `panopticon-import`, `panopticon-export`, `panopticon-tour`
 
-### A. `panopticon-export` decomposition (highest ROI)
+### B) Truth path
+- Importers produce `ImportEvent` (no canonical `commit_index`)
+- `panopticon-core/src/eventlog.rs` append writer assigns canonical `commit_index`
+- `panopticon-core/src/reducer.rs` and `projection.rs` produce deterministic state/viewmodel hashes
 
-Current issue:
-- `crates/panopticon-export/src/lib.rs` contains multiple concerns:
-  - export orchestration
-  - refusal report models and formatting
-  - deterministic bundling helpers
-  - extensive inline tests
+### C) Export safety path
+- `panopticon-export/src/lib.rs` orchestrates discovery + scanning + refusal report + bundle creation
+- Secret scanning and refusal reporting are safety-critical and currently concentrated in one large file
 
-Proposed structure:
-- `crates/panopticon-export/src/lib.rs` (public API surface + re-exports only)
-- `crates/panopticon-export/src/export_pipeline.rs` (run_export orchestration)
-- `crates/panopticon-export/src/refusal_report.rs` (report schema + serialization)
-- `crates/panopticon-export/src/bundle.rs` (tar/zstd deterministic packaging)
-- keep `crates/panopticon-export/src/scanner.rs` as-is
+### D) Tour/evidence path
+- `panopticon-tour/src/lib.rs` runs deterministic import→append→reduce→project flow
+- Emits artifacts consumed by README/demo validation and trust proofs
 
-Why:
-- Fastest onboarding win for maintainers.
-- Lower merge-conflict pressure during parallel edits.
-- Cleaner test targeting by concern.
+## 4) Structural pain points
 
-### B. `panopticon-tour` decomposition (high ROI)
+1. High-change files are too large (`cli_handlers.rs`, `export/lib.rs`), increasing merge collisions and review friction.
+2. Mixed concerns inside single files slow onboarding (command routing + file I/O + contract formatting in one place).
+3. Some crates already have partial decomposition (`tour` has `artifacts.rs`/`metrics.rs`), so consistency can improve further.
 
-Current issue:
-- `crates/panopticon-tour/src/lib.rs` mixes pipeline orchestration and artifact rendering logic.
+## 5) Reorganization strategy
 
-Proposed structure:
-- `crates/panopticon-tour/src/lib.rs` (public types + orchestration entrypoints)
-- `crates/panopticon-tour/src/artifacts.rs` (metrics/hash/capture writers)
-- `crates/panopticon-tour/src/metrics.rs` (metrics structs + builders)
-- `crates/panopticon-tour/src/pipeline.rs` (import/append/reduce/project sequence)
+Principle:
+- Keep crate boundaries and public APIs stable.
+- Refactor internally by concern in small, reversible phases.
+- One structural lever per bead.
 
-Why:
-- Makes deterministic artifact contract easier to inspect and evolve safely.
+### Phase 1 (highest ROI, lowest behavior risk): `panopticon-export`
 
-### C. `panopticon-tui` decomposition (targeted)
+Current concern mix inside `crates/panopticon-export/src/lib.rs`:
+- config/result surface types
+- export pipeline orchestration
+- refusal-report model and serialization
+- path-label/share-safe helpers
+- test block
 
-Current issue:
-- `crates/panopticon-tui/src/main.rs` has CLI parsing, envelope formatting, output mode logic, and command execution together.
+Proposed internal structure:
+- `src/lib.rs`: public API surface, crate docs, re-exports only
+- `src/export_pipeline.rs`: `run_export` orchestration flow
+- `src/refusal_report.rs`: refusal report schema/build/serialize helpers
+- `src/path_label.rs`: share-safe path labeling helpers
+- Keep `src/discover.rs`, `src/scanner.rs`, `src/secret_scan.rs`, `src/bundle.rs`
 
-Proposed structure:
-- `crates/panopticon-tui/src/main.rs` (thin CLI entry)
-- `crates/panopticon-tui/src/cli_contract.rs` (JSON/human envelope types and helpers)
-- `crates/panopticon-tui/src/cli_commands.rs` (view/export/tour command runners)
-- `crates/panopticon-tui/src/arg_normalization.rs` (intent-repair normalization logic)
+Why this first:
+- Directly improves maintainability of security-sensitive code paths.
+- Reduced chance of accidental regressions from unrelated edits.
 
-Why:
-- Reduces risk when updating robot-mode contract guarantees.
-- Keeps behavior-critical surface testable in isolation.
+### Phase 2: `panopticon-tui` CLI internals
 
-## 4) Files that should stay as they are (for now)
+Current concern mix inside `crates/panopticon-tui/src/cli_handlers.rs`:
+- command orchestration
+- JSON envelope builders
+- compare/replay/export/tour handlers
+- file output and report shaping
 
-- `panopticon-import/src/cassette.rs`
-  - Large but cohesive, single-source mapping logic.
-- `panopticon-core` large files (`event.rs`, `reducer.rs`, `projection.rs`)
-  - Candidate for future split, but currently high-coupling truth-path code.
-  - Should be split only with dedicated invariant-focused beads and heavy regression gates.
+Proposed internal structure:
+- `src/cli_handlers/mod.rs`: public dispatch and shared helper imports
+- `src/cli_handlers/view.rs`
+- `src/cli_handlers/compare.rs`
+- `src/cli_handlers/export.rs`
+- `src/cli_handlers/tour.rs`
+- `src/cli_handlers/incident_pack.rs`
+- `src/cli_handlers/envelope.rs`
 
-## 5) Calling-code impact map
+Why this second:
+- Largest operational surface for human + agent users.
+- Makes behavior and tests easier to map to command families.
 
-For each candidate split, expected updates:
+### Phase 3: `panopticon-tour` pipeline clarity
 
-- `mod` declarations and `pub use` surfaces in crate `lib.rs`.
-- Internal `use crate::...` paths after module extraction.
-- Test imports that currently rely on same-file visibility.
-- No external crate API break is expected if `pub` surface is preserved via re-exports.
+Current `crates/panopticon-tour/src/lib.rs` still mixes orchestration + state transitions + profile output.
 
-Risk controls:
-- Keep old public type/function names intact.
-- Prefer move-only refactors before semantic edits.
+Proposed internal structure:
+- `src/lib.rs`: public types/re-exports
+- `src/pipeline.rs`: deterministic run pipeline
+- `src/profile.rs`: stage profiling and summary
+- Keep `src/artifacts.rs`, `src/metrics.rs`
 
-## 6) Migration sequence (safe order)
+Why this third:
+- Improves reproducibility auditing and benchmark readability.
 
-### Phase 0: preflight safeguards
-- Ensure all quality gates pass:
-  - `cargo fmt --check`
-  - `cargo clippy --all-targets -- -D warnings`
-  - `cargo test`
-- Keep or add lightweight docs/link guards to prevent public-surface drift.
+### Phase 4 (only after earlier phases): selective `panopticon-core` extraction
 
-### Phase 1: export crate internal split
-- Extract models/helpers first.
-- Keep behavior unchanged.
-- Run full gates.
+Core is safety-critical and coupled to constitutional invariants. Split only with strict proof steps.
 
-### Phase 2: tour crate internal split
-- Extract artifact emitters and metrics builders.
-- Run full gates + tour determinism tests.
+Candidate extractions:
+- `projection.rs`: split hash materialization helpers from view construction
+- `reducer.rs`: split checkpointing code from event-reduce logic
 
-### Phase 3: tui CLI internal split
-- Move contract/output-mode logic into dedicated modules.
-- Run full gates + CLI contract integration tests.
+Guardrail:
+- No semantic edits in same commit as file moves.
 
-### Phase 4: optional core decomposition planning
-- Only after prior phases are stable and reviewed.
-- Create a dedicated plan-only bead before any core truth-path split.
+## 6) Calling-code impact map (what must change during each phase)
 
-## 7) Rollback strategy
+For every extraction/move:
+1. Update module declarations (`mod ...`) and visibility (`pub(crate)`/`pub`).
+2. Update all `use crate::...` paths.
+3. Keep public symbols stable via re-exports from `lib.rs`.
+4. Update affected unit/integration tests to new module paths.
+5. Re-run proof/contract tests before proceeding to next phase.
 
-If a phase causes instability:
-- Revert that phase commit only.
-- Keep prior phases if green.
-- Reopen bead with explicit blocker notes.
-- Do not proceed to next phase until gates are clean.
+## 7) Safe migration workflow per phase
 
-## 8) Visibility and “private strategy” handling
+For each phase, execute in this order:
+1. Add bead and mark in progress.
+2. Move code mechanically (no behavior edits).
+3. Compile and fix imports.
+4. Run quality gates:
+   - `cargo fmt --check`
+   - `cargo clippy --all-targets -- -D warnings`
+   - `cargo test`
+5. Run targeted contract/e2e tests for touched area.
+6. Run `ubs --staged`.
+7. Append risk entry in `docs/RISK_REGISTER.md`.
+8. Commit with bead ID in subject.
 
-Public docs should stay product-first, factual, and operator-focused.
+## 8) Rollback plan
 
-Private strategy notes (hiring narrative, self-promotion copy experiments, audience positioning variants) should be kept out of public-facing docs and tracked separately, for example:
-- local ignored path (such as `.private/`) for personal notes, or
-- a separate private planning repo.
+If a phase fails quality/contract checks:
+- Revert only that phase commit.
+- Keep previous green phases.
+- Record blocker in bead notes.
+- Do not start next phase until current one is stable.
 
-This separation keeps public credibility high and avoids awkward tone drift in user-facing materials.
+## 9) What should NOT be reorganized now
 
-## 9) Recommendation
+Avoid these high-risk moves in current cycle:
+- Broad renames across all crates at once
+- Deep nested directory trees that reduce discoverability
+- Simultaneous semantic refactor + structural move in same commit
+- Core truth-path decomposition before smaller crates are stabilized
 
-Proceed with phased internal module decomposition; do not perform broad folder moves.
-Start with `panopticon-export` and `panopticon-tour`, where clarity gains are highest and correctness risk is manageable.
+## 10) Recommended first implementation bead sequence
+
+1. `EXPORT-MOD-1`: split `panopticon-export/src/lib.rs` into pipeline + refusal + label modules.
+2. `CLI-MOD-1`: split `panopticon-tui/src/cli_handlers.rs` by command family.
+3. `TOUR-MOD-1`: split `panopticon-tour/src/lib.rs` orchestration/profile concerns.
+4. `CORE-MOD-PLAN-1`: plan-only doc for safe core decomposition; no code movement yet.
+
+## 11) Expected outcome
+
+After these phases:
+- Faster onboarding for humans and coding agents.
+- Smaller review units and fewer merge collisions.
+- Better isolation of security-sensitive and determinism-sensitive logic.
+- No user-visible behavioral drift when done with mechanical-first commits and full gate coverage.
