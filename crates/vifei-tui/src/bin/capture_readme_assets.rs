@@ -418,6 +418,7 @@ fn render_terminal_svg(title: &str, content: &str) -> String {
     const LINE_HEIGHT: usize = 18;
     const H_PADDING: usize = 24;
     const V_PADDING: usize = 30;
+    const RIGHT_GUTTER: usize = 24;
 
     let lines: Vec<&str> = content.lines().collect();
     let max_cols = lines
@@ -425,7 +426,7 @@ fn render_terminal_svg(title: &str, content: &str) -> String {
         .map(|line| line.chars().count())
         .max()
         .unwrap_or(0);
-    let width = (max_cols * CHAR_WIDTH) + (H_PADDING * 2);
+    let width = (max_cols * CHAR_WIDTH) + (H_PADDING * 2) + RIGHT_GUTTER;
     let height = (lines.len() * LINE_HEIGHT) + (V_PADDING * 2) + 46;
 
     let mut out = String::new();
@@ -440,7 +441,7 @@ fn render_terminal_svg(title: &str, content: &str) -> String {
         "  <title>{}</title>\n",
         escape_xml(&format!("Vifei {title}"))
     ));
-    out.push_str(
+    out.push_str(&format!(
         "  <defs>\n\
     <linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">\n\
       <stop offset=\"0%\" stop-color=\"#0b1220\"/>\n\
@@ -459,8 +460,13 @@ fn render_terminal_svg(title: &str, content: &str) -> String {
         <feMergeNode in=\"SourceGraphic\"/>\n\
       </feMerge>\n\
     </filter>\n\
+    <clipPath id=\"terminal-viewport\">\n\
+      <rect x=\"22\" y=\"42\" width=\"{clip_w}\" height=\"{clip_h}\" rx=\"3\" ry=\"3\"/>\n\
+    </clipPath>\n\
   </defs>\n",
-    );
+        clip_w = width.saturating_sub(44),
+        clip_h = height.saturating_sub(56),
+    ));
     out.push_str(&format!(
         "  <rect x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" fill=\"url(#bg)\"/>\n"
     ));
@@ -483,7 +489,7 @@ fn render_terminal_svg(title: &str, content: &str) -> String {
         escape_xml(&format!("vifei · {title}"))
     ));
     out.push_str(
-        "  <g font-family=\"ui-monospace, SFMono-Regular, Menlo, Consolas, monospace\" font-size=\"14\">\n",
+        "  <g clip-path=\"url(#terminal-viewport)\" font-family=\"ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace\" font-size=\"14\">\n",
     );
 
     for (idx, line) in lines.iter().enumerate() {
