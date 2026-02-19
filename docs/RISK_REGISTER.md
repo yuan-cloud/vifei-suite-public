@@ -2106,3 +2106,16 @@ Context:
 3. Nondeterminism: Scanner output ordering is deterministic by file traversal order and per-line scanning; no truth-path hashing or event ordering behavior changed.
 4. Security: Introduces pre-publish secret hygiene controls with allowlist-based false-positive handling and an explicit emergency override path.
 5. Performance: Adds modest extra I/O for demo/release checks only; no impact on runtime ingest/reducer/projection paths.
+
+## bd-3w21 · MEDIA-3: launch bundle packaging + replay notes · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Launch-media packaging now depends on `scripts/demo_quickcheck.sh`, provenance verification, and media hygiene scan as a single contract chain, which intentionally couples release-demo assets to trust checks.
+2. Untested claims: Contract tests validate required files and verification flow, but optional cast capture remains environment-dependent when `asciinema` is unavailable.
+3. Nondeterminism: Bundle index file ordering is deterministic by sorted path traversal; git short SHA and command transcript content reflect the exact current checkout and run outputs by design.
+4. Security: Bundle generation now enforces provenance and hygiene checks before success, and avoids leaking host absolute paths in `bundle-index.json` by storing a normalized run directory label.
+5. Performance: Packaging adds extra hashing and command replay overhead only for launch/demo workflows; core ingest/reducer/projection runtime paths are unaffected.

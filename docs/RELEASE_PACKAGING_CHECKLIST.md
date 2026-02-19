@@ -47,6 +47,12 @@ And pass media hygiene scanning:
 scripts/testing/check_media_hygiene.sh /tmp/panopticon_demo_run
 ```
 
+Bundle proof assets, transcript, and replay notes:
+
+```bash
+scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
+```
+
 False-positive handling and safe override:
 - Add precise regex entries to `scripts/testing/media_hygiene_allowlist.txt` only for known synthetic content.
 - Keep entries narrow (pattern + file context), with a comment explaining why.

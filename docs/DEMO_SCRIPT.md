@@ -125,6 +125,14 @@ scripts/capture_showcase_cast.sh --fast /tmp/panopticon_demo_run/cast
 
 This captures the deterministic demo flow with replayable terminal output.
 
+## Launch bundle packaging
+
+Create a release-friendly media bundle with replay notes and transcript:
+
+```bash
+scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
+```
+
 ## Failure Handling
 
 - If `tier_a_drops != 0`, stop recording and open a blocker bead.
