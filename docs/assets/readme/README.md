@@ -3,7 +3,7 @@
 Generated with:
 
 ```bash
-cargo run -p panopticon-tui --bin capture_readme_assets
+cargo run -p vifei-tui --bin capture_readme_assets
 ```
 
 Files:

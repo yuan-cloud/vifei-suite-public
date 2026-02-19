@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-OUT_DIR="${1:-/tmp/panopticon_visual_cut}"
+OUT_DIR="${1:-/tmp/vifei_visual_cut}"
 mkdir -p "$OUT_DIR"
 
 run() {

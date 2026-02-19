@@ -7,7 +7,7 @@
 
 ## Change summary
 
-- Added `reduce_in_place(&mut State, &CommittedEvent)` in `panopticon-core`.
+- Added `reduce_in_place(&mut State, &CommittedEvent)` in `vifei-core`.
 - Kept existing `reduce(&State, &CommittedEvent) -> State` API for compatibility.
 - Updated replay path to use in-place mutation (`replay_from`).
 - Updated Tour reduction loop to use in-place mutation.
@@ -40,7 +40,7 @@ Because transition logic and write order are unchanged, and because state evolut
 Command (both before and after):
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 ### Before (from `perf-hotspots-a2-2026-02-17.md`)

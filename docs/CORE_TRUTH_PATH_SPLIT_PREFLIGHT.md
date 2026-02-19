@@ -1,9 +1,9 @@
 # CORE Truth-Path Split Preflight (Plan-Only)
 
-Status: plan-only. No `panopticon-core` code moves are performed by this document.
+Status: plan-only. No `vifei-core` code moves are performed by this document.
 
 ## Scope
-- Target area: `crates/panopticon-core/src/event.rs`, `crates/panopticon-core/src/reducer.rs`, `crates/panopticon-core/src/projection.rs`
+- Target area: `crates/vifei-core/src/event.rs`, `crates/vifei-core/src/reducer.rs`, `crates/vifei-core/src/projection.rs`
 - Goal: prepare a safe future decomposition path without changing behavior, ordering, or artifact contracts.
 
 ## Constitutional Constraints
@@ -27,7 +27,7 @@ This preflight is constrained by those documents. Any future split must preserve
 - Guardrail: preserve `ProjectionInvariants` API and behavior, plus `tour` artifact tests (`metrics.json`, `viewmodel.hash`, `ansi.capture`, `timetravel.capture`).
 
 4. API surface risk
-- Risk: downstream crates (`import`, `export`, `tour`, `tui`) break if `panopticon-core` public items move without re-export strategy.
+- Risk: downstream crates (`import`, `export`, `tour`, `tui`) break if `vifei-core` public items move without re-export strategy.
 - Guardrail: phase with `pub use` compatibility shims in `lib.rs` until downstream imports are updated and validated.
 
 5. Merge-conflict risk
@@ -75,4 +75,4 @@ This preflight is constrained by those documents. Any future split must preserve
 
 - This document exists and is linked from planning context.
 - Future core split sequence is explicitly ordered and test-gated.
-- No `panopticon-core` truth-path code was modified in this bead.
+- No `vifei-core` truth-path code was modified in this bead.

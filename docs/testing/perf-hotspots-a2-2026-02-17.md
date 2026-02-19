@@ -17,17 +17,17 @@ This environment does not allow kernel perf counters or ptrace sampling for unpr
 
 ## Fallback method used (non-privileged, reproducible)
 
-Stage-level timing profile was captured with deterministic in-process instrumentation in `panopticon-tour` via:
+Stage-level timing profile was captured with deterministic in-process instrumentation in `vifei-tour` via:
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 Memory/I-O envelope counters were captured with:
 
 ```bash
-/usr/bin/time -v env PANOPTICON_TOUR_PROFILE_ITERS=12 \
-  cargo run -q -p panopticon-tour --bin profile_tour --release
+/usr/bin/time -v env VIFEI_TOUR_PROFILE_ITERS=12 \
+  cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 ## Results
@@ -76,18 +76,18 @@ On a host where you can adjust sysctl and use perf:
 sudo sysctl -w kernel.perf_event_paranoid=1
 
 # collect counters
-perf stat -d cargo run -q -p panopticon-tour --bin bench_tour --release
+perf stat -d cargo run -q -p vifei-tour --bin bench_tour --release
 
 # collect sampled call stack profile
 perf record -F 99 --call-graph dwarf -- \
-  cargo run -q -p panopticon-tour --bin bench_tour --release
+  cargo run -q -p vifei-tour --bin bench_tour --release
 perf report --stdio | head -n 120
 ```
 
 Optional ptrace-based syscall profile:
 
 ```bash
-strace -f -c cargo run -q -p panopticon-tour --bin bench_tour --release
+strace -f -c cargo run -q -p vifei-tour --bin bench_tour --release
 ```
 
 ## Outcome for next bead

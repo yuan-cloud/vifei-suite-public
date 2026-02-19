@@ -10,7 +10,7 @@ patterns that enforce invariant I4 (testable determinism).
 The foundational test: serialize, deserialize, re-serialize, assert
 byte equality.
 
-From `crates/panopticon-core/src/event.rs`:
+From `crates/vifei-core/src/event.rs`:
 
 ```rust
 fn assert_roundtrip<T: Serialize + for<'de> Deserialize<'de>>(value: &T, label: &str) {
@@ -40,7 +40,7 @@ fn assert_roundtrip<T: Serialize + for<'de> Deserialize<'de>>(value: &T, label: 
 The N-run test catches hidden nondeterminism (HashMap iteration, thread-local
 state, float accumulation order).
 
-From `crates/panopticon-core/src/reducer.rs`:
+From `crates/vifei-core/src/reducer.rs`:
 
 ```rust
 #[test]

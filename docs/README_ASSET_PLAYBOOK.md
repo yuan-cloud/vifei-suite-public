@@ -25,7 +25,7 @@ This command regenerates:
 `asciinema` (replayable terminal cast):
 
 ```bash
-scripts/capture_showcase_cast.sh --fast /tmp/panopticon-readme-cast
+scripts/capture_showcase_cast.sh --fast /tmp/vifei-readme-cast
 ```
 
 Use recordings only when they map to real commands in this repo.

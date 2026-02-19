@@ -320,7 +320,7 @@
       "evidence_refs": [],
       "id": "bd-1siy",
       "issue_type": "task",
-      "title": "SHOWCASE-2: implement showcase UI profile in panopticon-tui"
+      "title": "SHOWCASE-2: implement showcase UI profile in vifei-tui"
     },
     {
       "classification": "covered_exact",
@@ -923,11 +923,11 @@
       "evidence_refs": [],
       "id": "bd-3gxs",
       "issue_type": "task",
-      "title": "SHOWCASE-1: detailed research for Panopticon showcase UX profile"
+      "title": "SHOWCASE-1: detailed research for Vifei showcase UX profile"
     },
     {
       "classification": "covered_parent_rollup",
-      "close_reason": "M5 complete: Deterministic projection (State + ProjectionInvariants -> ViewModel). LadderLevel enum (L0-L5). ExportSafetyState enum. ViewModel with all confession fields. viewmodel.hash via BLAKE3. 10-run determinism test. All sub-beads (M5.1-M5.5) closed. Total 153 tests in panopticon-core.",
+      "close_reason": "M5 complete: Deterministic projection (State + ProjectionInvariants -> ViewModel). LadderLevel enum (L0-L5). ExportSafetyState enum. ViewModel with all confession fields. viewmodel.hash via BLAKE3. 10-run determinism test. All sub-beads (M5.1-M5.5) closed. Total 153 tests in vifei-core.",
       "covered": true,
       "dependencies_parent_children": [
         "bd-3gy.1",
@@ -1015,7 +1015,7 @@
       "evidence_refs": [],
       "id": "bd-3lr",
       "issue_type": "task",
-      "title": "STRUCT-2.3: split panopticon-tui CLI internals by contract and command execution"
+      "title": "STRUCT-2.3: split vifei-tui CLI internals by contract and command execution"
     },
     {
       "classification": "covered_exact",
@@ -1126,7 +1126,7 @@
       "evidence_refs": [],
       "id": "bd-3n5",
       "issue_type": "task",
-      "title": "STRUCT-2.1: split panopticon-export internals by concern"
+      "title": "STRUCT-2.1: split vifei-export internals by concern"
     },
     {
       "classification": "covered_exact",
@@ -1412,7 +1412,7 @@
     },
     {
       "classification": "gap_requires_entry",
-      "close_reason": "M6.1 complete: TUI shell with CLI (panopticon view), terminal init (crossterm), main event loop, EventLog loading pipeline (read \u2192 reduce \u2192 project), panic hook for cleanup. Incident Lens and Forensic Lens (stub) with Tab toggle. Truth HUD renders all confession fields. 3 tests. Dependencies: ratatui 0.29, crossterm 0.28, clap 4.",
+      "close_reason": "M6.1 complete: TUI shell with CLI (vifei view), terminal init (crossterm), main event loop, EventLog loading pipeline (read \u2192 reduce \u2192 project), panic hook for cleanup. Incident Lens and Forensic Lens (stub) with Tab toggle. Truth HUD renders all confession fields. 3 tests. Dependencies: ratatui 0.29, crossterm 0.28, clap 4.",
       "covered": false,
       "dependencies_parent_children": [],
       "evidence_refs": [],
@@ -1538,7 +1538,7 @@
     },
     {
       "classification": "covered_exact",
-      "close_reason": "Implemented CI invariant tests in crates/panopticon-tour/tests/tour_invariants.rs with full gates passing.",
+      "close_reason": "Implemented CI invariant tests in crates/vifei-tour/tests/tour_invariants.rs with full gates passing.",
       "covered": true,
       "dependencies_parent_children": [],
       "evidence_refs": [],
@@ -1664,7 +1664,7 @@
       "evidence_refs": [],
       "id": "bd-d9m",
       "issue_type": "task",
-      "title": "STRUCT-2.2: split panopticon-tour internals by pipeline and artifact emitters"
+      "title": "STRUCT-2.2: split vifei-tour internals by pipeline and artifact emitters"
     },
     {
       "classification": "covered_exact",
@@ -1695,7 +1695,7 @@
       "evidence_refs": [],
       "id": "bd-gxd",
       "issue_type": "feature",
-      "title": "UX-POLISH: premium operator experience for Panopticon CLI/TUI"
+      "title": "UX-POLISH: premium operator experience for Vifei CLI/TUI"
     },
     {
       "classification": "covered_exact",
@@ -2039,7 +2039,7 @@
       ],
       "id": "bd-yuc.2",
       "issue_type": "task",
-      "title": "M3.2: Event type mapping (Cassette \u2192 Panopticon)"
+      "title": "M3.2: Event type mapping (Cassette \u2192 Vifei)"
     },
     {
       "classification": "covered_milestone_alias",

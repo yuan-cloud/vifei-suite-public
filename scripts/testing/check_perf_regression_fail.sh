@@ -8,8 +8,8 @@ MAX_P95_INCREASE_PCT="${MAX_P95_INCREASE_PCT:-20}"
 MAX_P99_INCREASE_PCT="${MAX_P99_INCREASE_PCT:-25}"
 MIN_BASELINE_ITERS="${MIN_BASELINE_ITERS:-10}"
 MIN_ARTIFACT_ITERS="${MIN_ARTIFACT_ITERS:-5}"
-OVERRIDE_FLAG="${PANOPTICON_PERF_GATE_OVERRIDE:-0}"
-OVERRIDE_REASON="${PANOPTICON_PERF_GATE_OVERRIDE_REASON:-}"
+OVERRIDE_FLAG="${VIFEI_PERF_GATE_OVERRIDE:-0}"
+OVERRIDE_REASON="${VIFEI_PERF_GATE_OVERRIDE_REASON:-}"
 
 fail() {
   local section="$1"
@@ -24,7 +24,7 @@ if [[ ! -f "$ARTIFACT_PATH" ]]; then
   fail \
     "PERF2-artifact" \
     "missing perf artifact at $ARTIFACT_PATH" \
-    "PANOPTICON_TOUR_BENCH_ARTIFACT=$ARTIFACT_PATH cargo run -q -p panopticon-tour --bin bench_tour --release"
+    "VIFEI_TOUR_BENCH_ARTIFACT=$ARTIFACT_PATH cargo run -q -p vifei-tour --bin bench_tour --release"
 fi
 
 if [[ ! -f "$BASELINE_PATH" ]]; then
@@ -48,8 +48,8 @@ max_p99 = float(sys.argv[5])
 min_baseline_iters = int(sys.argv[6])
 min_artifact_iters = int(sys.argv[7])
 
-override_enabled = os.environ.get("PANOPTICON_PERF_GATE_OVERRIDE", "0") == "1"
-override_reason = os.environ.get("PANOPTICON_PERF_GATE_OVERRIDE_REASON", "").strip()
+override_enabled = os.environ.get("VIFEI_PERF_GATE_OVERRIDE", "0") == "1"
+override_reason = os.environ.get("VIFEI_PERF_GATE_OVERRIDE_REASON", "").strip()
 
 artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
 baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
@@ -59,13 +59,13 @@ def fail(section: str, msg: str, replay: str) -> "None":
     print(f"replay: {replay}")
     raise SystemExit(1)
 
-if artifact.get("schema_version") != "panopticon-tour-bench-v1":
+if artifact.get("schema_version") != "vifei-tour-bench-v1":
     fail(
         "PERF2-schema",
         f"artifact schema mismatch: {artifact.get('schema_version')}",
-        "cargo run -q -p panopticon-tour --bin bench_tour --release",
+        "cargo run -q -p vifei-tour --bin bench_tour --release",
     )
-if baseline.get("schema_version") != "panopticon-tour-bench-v1":
+if baseline.get("schema_version") != "vifei-tour-bench-v1":
     fail(
         "PERF2-schema",
         f"baseline schema mismatch: {baseline.get('schema_version')}",
@@ -118,8 +118,8 @@ if override_enabled:
     if not override_reason:
         fail(
             "PERF2-override",
-            "override enabled but PANOPTICON_PERF_GATE_OVERRIDE_REASON is empty",
-            "set PANOPTICON_PERF_GATE_OVERRIDE_REASON='<ticket-or-incident-id>'",
+            "override enabled but VIFEI_PERF_GATE_OVERRIDE_REASON is empty",
+            "set VIFEI_PERF_GATE_OVERRIDE_REASON='<ticket-or-incident-id>'",
         )
     print(
         "::warning title=PERF_GATE_OVERRIDE::perf regression check overridden "
@@ -141,13 +141,13 @@ for metric, cur, base, delta_pct, max_increase in regressions:
         f"delta={delta_pct:.2f}% threshold={max_increase:.2f}%"
     )
 print(
-    "replay: PANOPTICON_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json "
-    "PANOPTICON_PERF_TREND_DIR=.tmp/full-confidence/perf/trends "
-    "cargo run -q -p panopticon-tour --bin bench_tour --release"
+    "replay: VIFEI_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json "
+    "VIFEI_PERF_TREND_DIR=.tmp/full-confidence/perf/trends "
+    "cargo run -q -p vifei-tour --bin bench_tour --release"
 )
 print(
-    "override (incident-only): PANOPTICON_PERF_GATE_OVERRIDE=1 "
-    "PANOPTICON_PERF_GATE_OVERRIDE_REASON='<ticket>'"
+    "override (incident-only): VIFEI_PERF_GATE_OVERRIDE=1 "
+    "VIFEI_PERF_GATE_OVERRIDE_REASON='<ticket>'"
 )
 raise SystemExit(1)
 PY

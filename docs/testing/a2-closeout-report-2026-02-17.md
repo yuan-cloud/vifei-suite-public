@@ -20,7 +20,7 @@ A2 delivered a high-confidence speed improvement on the measured critical path a
 Measurement command:
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 | Metric | Before (A2-2) | After (A2-7) | Delta |

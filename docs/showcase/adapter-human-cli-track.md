@@ -7,7 +7,7 @@ Use `--human` for each command to force human-oriented output even in piped cont
 ## 1) View (interactive inspection)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --human view docs/assets/readme/sample-eventlog.jsonl --profile showcase
 ```
 
@@ -19,22 +19,22 @@ Outcome:
 ## 2) Tour (deterministic proof run)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
-  --human tour fixtures/large-stress.jsonl --stress --output-dir /tmp/panopticon-human-tour
+cargo run -p vifei-tui --bin vifei -- \
+  --human tour fixtures/large-stress.jsonl --stress --output-dir /tmp/vifei-human-tour
 ```
 
 Outcome:
-- Writes proof artifacts under `/tmp/panopticon-human-tour`.
+- Writes proof artifacts under `/tmp/vifei-human-tour`.
 - Key files: `metrics.json`, `viewmodel.hash`, `ansi.capture`, `timetravel.capture`.
 
 ## 3) Export (share-safe clean path)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --human export docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --share-safe \
-  --output /tmp/panopticon-human-export/bundle.tar.zst \
-  --refusal-report /tmp/panopticon-human-export/refusal-report.json
+  --output /tmp/vifei-human-export/bundle.tar.zst \
+  --refusal-report /tmp/vifei-human-export/refusal-report.json
 ```
 
 Outcome:
@@ -44,11 +44,11 @@ Outcome:
 ## 4) Incident pack (one-command evidence pack)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --human incident-pack \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
-  --output-dir /tmp/panopticon-human-incident-pack
+  --output-dir /tmp/vifei-human-incident-pack
 ```
 
 Outcome:
@@ -58,13 +58,13 @@ Outcome:
 ## Optional mixed-format incident pack
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --human incident-pack \
   fixtures/small-session.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --left-format cassette \
   --right-format eventlog \
-  --output-dir /tmp/panopticon-human-incident-pack-mixed
+  --output-dir /tmp/vifei-human-incident-pack-mixed
 ```
 
 Outcome:

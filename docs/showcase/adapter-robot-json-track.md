@@ -19,8 +19,8 @@ Success responses include `data`.
 ## 1) Tour success envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
-  --json tour fixtures/small-session.jsonl --stress --output-dir /tmp/panopticon-robot-tour
+cargo run -p vifei-tui --bin vifei -- \
+  --json tour fixtures/small-session.jsonl --stress --output-dir /tmp/vifei-robot-tour
 ```
 
 Expected:
@@ -32,7 +32,7 @@ Expected:
 ## 2) Compare no-diff envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json compare \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl
@@ -47,7 +47,7 @@ Expected:
 ## 3) Compare divergence envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json compare \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-refusal-eventlog.jsonl
@@ -62,11 +62,11 @@ Expected:
 ## 4) Share-safe refusal envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
-  --output /tmp/panopticon-robot-export/refused.tar.zst \
-  --refusal-report /tmp/panopticon-robot-export/refusal-report.json
+  --output /tmp/vifei-robot-export/refused.tar.zst \
+  --refusal-report /tmp/vifei-robot-export/refusal-report.json
 ```
 
 Expected:
@@ -78,7 +78,7 @@ Expected:
 ## 5) Invalid args envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- --json bogus-subcommand
+cargo run -p vifei-tui --bin vifei -- --json bogus-subcommand
 ```
 
 Expected:
@@ -90,7 +90,7 @@ Expected:
 ## 6) Not-found envelope
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json export does-not-exist.jsonl --share-safe --output /tmp/out.tar.zst
 ```
 

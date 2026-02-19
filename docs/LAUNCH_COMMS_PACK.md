@@ -13,14 +13,14 @@ This pack intentionally excludes README authoring and uses only verified claims 
 
 Title:
 
-`Panopticon Suite v0.1.0`
+`Vifei Suite v0.1.0`
 
 Body template:
 
 ```markdown
-## Panopticon Suite v0.1.0
+## Vifei Suite v0.1.0
 
-Panopticon is a deterministic, local-first flight recorder for AI agent runs.
+Vifei is a deterministic, local-first flight recorder for AI agent runs.
 
 ### Highlights
 - Deterministic stress Tour with proof artifacts (`metrics.json`, `viewmodel.hash`, `ansi.capture`, `timetravel.capture`)
@@ -33,7 +33,7 @@ Panopticon is a deterministic, local-first flight recorder for AI agent runs.
 - Release-trust CI job emits checksum manifest and provenance attestation
 
 ### Artifacts
-- `panopticon`
+- `vifei`
 - `bench_tour`
 - `sha256sums.txt`
 
@@ -50,7 +50,7 @@ scripts/verify_release_artifacts.sh dist
 - Fresh install recommended for first v0.1 use
 - Re-run trust challenge after upgrade:
 ```bash
-scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
+scripts/demo_quickcheck.sh /tmp/vifei_demo_run
 ```
 ```
 
@@ -58,7 +58,7 @@ scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
 
 Post 1:
 
-`Panopticon Suite v0.1.0 is out: deterministic, local-first run evidence for AI agent workflows. It records truth as append-only EventLog and proves behavior under stress with replayable artifacts.`
+`Vifei Suite v0.1.0 is out: deterministic, local-first run evidence for AI agent workflows. It records truth as append-only EventLog and proves behavior under stress with replayable artifacts.`
 
 Post 2:
 
@@ -71,7 +71,7 @@ Post 3:
 Post 4:
 
 `Trust challenge takes ~1 command path:
-scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
+scripts/demo_quickcheck.sh /tmp/vifei_demo_run
 Look for tier_a_drops=0 and stable hash evidence.`
 
 Post 5:
@@ -80,7 +80,7 @@ Post 5:
 
 ## 3) LinkedIn Post Draft
 
-`Panopticon Suite v0.1.0 is now available.
+`Vifei Suite v0.1.0 is now available.
 
 This release focuses on deterministic run evidence for AI agent workflows:
 - append-only EventLog as canonical truth
@@ -91,7 +91,7 @@ What I care about most in this release is trust through verification, not market
 
 If you want a quick technical pass, run:
 
-scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
+scripts/demo_quickcheck.sh /tmp/vifei_demo_run
 
 and inspect tier_a_drops + hash outputs directly.`
 
@@ -99,7 +99,7 @@ and inspect tier_a_drops + hash outputs directly.`
 
 Title:
 
-`Deterministic Agent Run Evidence: Building Panopticon v0.1`
+`Deterministic Agent Run Evidence: Building Vifei v0.1`
 
 Outline:
 

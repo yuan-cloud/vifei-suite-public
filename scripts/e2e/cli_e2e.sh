@@ -105,15 +105,15 @@ assert_contains() {
   fi
 }
 
-run_cmd quick_help_json 0 cargo run -p panopticon-tui --bin panopticon
+run_cmd quick_help_json 0 cargo run -p vifei-tui --bin vifei
 assert_contains quick_help_json_stdout "$OUT_DIR/cmd/quick_help_json.stdout.log" "\"quick_help\""
 
 run_cmd view_non_tty_refusal 4 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   view docs/assets/readme/sample-eventlog.jsonl
 
 run_cmd tour_stress 0 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   tour fixtures/large-stress.jsonl --stress --output-dir "$OUT_DIR/tour"
 
 assert_file tour_metrics "$OUT_DIR/tour/metrics.json"
@@ -189,14 +189,14 @@ PY
 log_json "info" "tour_metadata" "ok" 0 "viewmodel_hash=${tour_hash_value} event_count_total=${tour_event_count}" "$OUT_DIR/tour/metrics.json"
 
 run_cmd tour_bench_release 0 \
-  env PANOPTICON_TOUR_BENCH_ITERS="${PANOPTICON_TOUR_BENCH_ITERS:-3}" \
-  cargo run -q -p panopticon-tour --bin bench_tour --release
+  env VIFEI_TOUR_BENCH_ITERS="${VIFEI_TOUR_BENCH_ITERS:-3}" \
+  cargo run -q -p vifei-tour --bin bench_tour --release
 assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p50="
 assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p95="
 assert_contains tour_bench_release_stdout "$OUT_DIR/cmd/tour_bench_release.stdout.log" "tour_run_ms_p99="
 
 run_cmd export_clean 0 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/bundle.tar.zst" \
@@ -206,7 +206,7 @@ assert_file export_bundle "$OUT_DIR/export/bundle.tar.zst"
 assert_contains export_clean_stdout "$OUT_DIR/cmd/export_clean.stdout.log" "\"code\":\"OK\""
 
 run_cmd export_refusal 3 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/refused.tar.zst" \

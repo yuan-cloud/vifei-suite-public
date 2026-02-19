@@ -1,6 +1,6 @@
 # Rust Error Handling Guide
 
-Error handling patterns for Panopticon using thiserror and anyhow.
+Error handling patterns for Vifei using thiserror and anyhow.
 
 **Crate versions:** thiserror 1.6.0, anyhow 1.1.0
 
@@ -10,8 +10,8 @@ Error handling patterns for Panopticon using thiserror and anyhow.
 
 | Crate type | Error library | Why |
 |-----------|--------------|-----|
-| Library (`panopticon-core`, `-import`, `-export`) | `thiserror` | Callers can match on specific variants |
-| Binary (`panopticon-tui` main.rs) | `anyhow` | Ergonomic, context-rich error chains |
+| Library (`vifei-core`, `-import`, `-export`) | `thiserror` | Callers can match on specific variants |
+| Binary (`vifei-tui` main.rs) | `anyhow` | Ergonomic, context-rich error chains |
 
 Many projects use both. thiserror defines structured errors in libraries;
 anyhow wraps them at the top level for human-readable reporting.
@@ -20,7 +20,7 @@ anyhow wraps them at the top level for human-readable reporting.
 
 ## thiserror patterns (library crates)
 
-### Panopticon-specific error enum
+### Vifei-specific error enum
 
 ```rust
 use thiserror::Error;

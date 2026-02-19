@@ -1,4 +1,4 @@
-# Panopticon v0.1 Launch + Distribution Plan (Post-Stabilization)
+# Vifei v0.1 Launch + Distribution Plan (Post-Stabilization)
 
 Status: execution-tracked artifact. Core launch-doc tracks (`bd-x7q.*`, `bd-1w9.*`) are complete; remaining items are release-time operations and GitHub settings gates.
 
@@ -6,7 +6,7 @@ Status: execution-tracked artifact. Core launch-doc tracks (`bd-x7q.*`, `bd-1w9.
 
 This plan answers four questions for v0.1:
 
-1. How Panopticon should be shipped (distribution, not cloud deployment)
+1. How Vifei should be shipped (distribution, not cloud deployment)
 2. What the launch package should include
 3. How to add personality/"wow" moments without breaking trust posture
 4. How to sequence implementation and comms work with bead-driven execution
@@ -19,7 +19,7 @@ This plan answers four questions for v0.1:
 
 ## Do We Need "Deployment" for v0.1?
 
-For v0.1, Panopticon does not need a hosted runtime deployment.
+For v0.1, Vifei does not need a hosted runtime deployment.
 
 Recommended interpretation:
 
@@ -29,7 +29,7 @@ Recommended interpretation:
   - crates.io publish for applicable crates
   - optional package manager channels (Homebrew, winget)
 
-Rationale: Panopticon is local-first and deterministic. Trust is built by reproducible local execution and artifact verification, not by uptime metrics.
+Rationale: Vifei is local-first and deterministic. Trust is built by reproducible local execution and artifact verification, not by uptime metrics.
 
 ## Release Surfaces (Priority Order)
 
@@ -56,7 +56,7 @@ Rationale: Panopticon is local-first and deterministic. Trust is built by reprod
 
 ## Positioning (Launch Messaging)
 
-Panopticon should position as:
+Vifei should position as:
 
 - deterministic local-first run evidence cockpit
 - replayable truth model under overload (truth preserved, projection degrades)
@@ -87,7 +87,7 @@ These are adjacent, not identical:
 - strategy: OSS LLM eval/observability with explicit enterprise option
 - lesson: side-by-side OSS + practical production paths reduce adoption friction
 
-Panopticon differentiation to emphasize:
+Vifei differentiation to emphasize:
 
 - canonical local event truth + deterministic replay hash surfaces
 - explicit overload honesty model
@@ -102,7 +102,7 @@ FrankenTUI's visible go-to-market choices worth copying:
 3. Public releases + crate publishing progression
 4. Visual proof artifacts (screenshots/showcase demos)
 
-Adaptation for Panopticon:
+Adaptation for Vifei:
 
 - keep a demo/tour command as first-run path
 - show proof artifacts (`metrics.json`, `viewmodel.hash`, capture files) early in README

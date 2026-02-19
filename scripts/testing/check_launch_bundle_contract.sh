@@ -28,7 +28,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-cargo run -p panopticon-tour --bin media_provenance -- \
+cargo run -p vifei-tour --bin media_provenance -- \
   --verify "$bundle_dir/demo-proof/media-provenance.json" \
   --base-dir "$bundle_dir/demo-proof" >/dev/null
 

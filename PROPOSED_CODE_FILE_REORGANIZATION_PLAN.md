@@ -4,7 +4,7 @@ Status: plan-only. No file moves, renames, API changes, or behavior changes are 
 
 ## 1) Purpose
 
-This plan adapts your request to the actual Panopticon Suite structure.
+This plan adapts your request to the actual Vifei Suite structure.
 
 Key finding up front:
 - The repo is **not** suffering from top-level folder chaos.
@@ -15,38 +15,38 @@ So the right move is targeted internal module decomposition, not broad directory
 ## 2) Current architecture (what exists today)
 
 Workspace crates are already clear and product-aligned:
-- `crates/panopticon-core`: truth model, append writer, reducer, projection, hashing
-- `crates/panopticon-import`: adapter ingestion and importer contracts
-- `crates/panopticon-export`: discovery, secret scanning, refusal reports, bundle output
-- `crates/panopticon-tour`: deterministic replay/tour pipeline and artifact generation
-- `crates/panopticon-tui`: interactive viewer, lenses, CLI entry/handlers
+- `crates/vifei-core`: truth model, append writer, reducer, projection, hashing
+- `crates/vifei-import`: adapter ingestion and importer contracts
+- `crates/vifei-export`: discovery, secret scanning, refusal reports, bundle output
+- `crates/vifei-tour`: deterministic replay/tour pipeline and artifact generation
+- `crates/vifei-tui`: interactive viewer, lenses, CLI entry/handlers
 
 Largest current files (high cognitive-load candidates):
-- `crates/panopticon-core/src/projection.rs` (~1698)
-- `crates/panopticon-core/src/reducer.rs` (~1331)
-- `crates/panopticon-tui/src/cli_handlers.rs` (~1293)
-- `crates/panopticon-export/src/lib.rs` (~1180)
-- `crates/panopticon-core/src/event.rs` (~1044)
-- `crates/panopticon-tui/src/forensic_lens.rs` (~928)
+- `crates/vifei-core/src/projection.rs` (~1698)
+- `crates/vifei-core/src/reducer.rs` (~1331)
+- `crates/vifei-tui/src/cli_handlers.rs` (~1293)
+- `crates/vifei-export/src/lib.rs` (~1180)
+- `crates/vifei-core/src/event.rs` (~1044)
+- `crates/vifei-tui/src/forensic_lens.rs` (~928)
 
 ## 3) Dependency and execution-flow map (condensed)
 
 ### A) CLI path
-- `panopticon-tui/src/main.rs`
-- `panopticon-tui/src/cli_handlers.rs`
-- Depends on `panopticon-core`, `panopticon-import`, `panopticon-export`, `panopticon-tour`
+- `vifei-tui/src/main.rs`
+- `vifei-tui/src/cli_handlers.rs`
+- Depends on `vifei-core`, `vifei-import`, `vifei-export`, `vifei-tour`
 
 ### B) Truth path
 - Importers produce `ImportEvent` (no canonical `commit_index`)
-- `panopticon-core/src/eventlog.rs` append writer assigns canonical `commit_index`
-- `panopticon-core/src/reducer.rs` and `projection.rs` produce deterministic state/viewmodel hashes
+- `vifei-core/src/eventlog.rs` append writer assigns canonical `commit_index`
+- `vifei-core/src/reducer.rs` and `projection.rs` produce deterministic state/viewmodel hashes
 
 ### C) Export safety path
-- `panopticon-export/src/lib.rs` orchestrates discovery + scanning + refusal report + bundle creation
+- `vifei-export/src/lib.rs` orchestrates discovery + scanning + refusal report + bundle creation
 - Secret scanning and refusal reporting are safety-critical and currently concentrated in one large file
 
 ### D) Tour/evidence path
-- `panopticon-tour/src/lib.rs` runs deterministic import→append→reduce→project flow
+- `vifei-tour/src/lib.rs` runs deterministic import→append→reduce→project flow
 - Emits artifacts consumed by README/demo validation and trust proofs
 
 ## 4) Structural pain points
@@ -62,9 +62,9 @@ Principle:
 - Refactor internally by concern in small, reversible phases.
 - One structural lever per bead.
 
-### Phase 1 (highest ROI, lowest behavior risk): `panopticon-export`
+### Phase 1 (highest ROI, lowest behavior risk): `vifei-export`
 
-Current concern mix inside `crates/panopticon-export/src/lib.rs`:
+Current concern mix inside `crates/vifei-export/src/lib.rs`:
 - config/result surface types
 - export pipeline orchestration
 - refusal-report model and serialization
@@ -82,9 +82,9 @@ Why this first:
 - Directly improves maintainability of security-sensitive code paths.
 - Reduced chance of accidental regressions from unrelated edits.
 
-### Phase 2: `panopticon-tui` CLI internals
+### Phase 2: `vifei-tui` CLI internals
 
-Current concern mix inside `crates/panopticon-tui/src/cli_handlers.rs`:
+Current concern mix inside `crates/vifei-tui/src/cli_handlers.rs`:
 - command orchestration
 - JSON envelope builders
 - compare/replay/export/tour handlers
@@ -103,9 +103,9 @@ Why this second:
 - Largest operational surface for human + agent users.
 - Makes behavior and tests easier to map to command families.
 
-### Phase 3: `panopticon-tour` pipeline clarity
+### Phase 3: `vifei-tour` pipeline clarity
 
-Current `crates/panopticon-tour/src/lib.rs` still mixes orchestration + state transitions + profile output.
+Current `crates/vifei-tour/src/lib.rs` still mixes orchestration + state transitions + profile output.
 
 Proposed internal structure:
 - `src/lib.rs`: public types/re-exports
@@ -116,7 +116,7 @@ Proposed internal structure:
 Why this third:
 - Improves reproducibility auditing and benchmark readability.
 
-### Phase 4 (only after earlier phases): selective `panopticon-core` extraction
+### Phase 4 (only after earlier phases): selective `vifei-core` extraction
 
 Core is safety-critical and coupled to constitutional invariants. Split only with strict proof steps.
 
@@ -169,9 +169,9 @@ Avoid these high-risk moves in current cycle:
 
 ## 10) Recommended first implementation bead sequence
 
-1. `EXPORT-MOD-1`: split `panopticon-export/src/lib.rs` into pipeline + refusal + label modules.
-2. `CLI-MOD-1`: split `panopticon-tui/src/cli_handlers.rs` by command family.
-3. `TOUR-MOD-1`: split `panopticon-tour/src/lib.rs` orchestration/profile concerns.
+1. `EXPORT-MOD-1`: split `vifei-export/src/lib.rs` into pipeline + refusal + label modules.
+2. `CLI-MOD-1`: split `vifei-tui/src/cli_handlers.rs` by command family.
+3. `TOUR-MOD-1`: split `vifei-tour/src/lib.rs` orchestration/profile concerns.
 4. `CORE-MOD-PLAN-1`: plan-only doc for safe core decomposition; no code movement yet.
 
 ## 11) Expected outcome

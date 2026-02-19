@@ -26,7 +26,7 @@ A3 delivered a deterministic-safe parse-path improvement (C2), verified equivale
 Profile command:
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 | Metric | A2 closeout | A3 post-C2 | Delta |

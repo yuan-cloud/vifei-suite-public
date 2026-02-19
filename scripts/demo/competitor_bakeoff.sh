@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Competitor bakeoff harness for Panopticon.
+# Competitor bakeoff harness for Vifei.
 # Runs objective, reproducible checks for:
 # 1) determinism stability
 # 2) refusal semantics
@@ -41,7 +41,7 @@ scripts/demo/refusal_radar.sh "--$MODE" "$OUT_DIR/radar" \
   2>&1 | tee "$OUT_DIR/radar.log"
 
 echo "[bakeoff] check 3/4: explainability capture"
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   tour "$FIXTURE" --stress --output-dir "$OUT_DIR/tour" >/dev/null
 
 ANSI_CAPTURE="$OUT_DIR/tour/ansi.capture"
@@ -54,7 +54,7 @@ done
 
 echo "[bakeoff] check 4/4: incident evidence pack"
 SAMPLE_EVENTLOG="docs/assets/readme/sample-export-clean-eventlog.jsonl"
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   incident-pack "$SAMPLE_EVENTLOG" "$SAMPLE_EVENTLOG" \
   --output-dir "$OUT_DIR/incident-pack" >/dev/null
 
@@ -107,7 +107,7 @@ duel_hash_b = (out_dir / "duel" / "b" / "viewmodel.hash").read_text(encoding="ut
 refusal_report = json.loads((out_dir / "radar" / "refusal-report.json").read_text(encoding="utf-8"))
 blocked_items = refusal_report.get("blocked_items", [])
 report = {
-    "schema_version": "panopticon-competitor-bakeoff-v1",
+    "schema_version": "vifei-competitor-bakeoff-v1",
     "mode": mode,
     "fixture": fixture,
     "duration_sec": duration,

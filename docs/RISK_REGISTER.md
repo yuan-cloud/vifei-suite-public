@@ -51,7 +51,7 @@ Context:
 - Invariants referenced: I4 (testable determinism via docs_guard)
 - Constitution touched: none
 
-1. Coupling: Workspace `Cargo.toml` declares all five crates with inter-crate dependency edges (`panopticon-import`, `panopticon-export`, `panopticon-tui`, `panopticon-tour` all depend on `panopticon-core`). These edges are intentional per the expected repo layout but mean `panopticon-core` public API changes will cascade to all downstream crates. Low risk since this is the designed architecture.
+1. Coupling: Workspace `Cargo.toml` declares all five crates with inter-crate dependency edges (`vifei-import`, `vifei-export`, `vifei-tui`, `vifei-tour` all depend on `vifei-core`). These edges are intentional per the expected repo layout but mean `vifei-core` public API changes will cascade to all downstream crates. Low risk since this is the designed architecture.
 2. Untested claims: The `docs_guard` test uses `HashSet` for guarded line matching, which is correct for exact-match semantics but does not catch near-misses (e.g., a line with one character changed). This is by design per AGENTS.md spec ("character-exact match after whitespace trimming"). Edge case: a guarded line that also appears legitimately in an unguarded context would be a false positive — no such case exists today but could arise if constitution docs contain common markdown phrases.
 3. Nondeterminism: The `docs_guard` test uses `HashSet` internally for lookup but produces deterministic pass/fail results (set membership is deterministic; only iteration order is nondeterministic, and we only check membership). The `collect_md_files` function uses `read_dir` which has nondeterministic ordering, but violation reporting order is cosmetic only — the test pass/fail is deterministic.
 4. Security: No secrets, tokens, or PII introduced. All files are stub code and governance docs. No network access, no user data handling.
@@ -68,7 +68,7 @@ Context:
 
 1. Coupling: The two-type pattern (`ImportEvent` / `CommittedEvent`) is now the load-bearing type boundary for all downstream beads. M2 (append writer) must call `CommittedEvent::commit()` to assign `commit_index`. M3 (importer) must produce `ImportEvent`. M4 (reducer) must consume `CommittedEvent`. Changing the field set on either type will cascade to all consumers. This coupling is intentional and enforces D6 at compile time. The `EventPayload` enum is also load-bearing — adding new Tier A variants requires updating every match arm in downstream code. The `Generic` variant mitigates this for Tier B/C.
 2. Untested claims: (a) `serde_json` Ryu-based f64 serialization is assumed deterministic across platforms for `PolicyDecision::queue_pressure`. Tested for specific values (0.0, 0.5, 0.8, 0.85, 1.0, 0.123456789) but not exhaustively. Exotic values (subnormals, negative zero) are not tested because queue_pressure is clamped to [0.0, 1.0]. (b) Field order stability relies on serde's documented guarantee that struct fields serialize in declaration order. If serde ever changes this default, all round-trip tests would catch it immediately. (c) We claim `CommittedEvent::commit()` is the ONLY way to create a `CommittedEvent`, but Rust's struct literal syntax allows direct construction outside the module if all fields are `pub`. The compile-time enforcement is that `ImportEvent` lacks `commit_index`, not that `CommittedEvent` is truly opaque.
-3. Nondeterminism: (a) `f64` in `PolicyDecision::queue_pressure` — serde_json Ryu produces canonical shortest representation for finite values, which is deterministic. Documented in code. (b) `BTreeMap<String, String>` in `Generic::data` — deterministic sorted iteration, verified by test. (c) No `HashMap` anywhere in event types. (d) No wall clock, no RNG, no thread-local state. Audit: `rg 'HashMap' crates/panopticon-core/src/event.rs` returns zero hits in non-test code.
+3. Nondeterminism: (a) `f64` in `PolicyDecision::queue_pressure` — serde_json Ryu produces canonical shortest representation for finite values, which is deterministic. Documented in code. (b) `BTreeMap<String, String>` in `Generic::data` — deterministic sorted iteration, verified by test. (c) No `HashMap` anywhere in event types. (d) No wall clock, no RNG, no thread-local state. Audit: `rg 'HashMap' crates/vifei-core/src/event.rs` returns zero hits in non-test code.
 4. Security: No secrets, tokens, or PII in the schema itself. Event payloads may contain sensitive data (e.g., `ToolCall::args` with API keys), but that is M8's responsibility (secret scanner). The schema does not add any access controls — all fields are `pub`, all data is in-memory. Acceptable for v0.1 local-only mode.
 5. Performance: No performance cliffs. All types are small (String fields, enum variants). Serialization is O(n) in field count. The `CommittedEvent::commit()` method moves all fields without cloning. The 32 unit tests add ~0.02s to the test suite. No unbounded allocations — all String fields are bounded by the inline payload threshold (blobs handle large content).
 
@@ -96,9 +96,9 @@ Context:
 - Invariants referenced: I1 (forensic truth — synthesized marking), I4 (testable determinism — source order preserved)
 - Constitution touched: none
 
-1. Coupling: `cassette::parse_cassette()` produces `Vec<ImportEvent>`, coupling tightly to `panopticon-core`'s `ImportEvent` and `EventPayload` types. Adding new `EventPayload` variants in M1 does not break the importer (unknown types map to `Generic`). However, changing `ImportEvent` field names or types would require importer updates. The `SOURCE_ID` constant ("agent-cassette") is public and used by integration tests for filtering — downstream code (M4 reducer, M7 tour) may depend on this string. The fixture file `small-session.jsonl` is a test dependency only and not part of the public API.
+1. Coupling: `cassette::parse_cassette()` produces `Vec<ImportEvent>`, coupling tightly to `vifei-core`'s `ImportEvent` and `EventPayload` types. Adding new `EventPayload` variants in M1 does not break the importer (unknown types map to `Generic`). However, changing `ImportEvent` field names or types would require importer updates. The `SOURCE_ID` constant ("agent-cassette") is public and used by integration tests for filtering — downstream code (M4 reducer, M7 tour) may depend on this string. The fixture file `small-session.jsonl` is a test dependency only and not part of the public API.
 2. Untested claims: (a) The minimal ISO 8601 parser (`parse_iso8601_ns`) does not validate day-of-month against actual month length — dates like Feb 31 or Apr 31 are silently accepted, producing incorrect `timestamp_ns`. Low impact: Agent Cassette sources produce machine-generated timestamps that are always valid. (b) Non-UTC timezone offsets (e.g., `+05:00`) are silently ignored, falling back to `timestamp_ns = 0`. Agent Cassette timestamps are expected to be UTC. (c) The fixture covers 5 of 8 `EventPayload` variants (RunStart, RunEnd, ToolCall, ToolResult, Error). PolicyDecision, RedactionApplied, and ClockSkewDetected are system-generated and not expected from cassette sources. (d) No test for cassette files larger than 11 events — parser is streaming (line-by-line) so memory is bounded.
-3. Nondeterminism: (a) `BTreeMap` used for `Generic::data` field — deterministic iteration. (b) `parse_cassette` processes lines in file order and does not sort — source order is preserved deterministically. (c) Event ID synthesis uses a sequential counter (`cassette:{seq}`) — deterministic. (d) No HashMap, no RNG, no wall clock, no thread-local state in the importer. Audit: `rg 'HashMap' crates/panopticon-import/src/cassette.rs` returns zero hits.
+3. Nondeterminism: (a) `BTreeMap` used for `Generic::data` field — deterministic iteration. (b) `parse_cassette` processes lines in file order and does not sort — source order is preserved deterministically. (c) Event ID synthesis uses a sequential counter (`cassette:{seq}`) — deterministic. (d) No HashMap, no RNG, no wall clock, no thread-local state in the importer. Audit: `rg 'HashMap' crates/vifei-import/src/cassette.rs` returns zero hits.
 4. Security: (a) The parser reads arbitrary JSONL input. Malformed lines produce `Error` events rather than panics — graceful degradation. (b) No path traversal risk — all paths in cassette events are treated as opaque string data, not used for filesystem operations. (c) The fixture contains fully synthetic data — no real secrets, API keys, or PII. Verified by fixture README.
 5. Performance: (a) `parse_cassette` reads all events into a `Vec` in memory. For v0.1 this is acceptable (target session size <10K events). Larger sessions would benefit from a streaming iterator API. (b) Each line is parsed as `serde_json::Value` then mapped — double allocation per event. Acceptable for v0.1 throughput targets. (c) No unbounded allocations — event size is bounded by the line length in the source file, and the EventLogWriter's max line bytes check (1MB) provides a downstream cap.
 
@@ -113,7 +113,7 @@ Context:
 
 1. Coupling: `State` struct is the sole input to projection (M5). Adding new `EventPayload` variants in M1 requires adding a match arm in `reduce()` — but `Generic` provides a fallback so the reducer won't fail to compile. `state_hash()` depends on `serde_json` struct field serialization order — if `State` fields are reordered, all hashes change. `REDUCER_VERSION` must be bumped whenever reducer logic changes. `Checkpoint` format couples to both `State` and `REDUCER_VERSION`. `replay()` and `replay_from()` are the primary APIs M5 and M7 will use.
 2. Untested claims: (a) `serde_json` serializes struct fields in declaration order — relied upon for deterministic `state_hash`, but not contractually guaranteed by serde_json. Tested indirectly via determinism_10_runs. (b) `state_hash` and `serialize_checkpoint` use `expect()` — these will panic if State ever contains a type that fails serialization. Current State is all-safe types (String, u64, BTreeMap, Vec of simple structs). (c) `f64` queue_pressure quantization uses `clamp(0.0, 1.0)` then `round()` — NaN input would clamp to 0.0 (f64::clamp behavior with NaN is "unspecified" per std docs but on current Rust returns the lower bound). Not tested for NaN specifically since queue_pressure is documented as `[0.0, 1.0]`.
-3. Nondeterminism: (a) All map-like containers are `BTreeMap` — deterministic iteration. Audit: `rg 'HashMap' crates/panopticon-core/src/reducer.rs` returns zero hits in non-test code. (b) No floats in `State` — `queue_pressure` is quantized to `u64` millionths before storing. (c) No RNG, no wall clock, no thread-local state. (d) `reduce()` is a pure function: clones state, applies event, returns new state. (e) Determinism verified: 10-run test with 100 diverse events + 10-run test with 5500 events crossing checkpoint boundary. All hashes identical.
+3. Nondeterminism: (a) All map-like containers are `BTreeMap` — deterministic iteration. Audit: `rg 'HashMap' crates/vifei-core/src/reducer.rs` returns zero hits in non-test code. (b) No floats in `State` — `queue_pressure` is quantized to `u64` millionths before storing. (c) No RNG, no wall clock, no thread-local state. (d) `reduce()` is a pure function: clones state, applies event, returns new state. (e) Determinism verified: 10-run test with 100 diverse events + 10-run test with 5500 events crossing checkpoint boundary. All hashes identical.
 4. Security: No secrets, tokens, or PII in reducer logic. State accumulates event metadata (agent names, tool names, error messages) which may contain sensitive data from source events — but that is M8's responsibility (secret scanner before export). No file IO in the reducer itself. Checkpoint serialization/deserialization is done by callers.
 5. Performance: (a) `reduce()` clones the entire `State` on every event — O(N*S) total cost for N events where S is state size. Acceptable for v0.1 (target <100K events). For larger replays, switching to `&mut State` would eliminate cloning. (b) `Vec` fields (policy_decisions, error_log, clock_skew_events, redaction_log) grow without bound. For v0.1 this is acceptable — these are typically small relative to event count. (c) Checkpoint at 5000-event intervals bounds the replay-from-scratch cost. (d) 33 reducer tests add ~1.8s to the test suite (dominated by the 6000-event and 10000-event checkpoint tests).
 
@@ -272,7 +272,7 @@ Context:
 - Invariants referenced: I3 (share-safe export — manifest provides verifiable receipt of bundle contents)
 - Constitution touched: none (references CAPACITY_ENVELOPE and BACKPRESSURE_POLICY for projection_invariants_version)
 
-1. Coupling: `BundleManifest` references `PROJECTION_INVARIANTS_VERSION` from panopticon-core. If the version constant changes, new bundles will embed the new version. Manifest schema version "manifest-v0.1" is hardcoded — changing the manifest format requires updating this and potentially adding backward-compatible parsing. The manifest does NOT include `bundle_hash` (circular dependency since manifest is inside the archive); `bundle_hash` lives in `ExportSuccess` only.
+1. Coupling: `BundleManifest` references `PROJECTION_INVARIANTS_VERSION` from vifei-core. If the version constant changes, new bundles will embed the new version. Manifest schema version "manifest-v0.1" is hardcoded — changing the manifest format requires updating this and potentially adding backward-compatible parsing. The manifest does NOT include `bundle_hash` (circular dependency since manifest is inside the archive); `bundle_hash` lives in `ExportSuccess` only.
 2. Untested claims: (a) `commit_index_range` assumes events are already sorted by commit_index in the EventLog file (relies on I1/I4: append writer assigns monotonic indices). No test verifies behavior with reordered events. (b) No test for empty EventLog edge case where `commit_index_range` is `None`. (c) Manifest JSON is pretty-printed (`to_string_pretty`), which slightly increases bundle size but aids debugging.
 3. Nondeterminism: None. Manifest entries are sorted alphabetically (inheriting the sorted `entries` vec). All fields are deterministic: file hashes are BLAKE3, commit_index range is from deterministic EventLog, projection_invariants_version is a constant. No wall clock, no RNG.
 4. Security: No new security risk. Manifest exposes file paths (archive-relative), sizes, and BLAKE3 hashes. No event content or blob data flows through the manifest. BLAKE3 hashes of blob data are already exposed via `payload_ref` in the EventLog.
@@ -287,14 +287,14 @@ Context:
 - Invariants referenced: I3 (share-safe export), I4 (testable determinism via bundle_hash)
 - Constitution touched: none
 
-1. Coupling: Integration tests depend on the public API of panopticon-export (`run_export`, `ExportConfig`, `BundleManifest`, etc.) and panopticon-core (`EventLogWriter`, `BlobStore`, `ImportEvent`). Changes to the export pipeline public API or event schema will require test updates. This is desirable — tests should break when the API changes.
+1. Coupling: Integration tests depend on the public API of vifei-export (`run_export`, `ExportConfig`, `BundleManifest`, etc.) and vifei-core (`EventLogWriter`, `BlobStore`, `ImportEvent`). Changes to the export pipeline public API or event schema will require test updates. This is desirable — tests should break when the API changes.
 2. Untested claims: (a) Cross-machine determinism not tested (same EventLog on different OSes/architectures). (b) Large bundle behavior not tested (tests use small fixtures). (c) No test for concurrent export of the same EventLog. All acceptable for v0.1.
 3. Nondeterminism: None. All tests use deterministic fixtures. No time-dependent assertions.
 4. Security: Test fixtures include known secret patterns (AWS keys, passwords) for refusal testing. These are well-known example values (AKIAIOSFODNN7EXAMPLE) that are not real credentials.
 5. Performance: 8 integration tests add ~0.04s to the test suite. Each creates temporary directories with small fixtures. No performance risk.
 
 ## bd-bjv.2 — M6.2: Incident Lens (default view)
-- Files: `crates/panopticon-tui/src/incident_lens.rs` (new), `crates/panopticon-tui/src/lib.rs` (modified)
+- Files: `crates/vifei-tui/src/incident_lens.rs` (new), `crates/vifei-tui/src/lib.rs` (modified)
 - Constitution touched: none
 
 1. Coupling: Incident Lens renders directly from reducer `State` (run_metadata, event_counts_by_type, error_log, clock_skew_events, policy_decisions). Changes to State fields will require Incident Lens updates. This is acceptable — the TUI is a consumer of State.
@@ -304,7 +304,7 @@ Context:
 5. Performance: 9 new tests add ~0.02s. Rendering is O(runs + types + anomalies) per frame, negligible for expected data sizes.
 
 ## bd-bjv.3 — M6.3: Forensic Lens (timeline + inspector) + Truth HUD fix
-- Files: `crates/panopticon-tui/src/forensic_lens.rs` (new), `crates/panopticon-tui/src/lib.rs` (modified), `crates/panopticon-tui/Cargo.toml` (modified), `crates/panopticon-tui/src/incident_lens.rs` (fmt-only)
+- Files: `crates/vifei-tui/src/forensic_lens.rs` (new), `crates/vifei-tui/src/lib.rs` (modified), `crates/vifei-tui/Cargo.toml` (modified), `crates/vifei-tui/src/incident_lens.rs` (fmt-only)
 - Constitution touched: none
 
 1. Coupling: Forensic Lens renders directly from `Vec<CommittedEvent>`, requiring App to store events. ForensicState is owned by the forensic_lens module. The App now stores events (memory cost proportional to EventLog size). Acceptable for v0.1 local-only usage.
@@ -315,7 +315,7 @@ Context:
 
 ## bd-bjv.6 · M6.6: Truth HUD snapshot test
 
-1. Coupling: Added `render_to_buffer` public function to panopticon-tui, exposing a `#[doc(hidden)]` test helper. Integration test depends on panopticon-core's EventLogWriter and panopticon-tui's render pipeline. Coupling is appropriate for an end-to-end test.
+1. Coupling: Added `render_to_buffer` public function to vifei-tui, exposing a `#[doc(hidden)]` test helper. Integration test depends on vifei-core's EventLogWriter and vifei-tui's render pipeline. Coupling is appropriate for an end-to-end test.
 2. Untested claims: None. All 6 required HUD fields are asserted. Empty eventlog edge case covered. Version string exact-match tested.
 3. Nondeterminism: None. render_to_buffer is deterministic (same EventLog → same output). TestBackend produces deterministic buffer content.
 
@@ -344,7 +344,7 @@ Context:
 
 ## bd-c7m.2 · Tour: large stress fixture (10K events)
 
-1. Coupling: New fixture `fixtures/large-stress.jsonl` (6.7 MB, 19,475 events). Generator binary `gen-large-stress` in panopticon-tour crate. No new library dependencies.
+1. Coupling: New fixture `fixtures/large-stress.jsonl` (6.7 MB, 19,475 events). Generator binary `gen-large-stress` in vifei-tour crate. No new library dependencies.
 2. Untested claims: None. 9 integration tests verify all CAPACITY_ENVELOPE requirements: event count >= 10K, representative event mix (tool_use/tool_result/error/session_start/session_end), multiple runs (25 sessions), multiple agents (4), backward timestamps (5 for clock skew), varying payload sizes (2–4,413 bytes). Tour pipeline integration tests confirm successful processing and determinism.
 3. Nondeterminism: None. Generator uses xorshift64 with fixed seed `0xDEAD_BEEF_CAFE_1234`. Same binary → same fixture. Fixture is committed as-is and verified deterministic through Tour pipeline.
 4. Security: No security implications. Fixture contains synthetic data only — no real credentials, paths, or PII.
@@ -352,7 +352,7 @@ Context:
 
 ## bd-c7m.3 · Tour: proof artifact emission (metrics.json, timetravel.capture)
 
-1. Coupling: `DegradationTransition` struct in panopticon-tour mirrors `PolicyTransition` fields from panopticon-core reducer. If reducer adds/renames fields, tour must update. Acceptable — schema is documented in PLANS.md.
+1. Coupling: `DegradationTransition` struct in vifei-tour mirrors `PolicyTransition` fields from vifei-core reducer. If reducer adds/renames fields, tour must update. Acceptable — schema is documented in PLANS.md.
 2. Untested claims: `max_degradation_level` uses lexicographic string max over level names. This relies on the invariant that levels are named "L0"–"L5" where lex order matches severity. If a level is renamed (e.g., "Critical"), the max computation would break. Small fixtures produce no degradation_transitions, so the empty-array path is tested but the populated-array path is only exercised via the large stress fixture.
 3. Nondeterminism: `queue_pressure_micro` (u64) → f64 division is exact for values in [0, 1_000_000]. No HashMap iteration, no wall-clock, no random seeds. Seek point interval is deterministic from committed event count.
 4. Security: No security implications. Proof artifacts contain only hashes, counts, and level strings.
@@ -360,7 +360,7 @@ Context:
 
 ## bd-c7m.5 · Tour: ansi.capture emission
 
-1. Coupling: ANSI color logic (`ansi_level`, `ansi_drops`, `ansi_export`, `ansi_pressure`) mirrors Truth HUD color semantics from `panopticon-tui/src/truth_hud.rs`. If TUI changes color thresholds (e.g., pressure 80% → 75%), tour's ANSI capture will diverge. Acceptable for v0.1 — both are derived from the same BACKPRESSURE_POLICY specification. Cannot use panopticon-tui directly due to circular dependency (tui → tour).
+1. Coupling: ANSI color logic (`ansi_level`, `ansi_drops`, `ansi_export`, `ansi_pressure`) mirrors Truth HUD color semantics from `vifei-tui/src/truth_hud.rs`. If TUI changes color thresholds (e.g., pressure 80% → 75%), tour's ANSI capture will diverge. Acceptable for v0.1 — both are derived from the same BACKPRESSURE_POLICY specification. Cannot use vifei-tui directly due to circular dependency (tui → tour).
 2. Untested claims: ANSI output is not compared byte-for-byte against TUI rendering. The capture mirrors Truth HUD fields and color logic but uses raw ANSI codes rather than ratatui. Visual parity with the actual TUI is not verified — only that all required fields and escape codes are present.
 3. Nondeterminism: None. `render_ansi_capture` is a pure function from ViewModel + event_count + hash → String. No wall-clock, no randomness, no platform-dependent formatting. Uses `std::fmt::Write` which is deterministic. Determinism is tested explicitly.
 4. Security: No security implications. ANSI capture contains only ViewModel field values (levels, counts, hashes). No secrets or PII.
@@ -376,11 +376,11 @@ Context:
 
 ## bd-2fp.1 · A1-1: Tour benchmark harness + baseline capture · 2026-02-17
 
-1. Coupling: New benchmark entrypoint (`crates/panopticon-tour/src/bin/bench_tour.rs`) depends on current Tour CLI pipeline and fixture location (`fixtures/large-stress.jsonl`). If fixture path or run_tour contract changes, the benchmark tool must be updated.
+1. Coupling: New benchmark entrypoint (`crates/vifei-tour/src/bin/bench_tour.rs`) depends on current Tour CLI pipeline and fixture location (`fixtures/large-stress.jsonl`). If fixture path or run_tour contract changes, the benchmark tool must be updated.
 2. Untested claims: Benchmark numbers are single-host samples and are not cross-machine comparable. They are suitable for relative trend checks, not absolute SLO commitments.
 3. Nondeterminism: The benchmark computes wall-time percentiles, which are expected to vary by host load. This does not affect truth artifacts because benchmark output is separate from canonical run artifacts.
 4. Security: No new secret handling surface. Benchmark consumes existing synthetic fixture and emits only timing metrics.
-5. Performance cliffs: Running benchmark in `--release` over large fixture is CPU-heavy by design; if run with high iteration count it can consume local resources. Guardrail is configurable iteration count via `PANOPTICON_TOUR_BENCH_ITERS`.
+5. Performance cliffs: Running benchmark in `--release` over large fixture is CPU-heavy by design; if run with high iteration count it can consume local resources. Guardrail is configurable iteration count via `VIFEI_TOUR_BENCH_ITERS`.
 
 ## bd-2fp.2 · A1-2: Remove duplicated parse/replay in Tour invariant tests · 2026-02-17
 
@@ -394,7 +394,7 @@ Context:
 
 1. Coupling: CI now depends on GitHub-specific attestation action (`actions/attest-build-provenance@v1`) and artifact upload path conventions under `dist/`.
 2. Untested claims: Attestation verification is documented but not executed in local tests; it requires GitHub-hosted workflow context and repository attestation APIs.
-3. Nondeterminism: Build timestamps/environment in compiled binaries may vary, but this change does not alter Panopticon deterministic truth/projection artifacts.
+3. Nondeterminism: Build timestamps/environment in compiled binaries may vary, but this change does not alter Vifei deterministic truth/projection artifacts.
 4. Security: Improves supply-chain posture by adding provenance metadata and checksum workflow. No new runtime secret surface added.
 5. Performance cliffs: Added release-trust CI job increases CI runtime on `main` and `v*` tags; impact is bounded to release-trust paths and does not affect local runtime performance.
 
@@ -432,7 +432,7 @@ Context:
 
 ## bd-x7q.3 · README-ASSETS: deterministic capture assets + architecture visual · 2026-02-17
 
-1. Coupling: Added `capture_readme_assets` binary and hidden render helpers in `panopticon-tui` to generate README assets from current render paths and export/tour APIs. If lens titles, HUD text, or export refusal formatting change, regenerated assets will change accordingly.
+1. Coupling: Added `capture_readme_assets` binary and hidden render helpers in `vifei-tui` to generate README assets from current render paths and export/tour APIs. If lens titles, HUD text, or export refusal formatting change, regenerated assets will change accordingly.
 2. Untested claims: Asset generation binary has no unit tests; correctness is validated through full workspace gates and deterministic capture outputs. Future bead should consider snapshot tests for generated assets if strict byte pinning is required.
 3. Nondeterminism: Captures are deterministic for provided sample EventLog and fixture inputs. `artifacts-view.txt` includes Tour hash for `fixtures/large-stress.jsonl` and can change only if deterministic core behavior changes.
 4. Security: Export-refusal asset intentionally includes redacted secret matches from synthetic input only. No real credentials introduced.
@@ -440,7 +440,7 @@ Context:
 
 ## bd-x7q.4 · README-VERIFY: command and trust-step reproducibility validation · 2026-02-17
 
-1. Coupling: README examples are now explicitly coupled to generated sample assets under `docs/assets/readme/` and to current CLI contract (`panopticon` binary flags/subcommands).
+1. Coupling: README examples are now explicitly coupled to generated sample assets under `docs/assets/readme/` and to current CLI contract (`vifei` binary flags/subcommands).
 2. Untested claims: `view` cannot be fully exercised in this non-interactive sandbox due TTY constraints; verification records this explicitly rather than claiming a full pass.
 3. Nondeterminism: Determinism checks were rerun (`tour` twice) and hashes matched; no new nondeterministic behavior introduced.
 4. Security: Verification surfaced conservative scanner false positives on numeric-heavy sample data and led to a dedicated clean export sample; this reduces confusion without weakening share-safe behavior.
@@ -448,7 +448,7 @@ Context:
 
 ## bd-x7q.5 · README-REVIEW: independent QA/polish gate · 2026-02-17
 
-1. Coupling: Review uncovered command-coupling drift after adding a second binary in `panopticon-tui`; README commands now explicitly pin `--bin panopticon` to remain unambiguous.
+1. Coupling: Review uncovered command-coupling drift after adding a second binary in `vifei-tui`; README commands now explicitly pin `--bin vifei` to remain unambiguous.
 2. Untested claims: No new product claims added. Remaining caveat is TUI `view` requires interactive TTY, documented in README and verification log.
 3. Nondeterminism: None introduced; documentation fixes only.
 4. Security: No new security surface. Review retained conservative share-safe posture and explicit refusal-path validation.
@@ -472,7 +472,7 @@ Context:
 
 ## bd-3qq.1 · LAUNCH-MEDIA: demo script + capture runbook · 2026-02-17
 
-1. Coupling: Demo flow is now coupled to current sample assets and CLI command shape (`--bin panopticon`). If command flags or sample paths change, demo script/runbook must be updated.
+1. Coupling: Demo flow is now coupled to current sample assets and CLI command shape (`--bin vifei`). If command flags or sample paths change, demo script/runbook must be updated.
 2. Untested claims: Optional recording tools (`asciinema`, `vhs`) are documented as optional; this bead does not claim tool availability in all environments.
 3. Nondeterminism: Demo quickcheck explicitly uses deterministic fixture and verifies trust outputs; no new nondeterministic runtime behavior introduced.
 4. Security: Demo script preserves share-safe posture by demonstrating both success and refusal paths, reducing risk of unsafe export messaging.
@@ -504,7 +504,7 @@ Context:
 
 ## bd-1w9.2 · README-IA: redesign information architecture and story flow · 2026-02-17
 
-1. Coupling: README structure now couples onboarding flow to specific command paths (`--bin panopticon`, stress Tour, share-safe export). CLI contract changes will require coordinated README updates.
+1. Coupling: README structure now couples onboarding flow to specific command paths (`--bin vifei`, stress Tour, share-safe export). CLI contract changes will require coordinated README updates.
 2. Untested claims: The IA rewrite improves clarity on paper, but audience comprehension gains are not yet measured by UX sessions.
 3. Nondeterminism: No runtime nondeterminism introduced; documentation-only changes.
 4. Security: The rewrite keeps trust claims tied to verifiable commands and avoids promising unsupported deployment/security properties.
@@ -552,7 +552,7 @@ Context:
 
 ## bd-gxd.2 · UX-CLI-RECOVERY: actionable error and refusal guidance
 
-1. Coupling: Centralized CLI failure formatting in `format_cli_failure` inside `crates/panopticon-tui/src/main.rs`; view/tour/export failures now share one message contract, improving consistency but coupling copy style to this helper.
+1. Coupling: Centralized CLI failure formatting in `format_cli_failure` inside `crates/vifei-tui/src/main.rs`; view/tour/export failures now share one message contract, improving consistency but coupling copy style to this helper.
 2. Untested claims: Added unit tests for section structure and numbered commands, but did not add subprocess integration tests for every runtime error branch; this remains partially covered by existing end-to-end suites.
 3. Nondeterminism: None introduced. Message formatting is deterministic string assembly from explicit inputs; no time/random/source-order behavior added.
 4. Security and privacy: Recovery output may include file paths supplied by user arguments; no secret content is introduced by this bead.
@@ -678,7 +678,7 @@ Context:
 4. Security and privacy: Validation evidence uses local fixtures and operational metadata only; no new secret-bearing surfaces added.
 5. Performance cliffs: None in product code. Process overhead is limited to periodic validation report updates.
 
-## bd-gxd · UX-POLISH: premium operator experience for Panopticon CLI/TUI
+## bd-gxd · UX-POLISH: premium operator experience for Vifei CLI/TUI
 
 1. Coupling: The UX polish track now depends on maintaining consistency between CLI recovery copy, lens-specific hints, onboarding behavior, and modality evidence docs.
 2. Untested claims: Some UX outcomes are measured via deterministic proxy checks rather than broad human studies; repeat operator sessions should continue before major UX claims are expanded.
@@ -720,7 +720,7 @@ Context:
 
 ## bd-1iv · UBS-HARDEN: production-path panic/unwrap cleanup and parser-context improvements
 
-1. Coupling: UBS hygiene now has tighter coupling to test-style patterns in `crates/panopticon-export/src/lib.rs`; future test authors should prefer `matches!` assertions over panic branches to keep scanner noise controlled.
+1. Coupling: UBS hygiene now has tighter coupling to test-style patterns in `crates/vifei-export/src/lib.rs`; future test authors should prefer `matches!` assertions over panic branches to keep scanner noise controlled.
 2. Untested claims: This bead focused on UBS signal quality and did not claim new runtime behavior; production export/refusal behavior remained covered by existing unit and integration suites.
 3. Nondeterminism: No new nondeterminism introduced; edits were test-logic refactors only, with deterministic assertions and no ordering/time/randomness changes.
 4. Security and privacy: Secret-scanner fixtures were rewritten to avoid obvious literal credential forms while preserving refusal-path coverage, reducing accidental “hardcoded secret” noise without weakening checks.
@@ -744,7 +744,7 @@ Context:
 
 ## bd-24k · ROBOT-MODE-CLI-V1.1: strict contract guarantees
 
-1. Coupling: Robot-mode consumers are now coupled to an explicit envelope schema version (`panopticon-cli-robot-v1.1`) and required key set, reducing ambiguity but requiring version-aware clients for future schema evolution.
+1. Coupling: Robot-mode consumers are now coupled to an explicit envelope schema version (`vifei-cli-robot-v1.1`) and required key set, reducing ambiguity but requiring version-aware clients for future schema evolution.
 2. Untested claims: We added integration coverage for no-arg auto-JSON, invalid args, and not-found failures; we did not yet add golden snapshot tests for every success payload variant across all subcommands.
 3. Nondeterminism: No truth-path nondeterminism introduced; contract changes are output-shape and parsing behavior only, and remain deterministic for identical inputs.
 4. Security and privacy: Structured envelopes surface actionable path-level diagnostics and suggestions; this improves automation but means logs should still be treated as operational artifacts.
@@ -752,7 +752,7 @@ Context:
 
 ## bd-2fp.5 · A1-4: Pipeline pass-reduction spike (profile-gated)
 
-1. Coupling: `panopticon-tour` now depends on `EventLogWriter::append` result accessors for committed-sequence capture; this is an explicit cross-crate contract between Tour and core write-path APIs.
+1. Coupling: `vifei-tour` now depends on `EventLogWriter::append` result accessors for committed-sequence capture; this is an explicit cross-crate contract between Tour and core write-path APIs.
 2. Untested claims: We validated append-sequence/readback equivalence with a focused unit test, but we did not add a large-fixture equivalence test that compares old-vs-new pipeline internals under stress-size inputs.
 3. Nondeterminism: No new nondeterminism introduced; committed ordering still flows from append-writer `commit_index`, and deterministic artifact/hash checks remain green.
 4. Security and privacy: No new secret-handling surfaces were introduced; change is in Tour pipeline event flow only.
@@ -772,7 +772,7 @@ Context:
 2. Untested claims: We expanded success-path contract coverage for `export` and `tour`, but we still do not have exhaustive golden snapshots for every command payload permutation.
 3. Nondeterminism: No runtime nondeterminism introduced; tests assert deterministic JSON envelope keys for fixed inputs.
 4. Security and privacy: New tests use curated non-secret fixtures and temp output directories; no real credential material added.
-5. Performance cliffs: Additional integration tests slightly increase `panopticon-tui` test runtime, but impact is modest and bounded.
+5. Performance cliffs: Additional integration tests slightly increase `vifei-tui` test runtime, but impact is modest and bounded.
 
 ## bd-1z3.3 · COV-3: e2e evidence/logging polish
 
@@ -938,20 +938,20 @@ Context:
 4. Security: Improves operator trust posture by reducing stale/broken public guidance risk.
 5. Performance: Negligible test-time overhead from small file reads.
 
-## bd-3n5 · STRUCT-2.1: split panopticon-export internals by concern · 2026-02-17
+## bd-3n5 · STRUCT-2.1: split vifei-export internals by concern · 2026-02-17
 
 Context:
 - Bead owner: GreenEagle (codex-cli)
 - Invariants referenced: I3 (share-safe export gate), I5 (loud failure), deterministic bundle/artifact expectations
 - Constitution touched: none
 
-1. Coupling: `panopticon-export` is now split across internal modules (`discover`, `secret_scan`, `bundle`) and tied via `pub(crate)` re-exports in `lib.rs`; future cross-module refactors need attention to internal visibility boundaries.
+1. Coupling: `vifei-export` is now split across internal modules (`discover`, `secret_scan`, `bundle`) and tied via `pub(crate)` re-exports in `lib.rs`; future cross-module refactors need attention to internal visibility boundaries.
 2. Untested claims: This change claims behavior-preserving module decomposition; claim is covered by full crate/unit/integration tests but not by byte-for-byte diff snapshots of every possible archive permutation.
 3. Nondeterminism: No new nondeterminism sources were introduced; deterministic ordering and hashing logic were moved, not rewritten.
 4. Security: Secret scanning and refusal behavior remain unchanged in logic and still fail closed; no new parsing or secret-surface expansion was introduced.
 5. Performance: Runtime cost should be unchanged; only code organization changed, with negligible compile-time impact from extra modules.
 
-## bd-d9m · STRUCT-2.2: split panopticon-tour internals by pipeline and artifact emitters · 2026-02-17
+## bd-d9m · STRUCT-2.2: split vifei-tour internals by pipeline and artifact emitters · 2026-02-17
 
 Context:
 - Bead owner: GreenEagle (codex-cli)
@@ -964,7 +964,7 @@ Context:
 4. Security: No new input or secret-handling paths added; artifact emission and fixture parsing behavior are unchanged.
 5. Performance: Runtime behavior should be equivalent; module split adds negligible compile-time overhead only.
 
-## bd-3lr · STRUCT-2.3: split panopticon-tui CLI internals by contract and command execution · 2026-02-17
+## bd-3lr · STRUCT-2.3: split vifei-tui CLI internals by contract and command execution · 2026-02-17
 
 Context:
 - Bead owner: GreenEagle (codex-cli)
@@ -1379,7 +1379,7 @@ Context:
 4. Security: No new security surface from research itself; future showcase page must avoid introducing unverifiable marketing claims.
 5. Performance cliffs: Potential extra render overhead in showcase mode is currently unmeasured and should be bounded during implementation.
 
-## bd-1siy · SHOWCASE-2 implement showcase UI profile in panopticon-tui · 2026-02-18
+## bd-1siy · SHOWCASE-2 implement showcase UI profile in vifei-tui · 2026-02-18
 
 Context:
 - Bead owner: GreenEagle (codex-cli)
@@ -1529,7 +1529,7 @@ Context:
 - Invariants referenced: I1, I2, D6, D7 ownership constraint
 - Constitution touched: none
 
-1. Coupling: `panopticon-import` now centralizes adapter contract behavior in `contract.rs`; new adapters must conform to shared helpers (schema-version validation and commit-index rejection).
+1. Coupling: `vifei-import` now centralizes adapter contract behavior in `contract.rs`; new adapters must conform to shared helpers (schema-version validation and commit-index rejection).
 2. Untested claims: Compatibility with future provider schemas is still prospective; each new adapter must add fixture-backed contract tests before relying on this framework.
 3. Nondeterminism: No new nondeterministic behavior introduced; normalization and contract checks are pure and deterministic over input records.
 4. Security: Rejecting source-supplied `commit_index` tightens trust boundaries and reduces risk of forged canonical ordering metadata.
@@ -1594,7 +1594,7 @@ Context:
 - Invariants referenced: I1, I2, I4, D6 ownership boundary
 - Constitution touched: none
 
-1. Coupling: `panopticon-core::delta` now depends on the committed-event schema shape; adding/removing committed fields or payload serialization changes will require coordinated delta updates.
+1. Coupling: `vifei-core::delta` now depends on the committed-event schema shape; adding/removing committed fields or payload serialization changes will require coordinated delta updates.
 2. Untested claims: We validate deterministic output and key divergence classes, but do not yet cover very large run-pair diffs for memory profiling; that belongs in the next compare-command bead integration path.
 3. Nondeterminism: No new nondeterminism introduced. Diff traversal is keyed by `BTreeMap/BTreeSet`, paths are sorted deterministically, and matching is by canonical `commit_index` only.
 4. Security: No new secret-handling surface was added; this bead computes metadata-only divergence records from already-ingested committed events.
@@ -1637,7 +1637,7 @@ Context:
 2. Untested claims: Peak RSS collection is Linux-specific (`/proc/self/status`) and currently degrades to `null` on non-Linux hosts; cross-platform RSS parity remains future work.
 3. Nondeterminism: Bench artifact shape is deterministic; measured latency/RSS values are intentionally environment-dependent metrics, and this is explicit in artifact provenance fields.
 4. Security: Artifact contains local path and command metadata; this is expected for local/CI diagnostics and should not be treated as a public redaction-safe export artifact.
-5. Performance cliffs: Running benchmark with high iteration counts can be expensive; guardrails remain via configurable `PANOPTICON_TOUR_BENCH_ITERS` and fixed fixture scope.
+5. Performance cliffs: Running benchmark with high iteration counts can be expensive; guardrails remain via configurable `VIFEI_TOUR_BENCH_ITERS` and fixed fixture scope.
 
 ## bd-9jsl · C2: CLI compare command + machine contract for incident diffs · 2026-02-18
 
@@ -1646,7 +1646,7 @@ Context:
 - Invariants referenced: I1, I2, I4, D6, D7 ownership constraint
 - Constitution touched: none
 
-1. Coupling: `panopticon-tui` CLI now couples to `panopticon-core::delta` and `panopticon-import::cassette` parsing for compare-mode input normalization.
+1. Coupling: `vifei-tui` CLI now couples to `vifei-core::delta` and `vifei-import::cassette` parsing for compare-mode input normalization.
 2. Untested claims: Compare contract tests now cover no-diff and divergence envelopes for eventlog inputs; cassette-vs-cassette compare parity is implemented but not yet covered with a dedicated fixture-pair contract test.
 3. Nondeterminism: Compare loads events in source order then computes diffs by canonical `commit_index`; output envelopes and divergence payloads are serialized deterministically.
 4. Security: Compare output includes local input paths and replay command suggestions; this is expected for local operator diagnostics and not a share-safe export artifact.
@@ -1659,7 +1659,7 @@ Context:
 - Invariants referenced: I1, I2, I3, I4, I5, D6, D7 ownership constraint
 - Constitution touched: none
 
-1. Coupling: `incident-pack` now composes compare, replay/projection hashing, and export refusal checks inside `panopticon-tui`; changes in any of those contracts require coordinated pack contract updates.
+1. Coupling: `incident-pack` now composes compare, replay/projection hashing, and export refusal checks inside `vifei-tui`; changes in any of those contracts require coordinated pack contract updates.
 2. Untested claims: Tests cover clean success and fail-closed refusal paths for eventlog inputs; mixed cassette/eventlog incident-pack permutations are implemented but not yet exhaustively covered.
 3. Nondeterminism: Pack artifacts are derived from committed events in canonical order; manifest file map uses deterministic key ordering and BLAKE3 file hashes.
 4. Security: Incident pack intentionally writes local file paths and normalized eventlogs to output directory for operator handoff; these artifacts are not treated as redacted public exports by default.
@@ -1711,7 +1711,7 @@ Context:
 - Invariants referenced: I2, I4, I5, D7 fail-closed execution boundary
 - Constitution touched: none
 
-1. Coupling: Added a repo guard test (`crates/panopticon-core/tests/runtime_masking_guard.rs`) that scans `panopticon-core/src` and `panopticon-tui/src` for specific serde fallback anti-patterns.
+1. Coupling: Added a repo guard test (`crates/vifei-core/tests/runtime_masking_guard.rs`) that scans `vifei-core/src` and `vifei-tui/src` for specific serde fallback anti-patterns.
 2. Untested claims: Guard currently focuses on known fallback signatures and line-window heuristics; it may miss semantically equivalent patterns expressed in very different syntax.
 3. Nondeterminism: No runtime nondeterminism introduced; this is test-only scanning logic with deterministic inputs.
 4. Security: Guard reduces risk of silent artifact degradation by enforcing fail-closed behavior at CI/test time; no new secret surface added.
@@ -1737,7 +1737,7 @@ Context:
 - Invariants referenced: I2, I4 (derived artifacts stay deterministic and out of truth path)
 - Constitution touched: none
 
-1. Coupling: `bench_tour` now owns both bench artifact schema (`panopticon-tour-bench-v1`) and trend record schema (`panopticon-perf-trend-v1`), coupling CI/reporting consumers to these versioned field sets.
+1. Coupling: `bench_tour` now owns both bench artifact schema (`vifei-tour-bench-v1`) and trend record schema (`vifei-perf-trend-v1`), coupling CI/reporting consumers to these versioned field sets.
 2. Untested claims: Trend storage is validated with schema roundtrip tests and validator checks, but we do not yet enforce JSONL compaction/retention policy for long-running trend logs.
 3. Nondeterminism: No truth-path nondeterminism introduced; new artifacts are derived diagnostics. Trend append order reflects invocation order, intentionally outside canonical EventLog semantics.
 4. Security: Trend records may include optional git SHA and fixture path metadata; this is operational telemetry and not share-safe export data.
@@ -1818,7 +1818,7 @@ Context:
 1. Coupling: Full-confidence CI now couples to `docs/testing/perf-baseline-lock-v1.json` and `scripts/testing/check_perf_regression_fail.sh`. Baseline maintenance is now an operational responsibility.
 2. Untested claims: Fail-gate behavior was validated locally with pass/fail/override scenarios, but CI-host variance behavior is still monitored post-merge.
 3. Nondeterminism: Perf data remains environment-sensitive by nature; deterministic enforcement is achieved through locked baseline schema + explicit thresholds + explicit override reason requirement.
-4. Security: No secrets introduced. Override path can be misused if left on; mitigated by required `PANOPTICON_PERF_GATE_OVERRIDE_REASON` and documented incident-only policy.
+4. Security: No secrets introduced. Override path can be misused if left on; mitigated by required `VIFEI_PERF_GATE_OVERRIDE_REASON` and documented incident-only policy.
 5. Performance: CI may fail more often on noisy runners once phase-2 is active; rollback path is documented and reversible by switching back to warn gate.
 
 ## bd-lh63 · TRACK-D: replay SLO and perf regression governance · 2026-02-18
@@ -2075,7 +2075,7 @@ Context:
 - Invariants referenced: I4
 - Constitution touched: none
 
-1. Coupling: Demo quickcheck now depends on `panopticon-tour --bin media_provenance` for provenance generation/verification, creating an explicit and auditable link between demo outputs and manifest integrity checks.
+1. Coupling: Demo quickcheck now depends on `vifei-tour --bin media_provenance` for provenance generation/verification, creating an explicit and auditable link between demo outputs and manifest integrity checks.
 2. Untested claims: Unit tests cover argument parsing, deterministic ordering, and tamper detection for the provenance manifest; full end-to-end cast bundle verification is still script-driven rather than a dedicated integration test.
 3. Nondeterminism: Manifest serialization is deterministic by schema and path ordering; `generated_at` is intentionally wall-clock metadata and does not feed truth-path ordering or hash contracts.
 4. Security: Provenance manifest adds tamper-evident BLAKE3 checks for launch media artifacts and improves auditability of source-command lineage per asset.
@@ -2179,7 +2179,7 @@ Context:
 - Invariants referenced: I3, I4
 - Constitution touched: none
 
-1. Coupling: Robot demo guidance is now explicitly coupled to CLI envelope and exit-code contract (`panopticon-cli-robot-v1.1`); contract changes must update this track.
+1. Coupling: Robot demo guidance is now explicitly coupled to CLI envelope and exit-code contract (`vifei-cli-robot-v1.1`); contract changes must update this track.
 2. Untested claims: This bead is docs-only and relies on existing robot-mode contract tests for behavioral guarantees rather than adding new execution harnesses.
 3. Nondeterminism: No runtime changes and no nondeterministic behavior introduced.
 4. Security: Track keeps refusal-path and error-path expectations explicit, reducing automation ambiguity around unsafe export and invalid input handling.
@@ -2224,14 +2224,14 @@ Context:
 4. Security: Prioritization explicitly favors fail-closed and explainable trust surfaces, reducing risk of adding growth features that weaken safety posture.
 5. Performance: No runtime impact; planning overhead is minimal and reduces priority churn.
 
-## bd-2f50 · FEATURE: add panopticon verify --strict command · 2026-02-19
+## bd-2f50 · FEATURE: add vifei verify --strict command · 2026-02-19
 
 Context:
 - Bead owner: Codex (gpt-5)
 - Invariants referenced: I2, I3, I4
 - Constitution touched: none
 
-1. Coupling: CLI now has a first-class trust gate command that couples `panopticon-tui`, `panopticon-tour`, and `panopticon-export` verification paths under one operator surface.
+1. Coupling: CLI now has a first-class trust gate command that couples `vifei-tui`, `vifei-tour`, and `vifei-export` verification paths under one operator surface.
 2. Untested claims: We added contract tests for strict-required and strict-success envelopes; command-level behavior is covered, but we did not add a dedicated chaos/fault-injection matrix yet.
 3. Nondeterminism: Verify command compares deterministic replay hashes and checks exported refusal semantics; no new randomness or ordering surfaces were introduced in truth paths.
 4. Security: Strict verify validates refusal behavior against secret-bearing fixture and checks explainability token presence, improving operator confidence in fail-closed posture.

@@ -1,4 +1,4 @@
-# AGENTS.md · Panopticon Suite · v0.1
+# AGENTS.md · Vifei Suite · v0.1
 
 Guidelines for AI coding agents working in this repo.
 Read `PLANS.md` first for project context, then follow every rule below.
@@ -55,7 +55,7 @@ If your change affects behavior under load, update a constitution doc or add a t
 
 ## PROJECT NORTH STAR (do not drift)
 
-Panopticon Suite is a deterministic, local-first cockpit for recording, replaying, and safely sharing agent runs as evidence bundles.
+Vifei Suite is a deterministic, local-first cockpit for recording, replaying, and safely sharing agent runs as evidence bundles.
 
 The EventLog is truth. The UI is a projection. Under overload, truth never degrades. Only the projection degrades.
 
@@ -74,7 +74,7 @@ Do not add dependencies without checking that they do not introduce nondetermini
 
 ## CLI ROBOT MODE (v1 policy for agent users)
 
-The `panopticon` CLI supports a robot-oriented mode for AI agents and automation:
+The `vifei` CLI supports a robot-oriented mode for AI agents and automation:
 
 - `--json` emits machine-readable output envelopes.
 - If stdout is not a TTY, output auto-switches to JSON unless `--human` is set.
@@ -89,7 +89,7 @@ Parser authority rule for robot mode:
 - `clap` is the only authority for command parsing and subcommand aliases.
 - Pre-parse normalization is limited to an explicit allowlist of option spelling repairs (for example underscore-to-hyphen long flags).
 - Normalization must never rewrite positional tokens and must stop at `--`.
-- Any change to parser/normalization behavior must include updates to CLI contract tests (`crates/panopticon-tui/tests/cli_robot_mode_contract.rs` and related unit tests) in the same commit.
+- Any change to parser/normalization behavior must include updates to CLI contract tests (`crates/vifei-tui/tests/cli_robot_mode_contract.rs` and related unit tests) in the same commit.
 
 Two-layer failure contract (required):
 
@@ -101,8 +101,8 @@ Two-layer failure contract (required):
 | Execution boundary | Secret scanner refusal during share-safe export | Never continue with partial success | Fail `EXPORT_REFUSED` and keep refusal details explicit |
 
 Contract tests that must remain aligned:
-- `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`
-- `crates/panopticon-tui/src/main.rs` CLI normalization/parse guidance tests
+- `crates/vifei-tui/tests/cli_robot_mode_contract.rs`
+- `crates/vifei-tui/src/main.rs` CLI normalization/parse guidance tests
 
 ---
 
@@ -160,7 +160,7 @@ register_agent(
 file_reservation_paths(
   project_key="<PROJECT_KEY>",
   agent_name="SchemaBuilder",
-  paths=["crates/panopticon-core/src/event.rs"],
+  paths=["crates/vifei-core/src/event.rs"],
   ttl_seconds=3600,
   exclusive=true,
   reason="M1"
@@ -170,16 +170,16 @@ file_reservation_paths(
 Recommended reservation patterns:
 
 ```
-"crates/panopticon-core/src/**"       # Core logic (event, reducer, projection)
-"crates/panopticon-import/src/**"     # Importer
-"crates/panopticon-export/src/**"     # Export
-"crates/panopticon-tui/src/**"        # TUI
-"crates/panopticon-tour/src/**"       # Tour harness
+"crates/vifei-core/src/**"       # Core logic (event, reducer, projection)
+"crates/vifei-import/src/**"     # Importer
+"crates/vifei-export/src/**"     # Export
+"crates/vifei-tui/src/**"        # TUI
+"crates/vifei-tour/src/**"       # Tour harness
 "docs/**"                             # Constitution and risk register
 "fixtures/**"                         # Test fixtures
 ```
 
-Prefer narrow patterns. Reserve `crates/panopticon-core/src/event.rs` over `crates/panopticon-core/src/**` when possible.
+Prefer narrow patterns. Reserve `crates/vifei-core/src/event.rs` over `crates/vifei-core/src/**` when possible.
 
 ### Communication
 
@@ -364,9 +364,9 @@ When starting work on a bead (multi-agent sessions only):
 
 If you claim `M2`:
 
-- Reserve: `crates/panopticon-core/src/eventlog.rs` and `crates/panopticon-core/src/blob_store.rs` (reason `M2`).
+- Reserve: `crates/vifei-core/src/eventlog.rs` and `crates/vifei-core/src/blob_store.rs` (reason `M2`).
 - Prove the invariant: `commit_index` assignment exists in exactly one place (append writer). Use `rg -n 'commit_index' -t rust` to audit quickly.
-- Run: `cargo test -p panopticon-core` plus the full quality gates before handoff.
+- Run: `cargo test -p vifei-core` plus the full quality gates before handoff.
 
 ---
 
@@ -547,7 +547,7 @@ Fix workflow:
 5. Re-run `ubs <file>` until exit 0.
 6. Commit.
 
-Speed matters. Scope to changed files. `ubs crates/panopticon-core/src/event.rs` (under 1 second) versus `ubs .` (30 seconds). Never full-scan for small edits.
+Speed matters. Scope to changed files. `ubs crates/vifei-core/src/event.rs` (under 1 second) versus `ubs .` (30 seconds). Never full-scan for small edits.
 
 Bug severity:
 

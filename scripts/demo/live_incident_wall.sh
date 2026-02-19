@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Live Incident Wall demo for Panopticon.
+# Live Incident Wall demo for Vifei.
 # Produces premium showcase wall assets (incident/forensic/truth HUD) and prints paths.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -22,7 +22,7 @@ started_at="$(date +%s)"
 if [[ "$MODE" == "full" ]]; then
   scripts/refresh_readme_assets.sh >/dev/null
 else
-  cargo run -p panopticon-tui --bin capture_readme_assets >/dev/null
+  cargo run -p vifei-tui --bin capture_readme_assets >/dev/null
 fi
 
 required=(

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Refusal Radar demo for Panopticon.
+# Refusal Radar demo for Vifei.
 # Demonstrates share-safe export refusal and surfaces blocked fields.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -13,7 +13,7 @@ if [[ "${1:-}" == "--fast" || "${1:-}" == "--full" ]]; then
   shift
 fi
 
-OUT_DIR="${1:-/tmp/panopticon_refusal_radar}"
+OUT_DIR="${1:-/tmp/vifei_refusal_radar}"
 mkdir -p "$OUT_DIR"
 
 EVENTLOG="docs/assets/readme/sample-refusal-eventlog.jsonl"
@@ -29,7 +29,7 @@ echo "[radar] input: $EVENTLOG"
 started_at="$(date +%s)"
 
 set +e
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   export "$EVENTLOG" \
   --share-safe \
   --output "$BUNDLE" \

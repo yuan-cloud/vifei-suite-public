@@ -8,7 +8,7 @@
 
 Single lever only:
 
-- Replace fractional-second parsing in `parse_iso8601_ns` with a zero-allocation digit loop (`parse_fractional_ns`) in `crates/panopticon-import/src/cassette.rs`.
+- Replace fractional-second parsing in `parse_iso8601_ns` with a zero-allocation digit loop (`parse_fractional_ns`) in `crates/vifei-import/src/cassette.rs`.
 
 ## Equivalence posture
 
@@ -30,8 +30,8 @@ Validation:
 Commands:
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
-/usr/bin/time -v env PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
+/usr/bin/time -v env VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 Post-change runs:

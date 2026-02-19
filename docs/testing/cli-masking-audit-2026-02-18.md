@@ -22,12 +22,12 @@ Evidence commands:
 ```bash
 git log --oneline -n 6
 rg -n "unwrap_or_default\\(|unwrap_or_else\\(|failed to serialize|RUNTIME_ERROR|incident-pack" \
-  crates/panopticon-tui/src/cli_handlers.rs \
-  crates/panopticon-core/src/delta.rs \
-  crates/panopticon-tour/src/bin/bench_tour.rs \
-  crates/panopticon-tui/tests/cli_robot_mode_contract.rs
-git show --patch --stat fecb7f3 -- crates/panopticon-tui/src/cli_handlers.rs
-git show --patch --stat bf43ccd -- crates/panopticon-tui/src/cli_handlers.rs
+  crates/vifei-tui/src/cli_handlers.rs \
+  crates/vifei-core/src/delta.rs \
+  crates/vifei-tour/src/bin/bench_tour.rs \
+  crates/vifei-tui/tests/cli_robot_mode_contract.rs
+git show --patch --stat fecb7f3 -- crates/vifei-tui/src/cli_handlers.rs
+git show --patch --stat bf43ccd -- crates/vifei-tui/src/cli_handlers.rs
 ```
 
 Classification rule:
@@ -39,13 +39,13 @@ Classification rule:
 
 | ID | Location | Classification | Why |
 |---|---|---|---|
-| F1 | `fecb7f3` in `crates/panopticon-tui/src/cli_handlers.rs` (`incident-pack` delta/replay writes used `serde_json::to_vec_pretty(...).unwrap_or_else(|_| b"{}".to_vec())`) | `RISKY_MASKING` | Serialization failure could write `{}` and continue, hiding artifact-shape regressions behind apparent success. |
-| F2 | `bf43ccd` in `crates/panopticon-tui/src/cli_handlers.rs` (`write_json_pretty(...)` + `RUNTIME_ERROR` return paths) | `INTENTIONAL_SAFE` | Correct fail-closed replacement; error is surfaced with structured runtime failure envelope. |
-| F3 | `crates/panopticon-core/src/delta.rs:126` (`serde_json::to_string(&event.payload).unwrap_or_default()`) | `RISKY_MASKING` | If payload serialization ever fails, tie-break key degrades to empty payload segment, potentially collapsing ordering distinctions in deterministic diff selection. |
-| F4 | `crates/panopticon-tour/src/bin/bench_tour.rs:190` (`env var parse fallback to default output path`) | `INTENTIONAL_SAFE` | Operational default for benchmark artifact path; does not affect truth path, event ordering, or production runtime correctness. |
-| F5 | `crates/panopticon-tui/src/cli_handlers.rs:402` (`unwrap_or_else(|| format!(\"event:{}\", ...))`) | `INTENTIONAL_SAFE` | Human-readable label fallback for refusal messages; no effect on canonical truth or deterministic artifact contents. |
+| F1 | `fecb7f3` in `crates/vifei-tui/src/cli_handlers.rs` (`incident-pack` delta/replay writes used `serde_json::to_vec_pretty(...).unwrap_or_else(|_| b"{}".to_vec())`) | `RISKY_MASKING` | Serialization failure could write `{}` and continue, hiding artifact-shape regressions behind apparent success. |
+| F2 | `bf43ccd` in `crates/vifei-tui/src/cli_handlers.rs` (`write_json_pretty(...)` + `RUNTIME_ERROR` return paths) | `INTENTIONAL_SAFE` | Correct fail-closed replacement; error is surfaced with structured runtime failure envelope. |
+| F3 | `crates/vifei-core/src/delta.rs:126` (`serde_json::to_string(&event.payload).unwrap_or_default()`) | `RISKY_MASKING` | If payload serialization ever fails, tie-break key degrades to empty payload segment, potentially collapsing ordering distinctions in deterministic diff selection. |
+| F4 | `crates/vifei-tour/src/bin/bench_tour.rs:190` (`env var parse fallback to default output path`) | `INTENTIONAL_SAFE` | Operational default for benchmark artifact path; does not affect truth path, event ordering, or production runtime correctness. |
+| F5 | `crates/vifei-tui/src/cli_handlers.rs:402` (`unwrap_or_else(|| format!(\"event:{}\", ...))`) | `INTENTIONAL_SAFE` | Human-readable label fallback for refusal messages; no effect on canonical truth or deterministic artifact contents. |
 | F6 | Planning commits `2f6e91d`, `33adcff`, `b152b2e` touching `.beads/issues.jsonl` | `FALSE_POSITIVE` | Bead metadata only; no runtime code path. |
-| F7 | `crates/panopticon-tui/src/cli_handlers.rs` compare command path (`build_compare_contract`, `emit_compare_contract_human`) | `INTENTIONAL_SAFE` | Reviewed current compare flow; parse/build failures already return structured `RUNTIME_ERROR` and no placeholder artifact write fallback remains in this path. |
+| F7 | `crates/vifei-tui/src/cli_handlers.rs` compare command path (`build_compare_contract`, `emit_compare_contract_human`) | `INTENTIONAL_SAFE` | Reviewed current compare flow; parse/build failures already return structured `RUNTIME_ERROR` and no placeholder artifact write fallback remains in this path. |
 
 ## Commit-Level Conclusion
 

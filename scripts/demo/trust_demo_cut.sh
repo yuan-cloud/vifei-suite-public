@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-OUT_DIR="${1:-/tmp/panopticon_trust_cut}"
+OUT_DIR="${1:-/tmp/vifei_trust_cut}"
 FIXTURE="${2:-fixtures/small-session.jsonl}"
 
 rm -rf "$OUT_DIR"
@@ -18,10 +18,10 @@ run() {
   "$@"
 }
 
-run cargo run -p panopticon-tui --bin panopticon -- \
+run cargo run -p vifei-tui --bin vifei -- \
   tour "$FIXTURE" --stress --output-dir "$OUT_DIR/tour-a" >/dev/null
 
-run cargo run -p panopticon-tui --bin panopticon -- \
+run cargo run -p vifei-tui --bin vifei -- \
   tour "$FIXTURE" --stress --output-dir "$OUT_DIR/tour-b" >/dev/null
 
 HASH_A="$(cat "$OUT_DIR/tour-a/viewmodel.hash")"
@@ -51,14 +51,14 @@ if ! rg -q '^tier_a_drops=0$' "$OUT_DIR/metrics-summary.txt"; then
   exit 1
 fi
 
-run cargo run -p panopticon-tui --bin panopticon -- \
+run cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export-clean.tar.zst" \
   --refusal-report "$OUT_DIR/refusal-clean.json" >/dev/null
 
 set +e
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export-refused.tar.zst" \

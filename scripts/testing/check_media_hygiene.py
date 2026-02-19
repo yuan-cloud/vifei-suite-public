@@ -155,7 +155,7 @@ def main() -> int:
             f"in {allowlist_path} for known synthetic fixtures",
             file=sys.stderr,
         )
-        if args.allow_unsafe or os.getenv("PANOPTICON_HYGIENE_ALLOW_UNSAFE") == "1":
+        if args.allow_unsafe or os.getenv("VIFEI_HYGIENE_ALLOW_UNSAFE") == "1":
             # maintain explicit operator acknowledgment path for emergency usage
             print(
                 "[hygiene] WARNING: unsafe override enabled; continuing despite findings",

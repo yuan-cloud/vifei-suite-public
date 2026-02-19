@@ -40,7 +40,7 @@ No strict decorative ban is enforced; apply judgment and keep usage restrained.
 
 Applies to:
 
-- `crates/panopticon-tui` lens copy and status styling
+- `crates/vifei-tui` lens copy and status styling
 - README narrative and launch-facing docs
 
 Does not override constitutional behavior in:

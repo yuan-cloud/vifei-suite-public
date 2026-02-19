@@ -154,10 +154,10 @@ jobs:
 
       - name: Replay benchmark artifact (warn-only calibration)
         run: |
-          PANOPTICON_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json \
-          PANOPTICON_PERF_TREND_DIR=.tmp/full-confidence/perf/trends \
-          PANOPTICON_GIT_SHA=${{ github.sha }} \
-          cargo run -q -p panopticon-tour --bin bench_tour --release \
+          VIFEI_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json \
+          VIFEI_PERF_TREND_DIR=.tmp/full-confidence/perf/trends \
+          VIFEI_GIT_SHA=${{ github.sha }} \
+          cargo run -q -p vifei-tour --bin bench_tour --release \
             2>&1 | tee .tmp/full-confidence/logs/bench-tour.log
 
       - name: Perf regression fail gate (phase-2)
@@ -227,13 +227,13 @@ PY
         if: steps.pty_preflight.outputs.status == 'pass'
         run: |
           set +e
-          TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e \
-            cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
+          TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e \
+            cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture \
             2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt1.log
           rc=$?
           if [ "$rc" -ne 0 ]; then
-            TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e \
-              cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture \
+            TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e \
+              cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture \
               2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt2.log
             rc=$?
           fi

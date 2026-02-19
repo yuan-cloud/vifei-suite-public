@@ -1,4 +1,4 @@
-# Panopticon Positioning
+# Vifei Positioning
 
 ## Category
 
@@ -6,7 +6,7 @@ Deterministic run evidence for AI agent workflows.
 
 ## One-line value proposition
 
-Panopticon records and replays agent runs as deterministic evidence bundles so teams can verify what happened, including under stress.
+Vifei records and replays agent runs as deterministic evidence bundles so teams can verify what happened, including under stress.
 
 ## Core problem
 
@@ -35,4 +35,4 @@ Most agent tooling is strong at logs and traces but weak on replay guarantees an
 
 ## Positioning statement
 
-For teams running AI agents in production or pre-production, Panopticon is the deterministic evidence cockpit that records, replays, and safely shares run truth with verifiable outputs.
+For teams running AI agents in production or pre-production, Vifei is the deterministic evidence cockpit that records, replays, and safely shares run truth with verifiable outputs.

@@ -18,7 +18,7 @@ Use one of these channels:
 
 Preferred advisory URL:
 
-- `https://github.com/yuan-cloud/panopticon-suite/security/advisories/new`
+- `https://github.com/yuan-cloud/vifei-suite/security/advisories/new`
 
 ## Scope
 

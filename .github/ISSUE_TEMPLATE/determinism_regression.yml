@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Use this template for invariants and reproducibility failures.
-        Panopticon's north star is deterministic evidence integrity.
+        Vifei's north star is deterministic evidence integrity.
   - type: input
     id: invariant
     attributes:
@@ -25,7 +25,7 @@ body:
       description: Include all commands in order.
       placeholder: |
         cargo test
-        cargo run -p panopticon-tour -- ...
+        cargo run -p vifei-tour -- ...
     validations:
       required: true
   - type: textarea

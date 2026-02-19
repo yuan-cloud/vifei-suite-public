@@ -6,7 +6,7 @@ This is the first thing a new agent reads after `AGENTS.md`.
 
 ## System overview
 
-Panopticon Suite is a deterministic, local-first terminal cockpit for
+Vifei Suite is a deterministic, local-first terminal cockpit for
 recording, replaying, and safely sharing AI agent runs as evidence bundles.
 
 **North star:** The EventLog is truth. The UI is a projection. Under
@@ -17,19 +17,19 @@ overload, truth never degrades — only the projection degrades.
 ## Crate layout
 
 ```text
-panopticon-suite/
+vifei-suite/
   crates/
-    panopticon-core/       # EventLog, reducer, projection, ViewModel, blob store
+    vifei-core/       # EventLog, reducer, projection, ViewModel, blob store
       src/event.rs         # M1: ImportEvent, CommittedEvent, EventPayload, Tier
       src/eventlog.rs      # M2: append-only writer, sole commit_index assigner
       src/blob_store.rs    # M2: BLAKE3 content-addressed blob store
       src/reducer.rs       # M4: pure (State, Event) -> State
       src/projection.rs    # M5: deterministic State -> ViewModel
-    panopticon-import/     # Importers (Agent Cassette first)
+    vifei-import/     # Importers (Agent Cassette first)
       src/cassette.rs      # M3: Cassette JSONL -> ImportEvent
-    panopticon-export/     # M8: share-safe export + redaction
-    panopticon-tui/        # M6: Ratatui TUI shell, lenses, Truth HUD
-    panopticon-tour/       # M7: deterministic stress harness
+    vifei-export/     # M8: share-safe export + redaction
+    vifei-tui/        # M6: Ratatui TUI shell, lenses, Truth HUD
+    vifei-tour/       # M7: deterministic stress harness
   fixtures/                # Test fixtures (synthetic Agent Cassette sessions)
   docs/
     constitution/          # CAPACITY_ENVELOPE.md, BACKPRESSURE_POLICY.md
@@ -95,7 +95,7 @@ ImportEvent  ──commit()──▶  CommittedEvent
 
 ## BLAKE3 content addressing (blake3 v1.8.3)
 
-All content hashes in Panopticon use BLAKE3 (256-bit / 64 hex chars).
+All content hashes in Vifei use BLAKE3 (256-bit / 64 hex chars).
 
 ### Blob store pattern
 

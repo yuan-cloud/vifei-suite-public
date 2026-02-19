@@ -2,7 +2,7 @@
 
 Bead: `bd-3gxs`
 
-Goal: define a high-impact showcase UX profile for Panopticon that improves visual appeal and demo quality without weakening deterministic truth guarantees.
+Goal: define a high-impact showcase UX profile for Vifei that improves visual appeal and demo quality without weakening deterministic truth guarantees.
 
 ## Research Inputs
 
@@ -43,7 +43,7 @@ Primary sources reviewed:
 2. Tooling supports repeatable media capture (`vhs`) instead of ad-hoc screen recording.
 3. Small composable pieces (styles/forms/components) keep visual upgrades incremental.
 
-## Constraints Specific to Panopticon
+## Constraints Specific to Vifei
 
 1. Truth-path invariants cannot be compromised.
 - Showcase mode must not alter EventLog truth, ordering, or artifact semantics.
@@ -114,7 +114,7 @@ From Product Hunt official guidance:
 2. First-comment clarity and concrete product explanation matter.
 3. Complete listing assets and maker responsiveness matter.
 
-Practical implication for Panopticon:
+Practical implication for Vifei:
 
 - lead with one runnable command and one verifiable output
 - keep media deterministic and reproducible

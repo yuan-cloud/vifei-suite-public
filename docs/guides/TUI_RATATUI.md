@@ -1,6 +1,6 @@
 # TUI Ratatui Guide
 
-Patterns for building the Panopticon TUI with Ratatui v0.30.0.
+Patterns for building the Vifei TUI with Ratatui v0.30.0.
 
 **Crate versions:** ratatui 0.30.0, crossterm 0.28/0.29
 
@@ -21,7 +21,7 @@ Patterns for building the Panopticon TUI with Ratatui v0.30.0.
 
 ## Architecture: Flux / unidirectional data flow
 
-Panopticon's data flow maps directly to Ratatui's recommended Flux pattern:
+Vifei's data flow maps directly to Ratatui's recommended Flux pattern:
 
 ```text
 EventLog → Reducer → State → Projection → ViewModel → TUI render
@@ -102,7 +102,7 @@ fn layout(area: Rect) -> (Rect, Rect, Rect) {
 
 ---
 
-## Key widgets for Panopticon
+## Key widgets for Vifei
 
 | Widget | Use |
 |--------|-----|
@@ -129,7 +129,7 @@ fn main() -> std::io::Result<()> {
 }
 ```
 
-For the full Panopticon TUI, use the manual terminal setup with event loop
+For the full Vifei TUI, use the manual terminal setup with event loop
 for input handling, but `ratatui::run()` is useful for prototyping.
 
 ---

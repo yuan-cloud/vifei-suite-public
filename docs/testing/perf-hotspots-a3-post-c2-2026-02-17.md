@@ -7,9 +7,9 @@
 ## Commands
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
-/usr/bin/time -v env PANOPTICON_TOUR_PROFILE_ITERS=12 \
-  cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
+/usr/bin/time -v env VIFEI_TOUR_PROFILE_ITERS=12 \
+  cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 ## Results

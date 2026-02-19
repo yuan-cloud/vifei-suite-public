@@ -9,17 +9,17 @@
 ## Evidence Commands
 ```bash
 OUT_DIR=.tmp/e2e-cli-baseline scripts/e2e/cli_e2e.sh
-PANOPTICON_E2E_OUT=.tmp/e2e-tui-baseline cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture
+VIFEI_E2E_OUT=.tmp/e2e-tui-baseline cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture
 ```
 
 ## Task Results
 | Task | Profile | Status | Completion (s) | Error type | Confidence (1-5) | Evidence |
 |---|---|---|---:|---|---:|---|
 | first_run_orientation | desktop | pass | 3 | none | 4 | `.tmp/e2e-cli-baseline/cmd/help.stdout.log` |
-| incident_to_forensic_triage | desktop | skip | 0 | pty_env | 3 | `crates/panopticon-tui/.tmp/e2e-tui-baseline/interactive_tui_flow_lens_toggle_nav_and_quit.assertions.log` |
+| incident_to_forensic_triage | desktop | skip | 0 | pty_env | 3 | `crates/vifei-tui/.tmp/e2e-tui-baseline/interactive_tui_flow_lens_toggle_nav_and_quit.assertions.log` |
 | trust_verification | desktop | pass | 4 | none | 5 | `.tmp/e2e-cli-baseline/tour/metrics.json` |
 | share_safe_refusal_recovery | desktop | pass | 2 | none | 5 | `.tmp/e2e-cli-baseline/cmd/export_refusal.stderr.log` |
-| incident_to_forensic_triage | narrow | skip | 0 | pty_env | 3 | `crates/panopticon-tui/.tmp/e2e-tui-baseline/interactive_tui_narrow_terminal_profile_stays_healthy.assertions.log` |
+| incident_to_forensic_triage | narrow | skip | 0 | pty_env | 3 | `crates/vifei-tui/.tmp/e2e-tui-baseline/interactive_tui_narrow_terminal_profile_stays_healthy.assertions.log` |
 
 ## Summary
 - runnable_tasks: 3

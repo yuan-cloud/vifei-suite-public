@@ -16,7 +16,7 @@ From `docs/testing/ux-audit-a2-2026-02-17.md`:
 
 File:
 
-- `crates/panopticon-tui/src/incident_lens.rs`
+- `crates/vifei-tui/src/incident_lens.rs`
 
 Changes:
 
@@ -36,8 +36,8 @@ Changes:
 Commands run:
 
 ```bash
-cargo test -p panopticon-tui --test modality_validation
-cargo test -p panopticon-tui incident_lens::tests::incident_lens_narrow_keeps_next_action_hint_visible
+cargo test -p vifei-tui --test modality_validation
+cargo test -p vifei-tui incident_lens::tests::incident_lens_narrow_keeps_next_action_hint_visible
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test

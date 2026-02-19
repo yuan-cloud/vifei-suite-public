@@ -16,10 +16,10 @@ Outcome:
 | Area | Before | After | Evidence |
 |---|---|---|---|
 | Audit visibility | No consolidated masking classification for recent commits | Explicit classification across last-5+HEAD with actionable follow-ups | `docs/testing/cli-masking-audit-2026-02-18.md` |
-| Incident-pack artifact contract | Success contract checked manifest existence only | Success contract validates manifest file set, compare/replay schema keys, and non-placeholder JSON | `crates/panopticon-tui/tests/cli_robot_mode_contract.rs` (`incident_pack_success_emits_manifest_and_hashes`) |
-| Human failure clarity | Runtime output-dir failure behavior not asserted | Human-mode incident-pack runtime failure path is contract-tested for actionable guidance | `crates/panopticon-tui/tests/cli_robot_mode_contract.rs` (`incident_pack_human_reports_runtime_error_when_output_dir_invalid`) |
-| Delta tie-break masking | `serde_json::to_string(...).unwrap_or_default()` could silently collapse payload key segment | Explicit non-empty sentinel encoding on serialization error; no empty default fallback | `crates/panopticon-core/src/delta.rs` |
-| Reintroduction guard | No dedicated runtime masking regression guard | Runtime source scan guard test catches representative placeholder fallback reintroduction | `crates/panopticon-core/tests/runtime_masking_guard.rs` |
+| Incident-pack artifact contract | Success contract checked manifest existence only | Success contract validates manifest file set, compare/replay schema keys, and non-placeholder JSON | `crates/vifei-tui/tests/cli_robot_mode_contract.rs` (`incident_pack_success_emits_manifest_and_hashes`) |
+| Human failure clarity | Runtime output-dir failure behavior not asserted | Human-mode incident-pack runtime failure path is contract-tested for actionable guidance | `crates/vifei-tui/tests/cli_robot_mode_contract.rs` (`incident_pack_human_reports_runtime_error_when_output_dir_invalid`) |
+| Delta tie-break masking | `serde_json::to_string(...).unwrap_or_default()` could silently collapse payload key segment | Explicit non-empty sentinel encoding on serialization error; no empty default fallback | `crates/vifei-core/src/delta.rs` |
+| Reintroduction guard | No dedicated runtime masking regression guard | Runtime source scan guard test catches representative placeholder fallback reintroduction | `crates/vifei-core/tests/runtime_masking_guard.rs` |
 | Policy clarity | Repair/fail boundary described but not matrixed | Two-layer parser vs execution matrix with explicit error-code mapping and test links | `AGENTS.md`, `docs/guides/CLI_DESIGN.md` |
 
 ## Fixes table

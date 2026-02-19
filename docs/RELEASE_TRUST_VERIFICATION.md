@@ -12,7 +12,7 @@ This document defines how to verify release artifacts produced by CI and how to 
 From `.github/workflows/ci.yml` `release-trust` job:
 
 1. Release binaries:
-- `dist/panopticon`
+- `dist/vifei`
 - `dist/bench_tour`
 
 2. Checksum manifest:
@@ -35,7 +35,7 @@ scripts/verify_release_artifacts.sh dist
 
 This produces:
 
-- `dist/panopticon`
+- `dist/vifei`
 - `dist/bench_tour`
 - `dist/sha256sums.txt`
 
@@ -61,7 +61,7 @@ Expected result:
 Verify using GitHub's attestation tooling. Example with `gh`:
 
 ```bash
-gh attestation verify dist/panopticon --repo <owner>/<repo>
+gh attestation verify dist/vifei --repo <owner>/<repo>
 gh attestation verify dist/bench_tour --repo <owner>/<repo>
 ```
 

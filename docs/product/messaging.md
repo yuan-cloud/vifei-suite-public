@@ -1,4 +1,4 @@
-# Panopticon Messaging
+# Vifei Messaging
 
 ## Messaging hierarchy
 
@@ -47,7 +47,7 @@
 
 ### Short product description
 
-Panopticon is a deterministic, local-first cockpit for recording and replaying AI agent runs as evidence bundles.
+Vifei is a deterministic, local-first cockpit for recording and replaying AI agent runs as evidence bundles.
 
 ### Three bullets
 

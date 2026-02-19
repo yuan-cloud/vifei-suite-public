@@ -1,7 +1,7 @@
 # UX Scope v0.1 (Terminal-First)
 
 ## Purpose
-Define what "premium" UX means for Panopticon in v0.1 without drifting into web/SaaS aesthetics that do not improve operator outcomes.
+Define what "premium" UX means for Vifei in v0.1 without drifting into web/SaaS aesthetics that do not improve operator outcomes.
 
 This scope applies to:
 - CLI command surfaces (`view`, `tour`, `export`)
@@ -18,7 +18,7 @@ Modality-specific expectations are defined in:
 Visual/copy tone standards are defined in:
 - `docs/UX_VISUAL_TONE.md`
 
-## Premium UX Principles for Panopticon
+## Premium UX Principles for Vifei
 1. Clarity first
 Critical state and next safe action must be obvious in the first screenful.
 

@@ -1,6 +1,6 @@
 # Artifact Serialization Policy (v0.1)
 
-This policy defines stable output modes for Panopticon Tour proof artifacts.
+This policy defines stable output modes for Vifei Tour proof artifacts.
 
 ## Goal
 
@@ -8,7 +8,7 @@ Prevent accidental byte-shape drift in deterministic surfaces unless explicitly 
 
 ## Current policy
 
-`panopticon-tour` artifact modes:
+`vifei-tour` artifact modes:
 
 - `metrics.json`: pretty JSON (`serde_json::to_string_pretty`)
 - `timetravel.capture`: pretty JSON (`serde_json::to_string_pretty`)

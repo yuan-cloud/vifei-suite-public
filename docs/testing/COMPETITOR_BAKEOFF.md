@@ -25,7 +25,7 @@ scripts/demo/competitor_bakeoff.sh --full
 - Requires refusal report with blocked items.
 
 3. Explainability surface
-- Runs `panopticon tour --stress` and checks `ansi.capture` includes:
+- Runs `vifei tour --stress` and checks `ansi.capture` includes:
   - `Level:`
   - `Agg:`
   - `Pressure:`
@@ -51,7 +51,7 @@ Each run writes a timestamped directory under `.tmp/competitor-bakeoff/` by defa
 - `incident-pack/`
 - `bakeoff-report.json`
 
-`bakeoff-report.json` uses schema `panopticon-competitor-bakeoff-v1` for easy reuse in launch posts and benchmark narratives.
+`bakeoff-report.json` uses schema `vifei-competitor-bakeoff-v1` for easy reuse in launch posts and benchmark narratives.
 
 ## CI-compatible evidence run
 

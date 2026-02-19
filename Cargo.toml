@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/panopticon-core",
-    "crates/panopticon-import",
-    "crates/panopticon-export",
-    "crates/panopticon-tui",
-    "crates/panopticon-tour",
+    "crates/vifei-core",
+    "crates/vifei-import",
+    "crates/vifei-export",
+    "crates/vifei-tui",
+    "crates/vifei-tour",
 ]
 
 [workspace.package]

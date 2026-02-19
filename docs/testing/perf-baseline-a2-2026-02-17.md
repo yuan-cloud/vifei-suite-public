@@ -10,12 +10,12 @@ OUT_DIR=.tmp/a2-cli scripts/e2e/cli_e2e.sh
 
 # 12-run latency sample
 for i in $(seq 1 12); do
-  /usr/bin/time -f '%e' cargo run -q -p panopticon-tui --bin panopticon -- \
+  /usr/bin/time -f '%e' cargo run -q -p vifei-tui --bin vifei -- \
     tour --stress fixtures/large-stress.jsonl --output-dir .tmp/a2-baseline/tour-run-$i
 done
 
-PANOPTICON_TOUR_BENCH_ITERS=12 cargo run -q -p panopticon-tour --bin bench_tour --release
-/usr/bin/time -v cargo run -q -p panopticon-tour --bin bench_tour --release
+VIFEI_TOUR_BENCH_ITERS=12 cargo run -q -p vifei-tour --bin bench_tour --release
+/usr/bin/time -v cargo run -q -p vifei-tour --bin bench_tour --release
 /usr/bin/time -v cargo test
 ```
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build and package release artifacts for Panopticon v0.1.
+# Build and package release artifacts for Vifei v0.1.
 #
 # Usage:
 #   scripts/release_artifacts.sh
@@ -13,17 +13,17 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "[release] building release binaries"
-cargo build --release -p panopticon-tui
-cargo build --release -p panopticon-tour
+cargo build --release -p vifei-tui
+cargo build --release -p vifei-tour
 
 mkdir -p "$OUT_DIR"
-cp target/release/panopticon "$OUT_DIR/"
+cp target/release/vifei "$OUT_DIR/"
 cp target/release/bench_tour "$OUT_DIR/"
 
 # Deterministic checksum ordering for stable verification logs.
 (
   cd "$OUT_DIR"
-  LC_ALL=C ls -1 panopticon bench_tour | xargs sha256sum > sha256sums.txt
+  LC_ALL=C ls -1 vifei bench_tour | xargs sha256sum > sha256sums.txt
 )
 
 echo "[release] wrote artifacts to $OUT_DIR"

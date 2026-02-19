@@ -9,7 +9,7 @@ MAX_P99_INCREASE_PCT="${MAX_P99_INCREASE_PCT:-25}"
 
 if [[ ! -f "$ARTIFACT_PATH" ]]; then
   echo "::warning title=PERF_WARN::missing perf artifact at $ARTIFACT_PATH"
-  echo "replay: PANOPTICON_TOUR_BENCH_ARTIFACT=$ARTIFACT_PATH cargo run -q -p panopticon-tour --bin bench_tour --release"
+  echo "replay: VIFEI_TOUR_BENCH_ARTIFACT=$ARTIFACT_PATH cargo run -q -p vifei-tour --bin bench_tour --release"
   exit 0
 fi
 
@@ -66,9 +66,9 @@ if warnings:
             f"delta={delta_pct:.2f}% threshold={max_increase:.2f}%"
         )
     print(
-        "replay: PANOPTICON_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json "
-        "PANOPTICON_PERF_TREND_DIR=.tmp/full-confidence/perf/trends "
-        "cargo run -q -p panopticon-tour --bin bench_tour --release"
+        "replay: VIFEI_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json "
+        "VIFEI_PERF_TREND_DIR=.tmp/full-confidence/perf/trends "
+        "cargo run -q -p vifei-tour --bin bench_tour --release"
     )
 else:
     print("PERF_WARN: no threshold exceedance against current baseline candidate")

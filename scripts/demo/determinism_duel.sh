@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Determinism Duel demo for Panopticon.
+# Determinism Duel demo for Vifei.
 # Runs two independent stress tours and fails if viewmodel hashes diverge.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -13,7 +13,7 @@ if [[ "${1:-}" == "--fast" || "${1:-}" == "--full" ]]; then
   shift
 fi
 
-OUT_DIR="${1:-/tmp/panopticon_determinism_duel}"
+OUT_DIR="${1:-/tmp/vifei_determinism_duel}"
 if [[ "$MODE" == "fast" ]]; then
   FIXTURE="fixtures/small-session.jsonl"
 else
@@ -28,11 +28,11 @@ echo "[duel] fixture: $FIXTURE"
 started_at="$(date +%s)"
 
 echo "[duel] run A"
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   tour "$FIXTURE" --stress --output-dir "$OUT_DIR/a" >/dev/null
 
 echo "[duel] run B"
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   tour "$FIXTURE" --stress --output-dir "$OUT_DIR/b" >/dev/null
 
 hash_a="$(<"$OUT_DIR/a/viewmodel.hash")"

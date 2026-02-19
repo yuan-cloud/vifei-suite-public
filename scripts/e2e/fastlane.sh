@@ -110,17 +110,17 @@ assert_contains() {
 cd "$ROOT_DIR"
 
 # Core invariant smoke: canonical ordering + deterministic state/viewmodel hash paths.
-stage_cmd core_commit_index 0 cargo test -p panopticon-core eventlog::tests::commit_index_is_writer_assigned
-stage_cmd core_reducer_determinism 0 cargo test -p panopticon-core reducer::tests::determinism_10_runs
-stage_cmd core_projection_hash 0 cargo test -p panopticon-core projection::tests::test_viewmodel_hash_determinism
-stage_cmd docs_guard 0 cargo test -p panopticon-core --test docs_guard
+stage_cmd core_commit_index 0 cargo test -p vifei-core eventlog::tests::commit_index_is_writer_assigned
+stage_cmd core_reducer_determinism 0 cargo test -p vifei-core reducer::tests::determinism_10_runs
+stage_cmd core_projection_hash 0 cargo test -p vifei-core projection::tests::test_viewmodel_hash_determinism
+stage_cmd docs_guard 0 cargo test -p vifei-core --test docs_guard
 
 # CLI smoke: help + share-safe success/refusal contracts.
-stage_cmd cli_quick_help_json 0 cargo run -p panopticon-tui --bin panopticon
+stage_cmd cli_quick_help_json 0 cargo run -p vifei-tui --bin vifei
 assert_contains cli_quick_help_json_stdout "$OUT_DIR/cmd/cli_quick_help_json.stdout.log" "\"quick_help\""
 
 stage_cmd cli_export_clean 0 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/bundle.tar.zst" \
@@ -129,7 +129,7 @@ assert_file cli_export_bundle "$OUT_DIR/export/bundle.tar.zst"
 assert_contains cli_export_clean_stdout "$OUT_DIR/cmd/cli_export_clean.stdout.log" "\"code\":\"OK\""
 
 stage_cmd cli_export_refusal 3 \
-  cargo run -p panopticon-tui --bin panopticon -- \
+  cargo run -p vifei-tui --bin vifei -- \
   export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
   --output "$OUT_DIR/export/refused.tar.zst" \
@@ -163,7 +163,7 @@ log_json "info" "cli_export_refusal_report" "ok" 0 "refusal report schema/order 
 
 # Minimal TUI smoke: width bucket contracts + interactive PTY path (skip-aware by design).
 stage_cmd tui_modality_smoke 0 \
-  cargo test -p panopticon-tui --test modality_validation width_buckets_preserve_required_surface_markers
+  cargo test -p vifei-tui --test modality_validation width_buckets_preserve_required_surface_markers
 
 set +e
 env OUT_DIR="$OUT_DIR" scripts/e2e/pty_preflight.sh \
@@ -203,7 +203,7 @@ echo "[tui_pty_preflight] status=$pty_status rc=$pty_rc" >> "$SUMMARY_TXT"
 
 if [[ "$pty_status" == "pass" ]]; then
   stage_cmd tui_interactive_smoke 0 \
-    cargo test -p panopticon-tui --test tui_e2e_interactive interactive_tui_flow_lens_toggle_nav_and_quit -- --nocapture
+    cargo test -p vifei-tui --test tui_e2e_interactive interactive_tui_flow_lens_toggle_nav_and_quit -- --nocapture
 else
   log_json "info" "tui_interactive_smoke" "ok" 0 "gated: PTY capability unavailable for runner" "$OUT_DIR/pty-preflight.log"
   echo "[tui_interactive_smoke] GATED due to PTY capability status=fail (see $OUT_DIR/pty-preflight.log)" >> "$SUMMARY_TXT"
@@ -229,7 +229,7 @@ if [[ "$ELAPSED" -gt "$MAX_SECONDS" ]]; then
     echo "  - cargo clippy --all-targets -- -D warnings"
     echo "  - cargo test"
     echo "  - scripts/e2e/cli_e2e.sh"
-    echo "  - cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+    echo "  - cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture"
   } >> "$SUMMARY_TXT"
   exit 1
 fi
@@ -246,5 +246,5 @@ fi
   echo "  cargo clippy --all-targets -- -D warnings"
   echo "  cargo test"
   echo "  scripts/e2e/cli_e2e.sh"
-  echo "  cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+  echo "  cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture"
 } | tee -a "$SUMMARY_TXT"

@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible bug in Panopticon Suite
+description: Report a reproducible bug in Vifei Suite
 title: "[Bug] "
 labels:
   - bug

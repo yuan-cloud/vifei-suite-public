@@ -1,12 +1,12 @@
-# Panopticon Suite
+# Vifei Suite
 
-[![CI](https://img.shields.io/github/actions/workflow/status/yuan-cloud/panopticon-suite/ci.yml?branch=main&label=CI)](https://github.com/yuan-cloud/panopticon-suite/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/tag/yuan-cloud/panopticon-suite?label=release)](https://github.com/yuan-cloud/panopticon-suite/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/yuan-cloud/vifei-suite/ci.yml?branch=main&label=ci)](https://github.com/yuan-cloud/vifei-suite/actions/workflows/ci.yml)
+[![Tag](https://img.shields.io/github/v/tag/yuan-cloud/vifei-suite?sort=semver&label=tag)](https://github.com/yuan-cloud/vifei-suite/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Deterministic, local-first run evidence for AI agent workflows.
 
-Panopticon records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can rerun and verify.
+Vifei records canonical run truth as an append-only EventLog, then projects that truth into operator views and proof artifacts you can rerun and verify.
 
 Presentation showcase: `docs/showcase/index.md`
 
@@ -23,8 +23,8 @@ Trust-first cockpit with deterministic proof surfaces:
 Quick launch commands:
 
 ```bash
-scripts/demo/trust_demo_cut.sh /tmp/panopticon_trust_cut fixtures/small-session.jsonl
-scripts/demo/visual_showcase_cut.sh /tmp/panopticon_visual_cut
+scripts/demo/trust_demo_cut.sh /tmp/vifei_trust_cut fixtures/small-session.jsonl
+scripts/demo/visual_showcase_cut.sh /tmp/vifei_visual_cut
 scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
 ```
 
@@ -36,7 +36,7 @@ scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
 
 ## Why This Exists
 
-Most agent workflows have logs but weak replay guarantees under stress. Panopticon keeps truth auditable when pressure rises.
+Most agent workflows have logs but weak replay guarantees under stress. Vifei keeps truth auditable when pressure rises.
 
 - Canonical ordering uses `commit_index` from one append writer.
 - Truth stays intact under overload; only projection quality degrades.
@@ -47,7 +47,7 @@ Most agent workflows have logs but weak replay guarantees under stress. Panoptic
 1. Run deterministic stress Tour:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
+cargo run -p vifei-tui --bin vifei -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output
 ```
 
 2. Confirm proof artifacts:
@@ -61,7 +61,7 @@ cat tour-output/metrics.json
 3. Optional human-readable CLI surface check:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- --human --help
+cargo run -p vifei-tui --bin vifei -- --human --help
 ```
 
 Expected artifact files:
@@ -94,7 +94,7 @@ Use this path during active investigation on a full terminal.
 
 ```bash
 cat tour-output/viewmodel.hash
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output-rerun
+cargo run -p vifei-tui --bin vifei -- tour fixtures/large-stress.jsonl --stress --output-dir tour-output-rerun
 cat tour-output-rerun/viewmodel.hash
 ```
 
@@ -111,7 +111,7 @@ Use `--full` for stress-grade replay duel.
 ### View an EventLog in TUI
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-eventlog.jsonl
+cargo run -p vifei-tui --bin vifei -- view docs/assets/readme/sample-eventlog.jsonl
 ```
 
 Run in a real interactive terminal (TTY).
@@ -133,7 +133,7 @@ cat .tmp/competitor-bakeoff/run-*/bakeoff-report.json
 ### Showcase profile (visual demo mode)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   view docs/assets/readme/sample-eventlog.jsonl --profile showcase
 ```
 
@@ -160,7 +160,7 @@ Truth HUD (showcase):
 ### Export with share-safe checks
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- export \
+cargo run -p vifei-tui --bin vifei -- export \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --share-safe \
   --output out/bundle.tar.zst \
@@ -176,7 +176,7 @@ scripts/demo/refusal_radar.sh --fast
 ### Incident evidence pack (one command)
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- incident-pack \
+cargo run -p vifei-tui --bin vifei -- incident-pack \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --output-dir out/incident-pack
@@ -187,7 +187,7 @@ This writes deterministic local artifacts (`compare/delta.json`, replay summarie
 Input format flags for mixed-source comparisons:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- incident-pack \
+cargo run -p vifei-tui --bin vifei -- incident-pack \
   fixtures/small-session.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --left-format cassette \
@@ -200,7 +200,7 @@ Manifest input labels are share-safe file labels (not absolute local paths).
 ### Deterministic run comparison
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- compare \
+cargo run -p vifei-tui --bin vifei -- compare \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl
 ```
@@ -208,7 +208,7 @@ cargo run -p panopticon-tui --bin panopticon -- compare \
 Optional mixed-format compare:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- compare \
+cargo run -p vifei-tui --bin vifei -- compare \
   fixtures/small-session.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   --left-format cassette \
@@ -283,7 +283,7 @@ This prepares premium showcase wall assets under `docs/assets/readme/`.
 ### Record a showcase cast
 
 ```bash
-scripts/capture_showcase_cast.sh --fast /tmp/panopticon-showcase-cast
+scripts/capture_showcase_cast.sh --fast /tmp/vifei-showcase-cast
 ```
 
 Requires `asciinema`; output is a replayable `.cast` file for launch/demo channels.
@@ -293,7 +293,7 @@ Requires `asciinema`; output is a replayable `.cast` file for launch/demo channe
 Use machine-readable mode for automation:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json tour fixtures/large-stress.jsonl \
   --stress --output-dir tour-output
 ```
@@ -309,20 +309,20 @@ Behavior contract:
 Force human-readable output even when piping:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --human --help
 ```
 
 Strict trust verification command:
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json verify --strict --full --output-dir verify-output
 ```
 
 This emits a single structured result that checks determinism stability, Tier A drop safety, refusal semantics, and explainability token presence.
 
-Robot JSON contract keys (`schema_version=panopticon-cli-robot-v1.1`):
+Robot JSON contract keys (`schema_version=vifei-cli-robot-v1.1`):
 
 | Key | Type | Notes |
 |---|---|---|
@@ -364,11 +364,11 @@ flowchart TD
 
 Workspace crates:
 
-- `crates/panopticon-core`: event schema, append writer, reducer, projection
-- `crates/panopticon-import`: Agent Cassette importer
-- `crates/panopticon-export`: bundle export and share-safe scanning
-- `crates/panopticon-tour`: stress harness and proof artifact emission
-- `crates/panopticon-tui`: CLI and terminal UI lenses
+- `crates/vifei-core`: event schema, append writer, reducer, projection
+- `crates/vifei-import`: Agent Cassette importer
+- `crates/vifei-export`: bundle export and share-safe scanning
+- `crates/vifei-tour`: stress harness and proof artifact emission
+- `crates/vifei-tui`: CLI and terminal UI lenses
 
 ## Governance Docs
 
@@ -402,7 +402,7 @@ Workspace crates:
 
 ## Status
 
-Panopticon v0.1 implements the core truth pipeline. Release and public documentation work continues.
+Vifei v0.1 implements the core truth pipeline. Release and public documentation work continues.
 
 Track current work:
 

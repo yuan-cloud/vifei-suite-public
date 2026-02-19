@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking interest in Panopticon Suite.
+Thanks for taking interest in Vifei Suite.
 
 ## Contribution model
 

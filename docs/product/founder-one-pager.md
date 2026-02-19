@@ -1,8 +1,8 @@
-# Panopticon Founder One-Pager
+# Vifei Founder One-Pager
 
 ## What we are building
 
-Panopticon is a deterministic, local-first evidence cockpit for AI agent runs. It records canonical run truth, replays it reliably, and produces proof artifacts teams can verify directly.
+Vifei is a deterministic, local-first evidence cockpit for AI agent runs. It records canonical run truth, replays it reliably, and produces proof artifacts teams can verify directly.
 
 ## Why now
 
@@ -23,7 +23,7 @@ Agent adoption is accelerating; teams have visibility tools, but they still stru
 
 ## Why we win
 
-Most tools optimize for observability convenience; Panopticon prioritizes deterministic evidence. That distinction matters when teams need to verify, compare, and safely share run outcomes.
+Most tools optimize for observability convenience; Vifei prioritizes deterministic evidence. That distinction matters when teams need to verify, compare, and safely share run outcomes.
 
 ## Product surface today
 
@@ -46,5 +46,5 @@ Most tools optimize for observability convenience; Panopticon prioritizes determ
 ## Near-term success signals
 
 1. Users can run one command and verify hash stability on rerun.
-2. Public launch content clearly differentiates Panopticon from generic tracing tools.
+2. Public launch content clearly differentiates Vifei from generic tracing tools.
 3. Early adopters use refusal-safe export as part of real workflows.

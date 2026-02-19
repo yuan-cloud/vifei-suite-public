@@ -8,7 +8,7 @@
 
 Single lever only:
 
-- Switch importer parse path from generic `serde_json::Value` map lookups to typed `CassetteRecord` deserialization in `crates/panopticon-import/src/cassette.rs`.
+- Switch importer parse path from generic `serde_json::Value` map lookups to typed `CassetteRecord` deserialization in `crates/vifei-import/src/cassette.rs`.
 
 ## Equivalence posture
 
@@ -30,7 +30,7 @@ Validation:
 Command:
 
 ```bash
-PANOPTICON_TOUR_PROFILE_ITERS=12 cargo run -q -p panopticon-tour --bin profile_tour --release
+VIFEI_TOUR_PROFILE_ITERS=12 cargo run -q -p vifei-tour --bin profile_tour --release
 ```
 
 Latest runs after change:

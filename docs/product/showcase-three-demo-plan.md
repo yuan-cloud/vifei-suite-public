@@ -1,6 +1,6 @@
 # Showcase Three-Demo Plan
 
-Objective: ship three high-impact demos that make Panopticon visually compelling while reinforcing deterministic trust and share-safe safety posture.
+Objective: ship three high-impact demos that make Vifei visually compelling while reinforcing deterministic trust and share-safe safety posture.
 
 ## Demo A: Determinism Duel
 

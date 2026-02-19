@@ -1,17 +1,17 @@
-# Panopticon Showcase
+# Vifei Showcase
 
 Presentation-first preview for the project's premium visual profile.
 
 ## One-command visual demo
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   view docs/assets/readme/sample-eventlog.jsonl --profile showcase
 ```
 
 ## What this demonstrates
 
-Panopticon keeps truth deterministic while supporting a higher-end presentation layer for demos and public storytelling.
+Vifei keeps truth deterministic while supporting a higher-end presentation layer for demos and public storytelling.
 
 - Truth path is unchanged.
 - `commit_index` ordering remains canonical.
@@ -54,7 +54,7 @@ Security and governance command path:
 ### Visual launch cut (45-90s)
 
 ```bash
-scripts/demo/visual_showcase_cut.sh /tmp/panopticon_visual_cut
+scripts/demo/visual_showcase_cut.sh /tmp/vifei_visual_cut
 ```
 
 This produces a concise visual proof summary with deterministic hashes for showcase and narrow assets.

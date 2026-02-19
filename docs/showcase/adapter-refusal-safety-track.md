@@ -7,31 +7,31 @@ Use `--json` so refusal and runtime envelopes are machine-verifiable.
 ## 1) Share-safe refusal proof
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json export docs/assets/readme/sample-refusal-eventlog.jsonl \
   --share-safe \
-  --output /tmp/panopticon-safety/refused.tar.zst \
-  --refusal-report /tmp/panopticon-safety/refusal-report.json
+  --output /tmp/vifei-safety/refused.tar.zst \
+  --refusal-report /tmp/vifei-safety/refusal-report.json
 ```
 
 Expected:
 - process exit `3`
 - `ok=false`
 - `code="EXPORT_REFUSED"`
-- refusal report written at `/tmp/panopticon-safety/refusal-report.json`
+- refusal report written at `/tmp/vifei-safety/refusal-report.json`
 
 Inspect blocked fields:
 
 ```bash
-jq '.blocked_items[] | {event_id, field_path, pattern}' /tmp/panopticon-safety/refusal-report.json
+jq '.blocked_items[] | {event_id, field_path, pattern}' /tmp/vifei-safety/refusal-report.json
 ```
 
 ## 2) Safety guard for unsafe export mode
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- \
+cargo run -p vifei-tui --bin vifei -- \
   --json export docs/assets/readme/sample-export-clean-eventlog.jsonl \
-  --output /tmp/panopticon-safety/no-scan.tar.zst
+  --output /tmp/vifei-safety/no-scan.tar.zst
 ```
 
 Expected:
@@ -43,12 +43,12 @@ Expected:
 ## 3) Runtime safety failure envelope (no silent fallback)
 
 ```bash
-printf 'not-a-dir\n' > /tmp/panopticon-output-file
-cargo run -p panopticon-tui --bin panopticon -- \
+printf 'not-a-dir\n' > /tmp/vifei-output-file
+cargo run -p vifei-tui --bin vifei -- \
   --json incident-pack \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
   docs/assets/readme/sample-export-clean-eventlog.jsonl \
-  --output-dir /tmp/panopticon-output-file
+  --output-dir /tmp/vifei-output-file
 ```
 
 Expected:

@@ -1,7 +1,7 @@
 # UX Test Plan v0.1
 
 ## Purpose
-Define a repeatable operator UX validation protocol for Panopticon CLI/TUI flows, with measurable outcomes and direct conversion of findings into beads.
+Define a repeatable operator UX validation protocol for Vifei CLI/TUI flows, with measurable outcomes and direct conversion of findings into beads.
 
 Scope aligns with:
 - `docs/UX_SCOPE.md`
@@ -22,7 +22,7 @@ Both profiles are required for each baseline pass.
 ## Operator Task Script
 1. `first_run_orientation`
 - Goal: Operator can identify active lens, Truth HUD fields, and quit controls.
-- Command(s): `cargo run -p panopticon-tui --bin panopticon -- --help`, then interactive `view` flow via PTY harness.
+- Command(s): `cargo run -p vifei-tui --bin vifei -- --help`, then interactive `view` flow via PTY harness.
 - Pass condition: Lens identity and Truth HUD are visible, quit path works.
 
 2. `incident_to_forensic_triage`

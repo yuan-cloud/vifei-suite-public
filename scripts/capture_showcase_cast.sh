@@ -8,7 +8,7 @@ set -euo pipefail
 #   scripts/capture_showcase_cast.sh [--fast|--full] [output_dir]
 #
 # Examples:
-#   scripts/capture_showcase_cast.sh --fast /tmp/panopticon-cast
+#   scripts/capture_showcase_cast.sh --fast /tmp/vifei-cast
 #   scripts/capture_showcase_cast.sh --full
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -20,7 +20,7 @@ if [[ "${1:-}" == "--fast" || "${1:-}" == "--full" ]]; then
   shift
 fi
 
-OUT_DIR="${1:-/tmp/panopticon-showcase-cast}"
+OUT_DIR="${1:-/tmp/vifei-showcase-cast}"
 mkdir -p "$OUT_DIR"
 
 if ! command -v asciinema >/dev/null 2>&1; then
@@ -30,7 +30,7 @@ if ! command -v asciinema >/dev/null 2>&1; then
 fi
 
 RUN_DIR="$OUT_DIR/demo-proof"
-CAST_PATH="$OUT_DIR/panopticon-showcase-${MODE}.cast"
+CAST_PATH="$OUT_DIR/vifei-showcase-${MODE}.cast"
 
 echo "[cast] mode: $MODE"
 echo "[cast] output_dir: $OUT_DIR"

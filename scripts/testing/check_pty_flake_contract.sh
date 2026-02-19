@@ -63,7 +63,7 @@ line = path.read_text(encoding="utf-8").strip()
 if not line:
     raise SystemExit("empty preflight log")
 payload = json.loads(line)
-if payload.get("schema_version") != "panopticon-pty-preflight-v1":
+if payload.get("schema_version") != "vifei-pty-preflight-v1":
     raise SystemExit("unexpected preflight schema version")
 status = payload.get("status")
 if status not in {"pass", "fail"}:
@@ -90,7 +90,7 @@ if [[ "${#assertion_files[@]}" -eq 0 ]]; then
     usage_hint
     exit 1
   fi
-  fail "PTY1-assertion-files" "preflight passed but no assertion logs were produced" "TERM=xterm-256color PANOPTICON_E2E_OUT=$OUT_DIR/tui-e2e cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+  fail "PTY1-assertion-files" "preflight passed but no assertion logs were produced" "TERM=xterm-256color VIFEI_E2E_OUT=$OUT_DIR/tui-e2e cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture"
 fi
 
 python3 - "$MAX_RETRY_PASSES" "${assertion_files[@]}" <<'PY'
@@ -108,7 +108,7 @@ seen = 0
 
 for path in files:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if payload.get("schema_version") != "panopticon-tui-e2e-assert-v1":
+    if payload.get("schema_version") != "vifei-tui-e2e-assert-v1":
         raise SystemExit(f"CONTRACT_FAIL[PTY1-assertion-schema] invalid schema in {path}")
 
     status = payload.get("status")
@@ -130,14 +130,14 @@ if failed:
     print("CONTRACT_FAIL[PTY2-assertions] failing PTY assertion logs:")
     for name in failed:
         print(f"  - {name}")
-    print("replay: TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture")
+    print("replay: TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture")
     raise SystemExit(1)
 
 if skipped:
     print("CONTRACT_FAIL[PTY2-assertions] unexpected skip assertion logs while preflight passed:")
     for name in skipped:
         print(f"  - {name}")
-    print("replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh && TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture")
+    print("replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh && TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture")
     raise SystemExit(1)
 
 if retry_passes > max_retry_passes:
@@ -145,7 +145,7 @@ if retry_passes > max_retry_passes:
         f"CONTRACT_FAIL[PTY3-flake-budget] retry passes exceeded budget: {retry_passes} > {max_retry_passes}"
     )
     print(
-        "replay: TERM=xterm-256color PANOPTICON_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture"
+        "replay: TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture"
     )
     raise SystemExit(1)
 

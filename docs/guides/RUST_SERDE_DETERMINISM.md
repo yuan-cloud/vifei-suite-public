@@ -1,6 +1,6 @@
 # Rust Serde Determinism Guide
 
-Byte-stable serialization is a hard requirement for Panopticon (invariant I4).
+Byte-stable serialization is a hard requirement for Vifei (invariant I4).
 This guide covers the patterns that enforce it.
 
 **Crate versions:** serde 1.x, serde_json 1.x
@@ -21,7 +21,7 @@ serde's `#[derive(Serialize)]` serializes fields in declaration order.
 This is the stable guarantee we rely on. **Do not reorder struct fields
 without updating round-trip tests.**
 
-From `crates/panopticon-core/src/event.rs`:
+From `crates/vifei-core/src/event.rs`:
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -55,7 +55,7 @@ tier, payload, [payload_ref], [synthesized]
 
 ## Containers: BTreeMap only, never HashMap
 
-| Container | Deterministic? | Use in Panopticon |
+| Container | Deterministic? | Use in Vifei |
 |-----------|---------------|-------------------|
 | `BTreeMap` | Yes (sorted keys) | All map-like fields in serialized/hashed types |
 | `HashMap` | **No** (random iteration) | Runtime-only state (e.g., clock skew tracker) |
@@ -63,7 +63,7 @@ tier, payload, [payload_ref], [synthesized]
 | `HashSet` | **No** | Never in serialized paths |
 | `Vec` | Yes (ordered) | Sequences |
 
-From `crates/panopticon-core/src/event.rs`:
+From `crates/vifei-core/src/event.rs`:
 
 ```rust
 // GOOD: BTreeMap guarantees sorted keys in JSON
@@ -75,7 +75,7 @@ Generic {
 }
 ```
 
-From `crates/panopticon-core/src/reducer.rs`, the entire `State` struct
+From `crates/vifei-core/src/reducer.rs`, the entire `State` struct
 uses `BTreeMap` for all map fields. No `HashMap` appears in any
 serialized or hashed type.
 
@@ -146,7 +146,7 @@ f64 bit pattern.
 vs `0.0`, NaN variants). For hashed surfaces, **quantize floats to
 integers** before storing.
 
-From `crates/panopticon-core/src/reducer.rs`:
+From `crates/vifei-core/src/reducer.rs`:
 
 ```rust
 // PolicyDecision has queue_pressure: f64
@@ -185,6 +185,6 @@ fn assert_roundtrip<T: Serialize + for<'de> Deserialize<'de>>(value: &T) {
 }
 ```
 
-See `crates/panopticon-core/src/event.rs` tests for the full set covering
+See `crates/vifei-core/src/event.rs` tests for the full set covering
 all 8 Tier A variants plus Generic, payload_ref, synthesized, and edge
 cases (unicode, u64::MAX, empty strings).

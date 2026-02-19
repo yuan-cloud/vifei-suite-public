@@ -26,7 +26,7 @@ run_cmd() {
 echo "[bundle] output dir: $OUT_DIR"
 
 run_cmd scripts/demo_quickcheck.sh "$RUN_DIR"
-run_cmd cargo run -p panopticon-tour --bin media_provenance -- \
+run_cmd cargo run -p vifei-tour --bin media_provenance -- \
   --verify "$RUN_DIR/media-provenance.json" \
   --base-dir "$RUN_DIR"
 run_cmd scripts/testing/check_media_hygiene.sh "$RUN_DIR"
@@ -84,7 +84,7 @@ git_sha = (
 )
 
 index = {
-    "schema_version": "panopticon-launch-bundle-v1",
+    "schema_version": "vifei-launch-bundle-v1",
     "git_sha": git_sha,
     "run_dir": "demo-proof",
     "trust_cut_dir": "trust-cut",
@@ -159,7 +159,7 @@ PY
 ## Verify provenance and hygiene
 
 \`\`\`bash
-cargo run -p panopticon-tour --bin media_provenance -- \\
+cargo run -p vifei-tour --bin media_provenance -- \\
   --verify $RUN_DIR/media-provenance.json --base-dir $RUN_DIR
 scripts/testing/check_media_hygiene.sh $RUN_DIR
 \`\`\`

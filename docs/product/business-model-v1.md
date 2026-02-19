@@ -2,7 +2,7 @@
 
 ## Objective
 
-Turn Panopticon from strong OSS proof tooling into a durable product with clear enterprise value.
+Turn Vifei from strong OSS proof tooling into a durable product with clear enterprise value.
 
 ## Product tiers (proposed)
 

@@ -17,7 +17,7 @@ This QA report intentionally summarizes gate outcomes to avoid duplicating the f
 1. CLI surface check
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- --human --help
+cargo run -p vifei-tui --bin vifei -- --human --help
 ```
 
 Result: PASS (informational). Human-readable command surface matches README sections (`view`, `export`, `tour`).
@@ -26,8 +26,8 @@ Source: `docs/README_VERIFICATION.md` (Command Validation Matrix items 1-3).
 2. Deterministic stress Tour command
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir /tmp/readme-tour-a
-cargo run -p panopticon-tui --bin panopticon -- tour fixtures/large-stress.jsonl --stress --output-dir /tmp/readme-tour-b
+cargo run -p vifei-tui --bin vifei -- tour fixtures/large-stress.jsonl --stress --output-dir /tmp/readme-tour-a
+cargo run -p vifei-tui --bin vifei -- tour fixtures/large-stress.jsonl --stress --output-dir /tmp/readme-tour-b
 cat /tmp/readme-tour-a/viewmodel.hash /tmp/readme-tour-b/viewmodel.hash
 ```
 
@@ -37,7 +37,7 @@ Source: `docs/README_VERIFICATION.md` (hash compare evidence).
 3. Share-safe export command
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output /tmp/readme-export/bundle.tar.zst --refusal-report /tmp/readme-export/refusal-report.json
+cargo run -p vifei-tui --bin vifei -- export docs/assets/readme/sample-export-clean-eventlog.jsonl --share-safe --output /tmp/readme-export/bundle.tar.zst --refusal-report /tmp/readme-export/refusal-report.json
 ```
 
 Result: PASS. Bundle generated successfully.
@@ -46,7 +46,7 @@ Source: `docs/README_VERIFICATION.md` (export success evidence).
 4. TUI `view` command behavior in non-interactive environment
 
 ```bash
-cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-eventlog.jsonl
+cargo run -p vifei-tui --bin vifei -- view docs/assets/readme/sample-eventlog.jsonl
 ```
 
 Result: expected failure in non-TTY environments. README already states `view` requires an interactive terminal.

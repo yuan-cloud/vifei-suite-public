@@ -8,13 +8,13 @@ This document defines deterministic schema and storage layout for replay benchma
 
 - Bench artifact (single-run summary):
   - default path: `.tmp/perf/bench_tour_metrics.json`
-  - override: `PANOPTICON_TOUR_BENCH_ARTIFACT`
+  - override: `VIFEI_TOUR_BENCH_ARTIFACT`
 - Trend log (append-only JSONL):
   - default directory: `.tmp/perf/trends`
-  - override: `PANOPTICON_PERF_TREND_DIR`
+  - override: `VIFEI_PERF_TREND_DIR`
   - concrete file: `bench_tour/<target_os>-<target_arch>.jsonl`
 
-## Bench artifact schema (`panopticon-tour-bench-v1`)
+## Bench artifact schema (`vifei-tour-bench-v1`)
 
 Top-level fields:
 - `schema_version: string`
@@ -38,11 +38,11 @@ Top-level fields:
 - `target_arch: String`
 
 Validator requirements:
-- `schema_version == "panopticon-tour-bench-v1"`
+- `schema_version == "vifei-tour-bench-v1"`
 - `stats.iters > 0`
 - `command.fixture_path` non-empty
 
-## Trend record schema (`panopticon-perf-trend-v1`)
+## Trend record schema (`vifei-perf-trend-v1`)
 
 Top-level fields:
 - `schema_version: string`
@@ -52,15 +52,15 @@ Top-level fields:
 
 `key` fields:
 - `benchmark: string` (currently `"bench_tour"`)
-- `git_sha: Option<String>` (from `PANOPTICON_GIT_SHA`)
+- `git_sha: Option<String>` (from `VIFEI_GIT_SHA`)
 - `target_os: String`
 - `target_arch: String`
 - `package_version: String`
 - `fixture_path: String`
 
 Validator requirements:
-- `schema_version == "panopticon-perf-trend-v1"`
-- `metric_schema_version == "panopticon-tour-bench-v1"`
+- `schema_version == "vifei-perf-trend-v1"`
+- `metric_schema_version == "vifei-tour-bench-v1"`
 - `key.benchmark == "bench_tour"`
 - `stats.iters > 0`
 
@@ -73,7 +73,7 @@ Validator requirements:
 ## CI phase-2 policy (fail gate)
 
 - Workflow step runs:
-  - `cargo run -q -p panopticon-tour --bin bench_tour --release`
+  - `cargo run -q -p vifei-tour --bin bench_tour --release`
   - `scripts/testing/check_perf_regression_fail.sh`
 - Locked baseline file:
   - `docs/testing/perf-baseline-lock-v1.json`
@@ -82,15 +82,15 @@ Validator requirements:
   - `run_ms_p95`: max +20%
   - `run_ms_p99`: max +25%
 - Lock criteria:
-  - baseline schema `panopticon-tour-bench-v1`
+  - baseline schema `vifei-tour-bench-v1`
   - baseline `stats.iters >= 10`
   - current artifact `stats.iters >= 5`
 
 Emergency override (incident-only):
 
 ```bash
-PANOPTICON_PERF_GATE_OVERRIDE=1 \
-PANOPTICON_PERF_GATE_OVERRIDE_REASON="<ticket-or-incident-id>" \
+VIFEI_PERF_GATE_OVERRIDE=1 \
+VIFEI_PERF_GATE_OVERRIDE_REASON="<ticket-or-incident-id>" \
 scripts/testing/check_perf_regression_fail.sh \
   .tmp/full-confidence/perf/bench_tour_metrics.json \
   docs/testing/perf-baseline-lock-v1.json

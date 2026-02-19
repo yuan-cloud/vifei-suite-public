@@ -1,5 +1,5 @@
 {
-  "schema_version": "panopticon-tour-bench-v1",
+  "schema_version": "vifei-tour-bench-v1",
   "stats": {
     "iters": 10,
     "run_ms_p50": 1518.8076079999998,
@@ -16,7 +16,7 @@
       "target/debug/bench_tour",
       "--help"
     ],
-    "fixture_path": "/data/projects/PanopticonAliveca2.5/fixtures/large-stress.jsonl",
+    "fixture_path": "/data/projects/VifeiAliveca2.5/fixtures/large-stress.jsonl",
     "fixture_bytes": 6974442,
     "fixture_line_count": 19475,
     "package_version": "0.1.0",

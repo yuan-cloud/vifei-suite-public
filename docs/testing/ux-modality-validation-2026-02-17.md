@@ -4,12 +4,12 @@ Bead: `bd-gxd.9`
 
 ## Validation Commands
 ```bash
-cargo test -p panopticon-tui --test modality_validation -- --nocapture | tee .tmp/ux-modality-validation.log
-PANOPTICON_E2E_OUT=.tmp/e2e-tui-baseline cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture
+cargo test -p vifei-tui --test modality_validation -- --nocapture | tee .tmp/ux-modality-validation.log
+VIFEI_E2E_OUT=.tmp/e2e-tui-baseline cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture
 ```
 
 ## Per-Bucket Assertions (Automated)
-Source: `crates/panopticon-tui/tests/modality_validation.rs`
+Source: `crates/vifei-tui/tests/modality_validation.rs`
 
 | Bucket | Width | Assertions | Result | Evidence |
 |---|---:|---|---|---|
@@ -20,7 +20,7 @@ Source: `crates/panopticon-tui/tests/modality_validation.rs`
 | Emergency narrow | 72 | Same as above | PASS | `.tmp/ux-modality-validation.log` |
 
 ## Mobile README Assertions (Automated)
-Source: `crates/panopticon-tui/tests/modality_validation.rs`
+Source: `crates/vifei-tui/tests/modality_validation.rs`
 
 | Check | Assertion | Result | Evidence |
 |---|---|---|---|
@@ -30,7 +30,7 @@ Source: `crates/panopticon-tui/tests/modality_validation.rs`
 ## Narrow-Mode Interactive Proof Run
 Interactive PTY harness was executed for narrow profile, with explicit environment outcome logged:
 
-- `crates/panopticon-tui/.tmp/e2e-tui-baseline/interactive_tui_narrow_terminal_profile_stays_healthy.assertions.log`
+- `crates/vifei-tui/.tmp/e2e-tui-baseline/interactive_tui_narrow_terminal_profile_stays_healthy.assertions.log`
 - Result in this environment: `SKIP` due PTY permission denial (`script: failed to create pseudo-terminal: Permission denied`)
 
 This is an expected host constraint, not a product behavior failure.

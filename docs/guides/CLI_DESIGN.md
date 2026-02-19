@@ -1,6 +1,6 @@
 # CLI Design Guide
 
-Patterns for the Panopticon command-line interface using Clap v4 derive API.
+Patterns for the Vifei command-line interface using Clap v4 derive API.
 
 **Crate version:** clap 4.x (stable)
 
@@ -15,7 +15,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "panopticon", version, about = "Terminal cockpit for AI agent runs")]
+#[command(name = "vifei", version, about = "Terminal cockpit for AI agent runs")]
 struct Cli {
     /// Emit machine-readable JSON output
     #[arg(long, global = true, conflicts_with = "human")]
@@ -76,11 +76,11 @@ enum Commands {
 ## Hero loop mapping
 
 ```text
-1) panopticon import cassette ./session.jsonl
-2) panopticon view ./eventlog.jsonl
+1) vifei import cassette ./session.jsonl
+2) vifei view ./eventlog.jsonl
 3) [Tab] toggle Incident ↔ Forensic Lens
-4) panopticon export --share-safe -o ./bundle.tar.zst ./eventlog.jsonl
-5) panopticon tour --stress ./fixtures/large-session.jsonl
+4) vifei export --share-safe -o ./bundle.tar.zst ./eventlog.jsonl
+5) vifei tour --stress ./fixtures/large-session.jsonl
 ```
 
 Each step maps to one `Commands` variant.
@@ -155,13 +155,13 @@ Robot-mode error envelope (JSON):
 
 ```json
 {
-  "schema_version": "panopticon-cli-robot-v1.1",
+  "schema_version": "vifei-cli-robot-v1.1",
   "ok": false,
   "code": "INVALID_ARGS",
   "message": "Invalid command syntax.",
   "suggestions": [
-    "Run `panopticon --help` for command syntax.",
-    "Run `panopticon <command> --help` for command-specific args."
+    "Run `vifei --help` for command syntax.",
+    "Run `vifei <command> --help` for command-specific args."
   ],
   "exit_code": 2
 }
@@ -171,7 +171,7 @@ Robot-mode success envelope (JSON):
 
 ```json
 {
-  "schema_version": "panopticon-cli-robot-v1.1",
+  "schema_version": "vifei-cli-robot-v1.1",
   "ok": true,
   "code": "OK",
   "message": "Tour completed successfully.",
@@ -221,8 +221,8 @@ Use this matrix as the authoritative behavior split between parsing and executio
 | Execution boundary | Share-safe export scanner findings | Hard refusal path | `EXPORT_REFUSED` with refusal-report guidance |
 
 Reference contract tests:
-- `crates/panopticon-tui/tests/cli_robot_mode_contract.rs`
-- `crates/panopticon-tui/src/main.rs` (`parse_error_guidance_*`, normalization tests)
+- `crates/vifei-tui/tests/cli_robot_mode_contract.rs`
+- `crates/vifei-tui/src/main.rs` (`parse_error_guidance_*`, normalization tests)
 
 ---
 
@@ -249,7 +249,7 @@ validate after parsing and return clear errors via `anyhow`.
 ```rust
 #[test]
 fn test_import_parsing() {
-    let cli = Cli::try_parse_from(["panopticon", "import", "session.jsonl"]).unwrap();
+    let cli = Cli::try_parse_from(["vifei", "import", "session.jsonl"]).unwrap();
     match cli.command {
         Commands::Import { input } => assert_eq!(input, PathBuf::from("session.jsonl")),
         _ => panic!("expected Import"),
@@ -259,7 +259,7 @@ fn test_import_parsing() {
 #[test]
 fn test_export_requires_share_safe() {
     let cli = Cli::try_parse_from([
-        "panopticon", "export", "--share-safe", "-o", "out.tar.zst", "eventlog.jsonl"
+        "vifei", "export", "--share-safe", "-o", "out.tar.zst", "eventlog.jsonl"
     ]).unwrap();
     match cli.command {
         Commands::Export { share_safe, .. } => assert!(share_safe),

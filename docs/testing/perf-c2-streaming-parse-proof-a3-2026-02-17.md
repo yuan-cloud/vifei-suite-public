@@ -11,7 +11,7 @@
 
 File changed:
 
-- `crates/panopticon-tour/src/lib.rs`
+- `crates/vifei-tour/src/lib.rs`
 
 ## Equivalence oracle
 
@@ -41,8 +41,8 @@ against the same fixture content and asserts exact event equality.
 
 ## Verification
 
-- `cargo test -p panopticon-tour stream_fixture_parse_matches_buffered_parse`
-- `cargo test -p panopticon-tour`
+- `cargo test -p vifei-tour stream_fixture_parse_matches_buffered_parse`
+- `cargo test -p vifei-tour`
 - `cargo fmt --check`
 - `cargo clippy --all-targets -- -D warnings`
 - `cargo test`

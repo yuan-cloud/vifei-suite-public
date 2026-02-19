@@ -1,4 +1,4 @@
-# PLANS.md · Panopticon Suite · v0.1
+# PLANS.md · Vifei Suite · v0.1
 
 > **How to read this doc**
 > This is the single planning artifact for v0.1.
@@ -18,13 +18,13 @@ A built-in Tour stress harness emits repeatable artifacts so CI can adjudicate d
 
 Agent Cassette JSONL is imported into an append-only JSONL EventLog where a single writer assigns `commit_index` as the canonical replay order.
 Large payloads are stored as content-addressed blobs, a rebuildable SQLite index powers fast investigation queries, and a pure reducer plus deterministic projection produces a stable `viewmodel.hash`.
-Two contract docs, `docs/CAPACITY_ENVELOPE.md` and `docs/BACKPRESSURE_POLICY.md` (including "Projection invariants v0.1"), define overload semantics, and `panopticon tour --stress` emits proof artifacts that CI asserts.
+Two contract docs, `docs/CAPACITY_ENVELOPE.md` and `docs/BACKPRESSURE_POLICY.md` (including "Projection invariants v0.1"), define overload semantics, and `vifei tour --stress` emits proof artifacts that CI asserts.
 
 ---
 
 ## v0.1 WEDGE (keep this glued to the repo)
 
-Panopticon Suite is a local-first, terminal-first flight recorder for AI agent runs that produces deterministic, replayable evidence bundles.
+Vifei Suite is a local-first, terminal-first flight recorder for AI agent runs that produces deterministic, replayable evidence bundles.
 It is safe to share because export is redaction-first and refuses to produce an unsafe bundle.
 Under overload, truth never degrades. Only the projection degrades, and Tour plus CI prove this with artifacts.
 
@@ -36,7 +36,7 @@ This section exists to prevent drift.
 
 ### Canonical truth
 
-These are the only things Panopticon treats as forensic truth:
+These are the only things Vifei treats as forensic truth:
 
 1. Append-only EventLog (JSONL).
 2. Content-addressed blobs referenced by the EventLog.
@@ -104,7 +104,7 @@ Design note. Ingestion architecture should permit future multi-process inputs vi
 ### D4. Storage baseline
 
 Canonical truth. Append-only JSONL EventLog plus content-addressed blobs for large payloads.
-Derived cache. SQLite index from day 1, explicitly rebuildable (for example `panopticon reindex`) and never treated as truth.
+Derived cache. SQLite index from day 1, explicitly rebuildable (for example `vifei reindex`) and never treated as truth.
 
 ### D5. UX target
 
@@ -235,7 +235,7 @@ Deferred (explicitly not v0.1). Daemon mode, multi-process ingestion sequencer, 
 
 Even if slow at first, the artifact shapes must exist early.
 
-`panopticon tour --stress` must emit:
+`vifei tour --stress` must emit:
 
 | Artifact | Format | Purpose |
 |---|---|---|
@@ -309,11 +309,11 @@ A tiny always-visible strip that confesses system truthfulness state:
 Goal. One workflow that is boringly reliable under stress.
 
 ```text
-1) panopticon import cassette ./session.jsonl
-2) panopticon view ./eventlog.jsonl
+1) vifei import cassette ./session.jsonl
+2) vifei view ./eventlog.jsonl
 3) [Tab] toggle. Incident Lens to Forensic Lens
-4) panopticon export --share-safe -o ./bundle.tar.zst ./eventlog.jsonl
-5) panopticon tour --stress ./fixtures/large-session.jsonl
+4) vifei export --share-safe -o ./bundle.tar.zst ./eventlog.jsonl
+5) vifei tour --stress ./fixtures/large-session.jsonl
 ```
 
 ---
@@ -323,7 +323,7 @@ Goal. One workflow that is boringly reliable under stress.
 This is a guide, not a mandate. Agents may adjust boundaries if justified, but must not violate the Truth taxonomy.
 
 ```text
-panopticon-suite/
+vifei-suite/
 ├── PLANS.md
 ├── AGENTS.md
 ├── Cargo.toml
@@ -332,11 +332,11 @@ panopticon-suite/
 │   ├── BACKPRESSURE_POLICY.md
 │   └── RISK_REGISTER.md
 ├── crates/
-│   ├── panopticon-core/              # EventLog, reducer, projection, ViewModel
-│   ├── panopticon-import/            # Importers (Agent Cassette first)
-│   ├── panopticon-export/            # Share-safe export plus redaction
-│   ├── panopticon-tui/               # FrankenTUI shell, lenses, Truth HUD
-│   └── panopticon-tour/              # Tour stress harness
+│   ├── vifei-core/              # EventLog, reducer, projection, ViewModel
+│   ├── vifei-import/            # Importers (Agent Cassette first)
+│   ├── vifei-export/            # Share-safe export plus redaction
+│   ├── vifei-tui/               # FrankenTUI shell, lenses, Truth HUD
+│   └── vifei-tour/              # Tour stress harness
 └── fixtures/                         # Test fixtures (Agent Cassette sessions)
 ```
 
@@ -399,7 +399,7 @@ Acceptance criteria:
 | Depends on | M0 |
 | Inputs | D2 Tier A event list, D6 ordering model |
 | Outputs | Event types plus deterministic serde rules |
-| Files touched | `crates/panopticon-core/src/event.rs` plus unit tests |
+| Files touched | `crates/vifei-core/src/event.rs` plus unit tests |
 | Done when | Round-trip serialization is byte-stable for every Tier A event |
 
 Acceptance criteria:
@@ -434,7 +434,7 @@ Acceptance criteria:
 | Depends on | M1 |
 | Inputs | Event schema types, capacity targets |
 | Outputs | Single writer append, blob store wiring |
-| Files touched | `crates/panopticon-core/src/eventlog.rs`, `crates/panopticon-core/src/blob_store.rs` plus tests |
+| Files touched | `crates/vifei-core/src/eventlog.rs`, `crates/vifei-core/src/blob_store.rs` plus tests |
 | Done when | Monotonic `commit_index` is enforced and tested. Clock skew detection tested |
 
 Acceptance criteria:
@@ -460,12 +460,12 @@ Acceptance criteria:
 | Depends on | M2 |
 | Inputs | Append writer API, at least one Agent Cassette session fixture |
 | Outputs | Agent Cassette JSONL importer |
-| Files touched | `crates/panopticon-import/src/cassette.rs` plus fixtures and tests |
+| Files touched | `crates/vifei-import/src/cassette.rs` plus fixtures and tests |
 | Done when | Imports a real fixture without reordering. Marks synthesized fields |
 
 Acceptance criteria:
 
-- Reads Agent Cassette JSONL and maps events to Panopticon event schema.
+- Reads Agent Cassette JSONL and maps events to Vifei event schema.
 - Does not sort by timestamp. Preserves source order exactly as received. Append writer assigns `commit_index`. The importer must never re-sort, deduplicate, or "fix history" based on timestamps — if a source has out-of-order timestamps, that is surfaced via `ClockSkewDetected`, not corrected.
 - Any inferred or synthesized fields set `synthesized: true`.
 - At least one real session file in `fixtures/` with README documenting provenance and redaction status.
@@ -480,7 +480,7 @@ Acceptance criteria:
 | Depends on | M2 |
 | Inputs | EventLog with test data, capacity targets |
 | Outputs | Pure reducer, checkpoint support |
-| Files touched | `crates/panopticon-core/src/reducer.rs` plus tests |
+| Files touched | `crates/vifei-core/src/reducer.rs` plus tests |
 | Done when | Determinism test passes. Checkpoint replay matches full replay |
 
 Acceptance criteria:
@@ -501,7 +501,7 @@ Acceptance criteria:
 | Depends on | M4 |
 | Inputs | Reducer state, projection invariants from `docs/BACKPRESSURE_POLICY.md` |
 | Outputs | Deterministic projection and ViewModel types |
-| Files touched | `crates/panopticon-core/src/projection.rs` plus tests |
+| Files touched | `crates/vifei-core/src/projection.rs` plus tests |
 | Done when | `viewmodel.hash` is stable across repeated runs for same inputs |
 
 Acceptance criteria:
@@ -528,7 +528,7 @@ Acceptance criteria:
 | Depends on | M5 |
 | Inputs | ViewModel, FrankenTUI |
 | Outputs | TUI shell, Incident Lens, Forensic Lens stub, Truth HUD |
-| Files touched | `crates/panopticon-tui/src/` plus `src/main.rs` |
+| Files touched | `crates/vifei-tui/src/` plus `src/main.rs` |
 | Done when | TUI opens on an EventLog and renders Incident Lens. Truth HUD is auditable |
 
 Acceptance criteria:
@@ -554,12 +554,12 @@ Acceptance criteria:
 | Depends on | M5 and M6 |
 | Inputs | Projection, ViewModel, stress fixture(s), capacity targets |
 | Outputs | Tour harness and 4 proof artifacts |
-| Files touched | `crates/panopticon-tour/src/` plus fixtures and CI assertions |
-| Done when | `panopticon tour --stress` emits all artifacts and CI asserts invariants |
+| Files touched | `crates/vifei-tour/src/` plus fixtures and CI assertions |
+| Done when | `vifei tour --stress` emits all artifacts and CI asserts invariants |
 
 Acceptance criteria:
 
-- `panopticon tour --stress` ingests a large fixture, runs full pipeline under simulated load, emits to `tour-output/`:
+- `vifei tour --stress` ingests a large fixture, runs full pipeline under simulated load, emits to `tour-output/`:
   - `metrics.json`
   - `viewmodel.hash`
   - `ansi.capture`
@@ -581,12 +581,12 @@ Acceptance criteria:
 | Depends on | M2 |
 | Inputs | EventLog, blobs, redaction rules |
 | Outputs | Deterministic bundle, refusal report |
-| Files touched | `crates/panopticon-export/src/` plus tests |
+| Files touched | `crates/vifei-export/src/` plus tests |
 | Done when | Bundle hash stable for clean logs. Refusal path tested for secret-seeded logs |
 
 Acceptance criteria:
 
-- `panopticon export --share-safe -o bundle.tar.zst ./eventlog.jsonl` produces a deterministic archive. Same inputs yield the same `bundle_hash`.
+- `vifei export --share-safe -o bundle.tar.zst ./eventlog.jsonl` produces a deterministic archive. Same inputs yield the same `bundle_hash`.
 - Deterministic bundling rules are explicit and tested:
   - archive entry list is sorted deterministically
   - archive metadata is normalized (for example mtime, uid, gid)

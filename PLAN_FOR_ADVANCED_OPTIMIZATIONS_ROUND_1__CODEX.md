@@ -2,7 +2,7 @@
 
 Status: Round A1 refinement (plan-only).
 
-This revision tightens Round A to senior-grade production foundations while keeping scope appropriate for Panopticon v0.1.
+This revision tightens Round A to senior-grade production foundations while keeping scope appropriate for Vifei v0.1.
 No behavior-changing code is proposed in this file.
 
 ## 0) Guardrails (non-negotiable)
@@ -30,11 +30,11 @@ G. Regression guardrails: benchmark checks and deterministic CI assertions
 ## 2) Baseline (Round A measured)
 
 Environment:
-- Repo: `/data/projects/PanopticonAliveca2.5`
+- Repo: `/data/projects/VifeiAliveca2.5`
 - Fixture: `fixtures/large-stress.jsonl` (19,475 events)
 
 Primary command:
-- `cargo run -q -p panopticon-tui -- tour --stress fixtures/large-stress.jsonl --output-dir <dir>`
+- `cargo run -q -p vifei-tui -- tour --stress fixtures/large-stress.jsonl --output-dir <dir>`
 
 ### 2.1 Latency distribution (15 runs)
 
@@ -53,7 +53,7 @@ Results:
 ### 2.1.1 Benchmark harness sample (`bench_tour`, release)
 
 Command:
-- `PANOPTICON_TOUR_BENCH_ITERS=5 cargo run -p panopticon-tour --bin bench_tour --release`
+- `VIFEI_TOUR_BENCH_ITERS=5 cargo run -p vifei-tour --bin bench_tour --release`
 
 Observed sample:
 - p50 = 828.34 ms
@@ -202,7 +202,7 @@ For any accepted optimization bead, require these unchanged outputs for fixed fi
 
 ### Web/Research sequence
 1. Round 1: external best-practice collection (completed)
-2. Round 2: map external guidance to Panopticon constraints (this A1 refinement)
+2. Round 2: map external guidance to Vifei constraints (this A1 refinement)
 3. Round 3: beadize accepted items with dependencies
 
 ### Optimization sequence

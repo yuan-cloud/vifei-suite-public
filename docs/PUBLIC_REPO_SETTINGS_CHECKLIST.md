@@ -1,6 +1,6 @@
 # Public Repo Settings Checklist
 
-Purpose: make repository presentation, discoverability, and trust signals match Panopticon's deterministic-evidence positioning.
+Purpose: make repository presentation, discoverability, and trust signals match Vifei's deterministic-evidence positioning.
 
 Use this checklist before flipping public and before each release.
 

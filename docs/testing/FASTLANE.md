@@ -21,7 +21,7 @@ scripts/e2e/fastlane.sh
 - docs constitution guard
 
 2. CLI smoke
-- `panopticon --help`
+- `vifei --help`
 - share-safe export success path
 - share-safe refusal path (`export refused` + `Likely cause` contract)
 
@@ -89,6 +89,6 @@ Fastlane and full-confidence CI lanes enforce contract sections with explicit ta
 - Full CLI E2E:
   - `scripts/e2e/cli_e2e.sh`
 - Full interactive TUI E2E:
-  - `cargo test -p panopticon-tui --test tui_e2e_interactive -- --nocapture`
+  - `cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture`
 
 Use full suites when fastlane fails or when shipping/release-proof validation is required.

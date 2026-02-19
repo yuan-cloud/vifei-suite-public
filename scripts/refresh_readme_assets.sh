@@ -7,7 +7,7 @@ OUT_DIR="$ROOT_DIR/docs/assets/readme"
 cd "$ROOT_DIR"
 
 echo "[readme-assets] generating deterministic asset pack..."
-cargo run -p panopticon-tui --bin capture_readme_assets
+cargo run -p vifei-tui --bin capture_readme_assets
 
 required=(
   "incident-lens.txt"

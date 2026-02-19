@@ -12,7 +12,7 @@ Goal: make `README.md` visually strong, clear, and trustworthy without AI-genera
 
 ## Tool matrix
 
-| Tool | Use in Panopticon README | Pros | Risks / limits | Decision |
+| Tool | Use in Vifei README | Pros | Risks / limits | Decision |
 |---|---|---|---|---|
 | `shields.io` | concise status badges (tests, release, license) | fast scanability; standard OSS pattern | badge clutter and rainbow noise if overused | **Adopt with strict cap** (3-5 badges max) |
 | GitHub Mermaid | architecture and flow diagrams | source-controlled text diagrams; no image editor required | can become busy if oversized | **Adopt** for one architecture block |

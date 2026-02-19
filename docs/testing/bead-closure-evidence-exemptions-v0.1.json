@@ -1,7 +1,7 @@
 {
   "schema_version": "bead-closure-exemptions-v0.1",
   "policy_doc": "docs/testing/BEAD_CLOSURE_EVIDENCE_POLICY.md",
-  "owner": "Panopticon maintainers",
+  "owner": "Vifei maintainers",
   "last_reviewed_utc": "2026-02-18T00:00:00Z",
   "notes": [
     "This ledger is temporary and explicit. Entries must be removed as A3 backfills risk evidence.",

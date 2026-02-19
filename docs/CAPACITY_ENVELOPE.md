@@ -4,7 +4,7 @@ This document is constitutional.
 It contains target values only in the `TARGET` columns (numeric thresholds and pinned constants).
 Notes are explanatory only and must not introduce new policy.
 
-All values are `TARGET` until `panopticon tour --stress` measures and we promote them to `MEASURED`.
+All values are `TARGET` until `vifei tour --stress` measures and we promote them to `MEASURED`.
 
 This doc is the single source of truth for thresholds and budgets.
 Threshold labels here are API-level names; other docs and tests should reference labels, not copy values.

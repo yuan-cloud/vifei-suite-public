@@ -1,4 +1,4 @@
-# Best Practices Research Reference · Panopticon Suite
+# Best Practices Research Reference · Vifei Suite
 ## Compiled: 2026-02-16T~15:00 UTC by Claude Opus 4.6 (web) for Claude Code
 
 > **CC: Read this file FIRST before writing any guide in docs/guides/.**
@@ -59,7 +59,7 @@ Key patterns relevant to our guides:
 
 Source: https://www.anthropic.com/engineering/building-c-compiler
 
-Directly relevant lessons for Panopticon multi-agent swarm:
+Directly relevant lessons for Vifei multi-agent swarm:
 
 ### Harness design for autonomous agents
 - "The task verifier must be nearly perfect, otherwise Claude will solve the wrong problem"
@@ -148,7 +148,7 @@ fn store_blob(data: &[u8], blob_dir: &Path) -> std::io::Result<String> {
     let blob_path = blob_dir.join(&hex);
     if !blob_path.exists() {
         std::fs::write(&blob_path, data)?;
-        // fsync for durability (Panopticon requirement)
+        // fsync for durability (Vifei requirement)
     }
     Ok(hex)
 }
@@ -158,7 +158,7 @@ fn store_blob(data: &[u8], blob_dir: &Path) -> std::io::Result<String> {
 - Output: 256 bits (32 bytes) by default, but extensible (XOF)
 - Deterministic: same input always produces same output (no salt/seed by default)
 - Keyed mode: `blake3::keyed_hash(&key, data)` — NOT needed for content addressing
-- `derive_key` mode: for KDF — NOT needed for Panopticon v0.1
+- `derive_key` mode: for KDF — NOT needed for Vifei v0.1
 - **NOT a password hash** (too fast) — not relevant but worth noting
 - Latest release 1.8.3 fixed serialization backwards compatibility issue
 
@@ -168,7 +168,7 @@ fn store_blob(data: &[u8], blob_dir: &Path) -> std::io::Result<String> {
 
 Sources: https://ratatui.rs/, https://docs.rs/ratatui/latest/ratatui/, https://ratatui.rs/highlights/v030/
 
-### v0.30.0 breaking changes (CRITICAL for Panopticon)
+### v0.30.0 breaking changes (CRITICAL for Vifei)
 - **Modular workspace**: split into `ratatui`, `ratatui-core`, `ratatui-widgets`
   - Apps should still depend on main `ratatui` crate (re-exports everything)
   - Widget library authors should depend on `ratatui-core` for API stability
@@ -176,7 +176,7 @@ Sources: https://ratatui.rs/, https://docs.rs/ratatui/latest/ratatui/, https://r
 - **MSRV: Rust 1.86.0**
 - **Crossterm feature flags**: `crossterm_0_28` and `crossterm_0_29` — default is latest
 - **`ratatui::run()`** new convenience method for simple apps
-- **`no_std` support** added (not relevant for Panopticon)
+- **`no_std` support** added (not relevant for Vifei)
 - `Frame::size()` deprecated → use `Frame::area()`
 - `WidgetRef` blanket impl reversed
 
@@ -184,9 +184,9 @@ Sources: https://ratatui.rs/, https://docs.rs/ratatui/latest/ratatui/, https://r
 1. **Immediate mode rendering**: redraw every frame, no retained state in UI
 2. **Flux architecture**: recommended for complex apps (unidirectional data flow)
    - Action → Dispatcher → Store → View → (repeat)
-   - Maps well to Panopticon: EventLog → Reducer → Projection → ViewModel → TUI
+   - Maps well to Vifei: EventLog → Reducer → Projection → ViewModel → TUI
 3. **MVC pattern**: also documented as viable
-4. **Actor pattern**: for tokio-based apps (Panopticon is not async in v0.1)
+4. **Actor pattern**: for tokio-based apps (Vifei is not async in v0.1)
 
 ### Testing with TestBackend
 - `TestBackend` allows asserting buffer contents after draw
@@ -198,7 +198,7 @@ Sources: https://ratatui.rs/, https://docs.rs/ratatui/latest/ratatui/, https://r
 - Constraints: `Constraint::Percentage`, `Min`, `Max`, `Length`, `Ratio`, `Fill`
 - Nested layouts for responsive design
 
-### Key widgets for Panopticon
+### Key widgets for Vifei
 - `Table` — for event lists in Forensic Lens
 - `Paragraph` — for event detail inspector
 - `Block` — for lens framing
@@ -213,8 +213,8 @@ Sources: https://ratatui.rs/, https://docs.rs/ratatui/latest/ratatui/, https://r
 Sources: dtolnay repos, community consensus as of Jan-Feb 2026
 
 ### The Rule
-- **Library crates** (`panopticon-core`, `-import`, `-export`): use `thiserror`
-- **Binary crate** (`panopticon-tui` main.rs): use `anyhow`
+- **Library crates** (`vifei-core`, `-import`, `-export`): use `thiserror`
+- **Binary crate** (`vifei-tui` main.rs): use `anyhow`
 - Many projects use BOTH — thiserror for structured errors, anyhow at the top
 
 ### thiserror patterns (v1.6.0)
@@ -255,22 +255,22 @@ fn main() -> Result<()> {
 - Always derive `Debug` on error types
 - Always use `#[source]` or `#[from]` to preserve error chains
 - Never `.unwrap()` in library code — use `expect()` only for truly impossible states with explanation
-- **Panopticon-specific**: FM-* failure modes (FM-APPEND-FAIL, FM-BLOB-WRITE-FAIL) must map to specific thiserror variants, not generic anyhow errors
+- **Vifei-specific**: FM-* failure modes (FM-APPEND-FAIL, FM-BLOB-WRITE-FAIL) must map to specific thiserror variants, not generic anyhow errors
 
 ### ResExt (new, Feb 2026)
 - A new crate offering anyhow-like ergonomics with thiserror-like stack-based performance
-- Too new for Panopticon v0.1 — mention as "watch this space" only
+- Too new for Vifei v0.1 — mention as "watch this space" only
 
 ---
 
 ## 8. CLAP (v4.x, stable)
 
-### Subcommand pattern for Panopticon CLI
+### Subcommand pattern for Vifei CLI
 ```rust
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "panopticon", version, about)]
+#[command(name = "vifei", version, about)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -324,7 +324,7 @@ enum Commands {
 - 0: success
 - 1: general error
 - 2: usage error (clap handles this)
-- 3: export refused (secrets detected) — Panopticon-specific
+- 3: export refused (secrets detected) — Vifei-specific
 
 ---
 
@@ -349,7 +349,7 @@ No single authoritative source — synthesized from security scanning best pract
 
 ---
 
-## 10. CROSS-CUTTING: Lessons from Anthropic C Compiler for Multi-Agent Panopticon
+## 10. CROSS-CUTTING: Lessons from Anthropic C Compiler for Multi-Agent Vifei
 
 These are the most actionable takeaways for our upcoming 3-agent swarm:
 
