@@ -64,7 +64,7 @@ The EventLog is truth. The UI is a projection. Under overload, truth never degra
 ## TECH STACK (v0.1)
 
 - Language. Rust (stable toolchain). All code in Rust unless the user approves otherwise.
-- TUI. FrankenTUI (Ratatui-compatible fork). Snapshot-testable via `ftui-harness`.
+- TUI. Ratatui (Ratatui-compatible fork). Snapshot-testable via `ftui-harness`.
 - Serialization. `serde` plus `serde_json`. Deterministic output requires stable container ordering.
 - Hashing. BLAKE3 for all content hashes (`viewmodel.hash`, blob addresses, bundle integrity).
 - Storage. Append-only JSONL (truth) plus content-addressed blobs plus SQLite cache (rebuildable).

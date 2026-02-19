@@ -8,10 +8,9 @@ Goal: define a high-impact showcase UX profile for Vifei that improves visual ap
 
 Primary sources reviewed:
 
-- FrankenTUI site and web/react pages
-  - https://www.frankentui.com/
-  - https://frankentui.com/web
-  - https://frankentui.com/web_react
+- Ratatui site and docs
+  - https://ratatui.rs/
+  - https://docs.rs/ratatui/latest/ratatui/
 - Charm ecosystem pages and tools
   - https://charm.land/
   - https://charm.land/libs/
@@ -23,7 +22,7 @@ Primary sources reviewed:
   - https://help.producthunt.com/en/articles/2690626-how-do-i-share-my-post
   - https://help.producthunt.com/en/articles/10275873-what-are-points
 
-## What Works in FrankenTUI That We Can Borrow
+## What Works in Ratatui That We Can Borrow
 
 1. Product identity is immediately visible.
 - Strong visual language and explicit technical positioning appear above the fold.

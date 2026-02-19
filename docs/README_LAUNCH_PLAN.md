@@ -93,9 +93,9 @@ Vifei differentiation to emphasize:
 - explicit overload honesty model
 - evidence-bundle workflow for audit/share
 
-## FrankenTUI Reference Pattern (What to Borrow)
+## Ratatui Reference Pattern (What to Borrow)
 
-FrankenTUI's visible go-to-market choices worth copying:
+Ratatui's visible go-to-market choices worth copying:
 
 1. Demo-first onboarding (`cargo run ...` immediately)
 2. Strong README narrative with architecture explanation
@@ -240,9 +240,9 @@ These constraints are mandatory for launch-docs execution in this repo.
 - Arize Phoenix docs: https://arize.com/docs/phoenix
 - Helicone docs: https://docs.helicone.ai/
 - Opik docs: https://www.comet.com/docs/opik/
-- FrankenTUI site and repo:
-  - https://frankentui.com/
-  - https://github.com/Dicklesworthstone/frankentui
+- Ratatui site and repo:
+  - https://ratatui.rs/
+  - https://github.com/ratatui/ratatui
 - Terminal capture tooling:
   - https://asciinema.org/
   - https://github.com/charmbracelet/vhs

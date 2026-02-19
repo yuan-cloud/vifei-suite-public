@@ -219,7 +219,7 @@ This section is descriptive, not constitutional.
 | Layer | Choice | Notes |
 |---|---|---|
 | Language | Rust (stable) | All CLI, TUI, core logic |
-| TUI framework | FrankenTUI | Snapshot-testable via `ftui-harness` |
+| TUI framework | Ratatui | Snapshot-testable via `ftui-harness` |
 | Serialization | `serde` plus `serde_json` | Deterministic output requires stable container ordering |
 | Storage | Append-only JSONL plus content-addressed blobs | Canonical truth |
 | Cache | SQLite (for example via `rusqlite`) | Rebuildable derived index. Never truth |
@@ -335,7 +335,7 @@ vifei-suite/
 │   ├── vifei-core/              # EventLog, reducer, projection, ViewModel
 │   ├── vifei-import/            # Importers (Agent Cassette first)
 │   ├── vifei-export/            # Share-safe export plus redaction
-│   ├── vifei-tui/               # FrankenTUI shell, lenses, Truth HUD
+│   ├── vifei-tui/               # Ratatui shell, lenses, Truth HUD
 │   └── vifei-tour/              # Tour stress harness
 └── fixtures/                         # Test fixtures (Agent Cassette sessions)
 ```
@@ -526,7 +526,7 @@ Acceptance criteria:
 | Field | Value |
 |---|---|
 | Depends on | M5 |
-| Inputs | ViewModel, FrankenTUI |
+| Inputs | ViewModel, Ratatui |
 | Outputs | TUI shell, Incident Lens, Forensic Lens stub, Truth HUD |
 | Files touched | `crates/vifei-tui/src/` plus `src/main.rs` |
 | Done when | TUI opens on an EventLog and renders Incident Lens. Truth HUD is auditable |

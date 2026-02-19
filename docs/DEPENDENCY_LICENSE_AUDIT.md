@@ -4,16 +4,16 @@ Date: 2026-02-19
 
 ## Scope
 
-- Confirm whether FrankenTUI code was imported directly.
+- Confirm whether Ratatui code was imported directly.
 - Inspect Rust dependency license signals from cached crate metadata.
 - Verify workspace/crate license metadata consistency.
 
 ## Findings
 
-1. FrankenTUI usage mode:
-- No FrankenTUI git submodule or vendored source was found.
-- TUI implementation depends on `ratatui` crate (`crates/vifei-tui/Cargo.toml`), not a FrankenTUI crate.
-- FrankenTUI appears in docs as design/reference inspiration only.
+1. Ratatui usage mode:
+- No Ratatui git submodule or vendored source was found.
+- TUI implementation depends on `ratatui` crate (`crates/vifei-tui/Cargo.toml`), not a Ratatui crate.
+- Ratatui appears in docs as design/reference inspiration only.
 
 2. Provenance indicators in repository:
 - No explicit "copied from <repo>" or upstream code attribution headers were found in source files.

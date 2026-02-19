@@ -2003,7 +2003,7 @@ Context:
 4. Security: No new sensitive data handling paths were introduced; commands remain within existing share-safe and evidence workflows.
 5. Performance: No runtime impact; improved scanability should reduce operator time-to-proof during demos.
 
-## bd-2s2u · SHOWCASE: high-impact visual skin inspired by Frankentui aesthetics · 2026-02-19
+## bd-2s2u · SHOWCASE: high-impact visual skin inspired by Ratatui aesthetics · 2026-02-19
 
 Context:
 - Bead owner: Codex (gpt-5)

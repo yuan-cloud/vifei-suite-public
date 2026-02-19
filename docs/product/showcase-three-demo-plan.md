@@ -70,7 +70,7 @@ Dependencies:
 2. Existing stress fixture and tour artifact generation.
 3. README/showcase page docs flow.
 
-## Borrowing strategy from FrankenTUI-style momentum
+## Borrowing strategy from Ratatui-style momentum
 
 Apply:
 1. Demo-first storytelling.
