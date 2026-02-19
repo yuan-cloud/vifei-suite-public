@@ -11,6 +11,9 @@ Show four proof moments, in order:
 3. Share-safe export succeeds on clean input and refuses unsafe input.
 4. Competitor bakeoff report summarizes deterministic comparison signals.
 
+Adapter-facing operator snippets:
+- `docs/showcase/adapter-human-cli-track.md`
+
 ## Preflight
 
 ```bash

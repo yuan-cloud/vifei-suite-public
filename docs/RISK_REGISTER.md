@@ -2158,3 +2158,16 @@ Context:
 3. Nondeterminism: Bundle index and command-asset map generation use deterministic ordering for included files; timestamped output directory names remain operational metadata only.
 4. Security: Bundle flow enforces provenance and hygiene checks before success and keeps path surfaces normalized to avoid host path leakage in published artifacts.
 5. Performance: Extra launch checks increase demo packaging runtime only; no impact on canonical truth-path ingest/reducer/projection behavior.
+
+## bd-eea2 · ADAPTER-1: human CLI demo track · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Human CLI demo guidance now depends on current command surface for `view`, `tour`, `export`, and `incident-pack`; CLI contract changes must keep this track aligned.
+2. Untested claims: This bead is docs-only; snippet execution validity is anchored in existing command contracts and test suites, not a dedicated new snippet-runner.
+3. Nondeterminism: No runtime behavior changed and no new nondeterminism surfaces were introduced.
+4. Security: Track emphasizes share-safe export usage and keeps sample paths local/test-scoped; no new secret exposure surface added.
+5. Performance: No runtime performance impact; only operator documentation surface changed.

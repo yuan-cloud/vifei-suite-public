@@ -86,6 +86,9 @@ Expected artifact files:
 
 Use this path during active investigation on a full terminal.
 
+Human CLI adapter track (operator-readable snippets):
+`docs/showcase/adapter-human-cli-track.md`
+
 ### Determinism check (rerun hash)
 
 ```bash

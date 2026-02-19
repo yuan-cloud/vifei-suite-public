@@ -33,6 +33,12 @@ Truth HUD (showcase):
 
 ## Demo track
 
+### Adapter-facing human CLI track
+
+Operator-readable command path:
+
+`docs/showcase/adapter-human-cli-track.md`
+
 ### Visual launch cut (45-90s)
 
 ```bash
