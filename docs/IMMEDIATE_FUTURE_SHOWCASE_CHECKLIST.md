@@ -1,22 +1,28 @@
 # Immediate Future Showcase Checklist
 
-This checklist tracks the next visible upgrades after the current showcase profile + SVG gallery baseline.
+This checklist tracks remaining visible upgrades after the current showcase baseline.
+
+## Shipped baseline (already done)
+
+1. Showcase profile visuals are implemented in TUI (`standard` and `showcase`).
+2. Deterministic showcase SVG/TXT gallery is generated under `docs/assets/readme/`.
+3. Cast-first recording lane is available via `scripts/capture_showcase_cast.sh` (`asciinema`).
+4. Showcase page exists at `docs/showcase/index.md` with runnable demo commands.
 
 ## Priority 1 (next)
 
-1. Scripted terminal video capture lane
-- Use `scripts/capture_showcase_cast.sh` with `asciinema` when installed.
-- Capture lane standard is cast-first (`.cast`) for replayable fidelity and fast iteration.
-- Keep SVG/TXT outputs as canonical deterministic artifacts.
-
-2. Showcase microsite
-- Add `docs/showcase/index.md` using existing generated assets.
-- Include one deterministic proof block (`viewmodel.hash` rerun match).
-- Keep all commands copy/paste-ready and verified.
-
-3. Launch media bundle
+1. Launch media bundle
 - Add one 45-90 second demo flow for Product Hunt/social.
 - Keep one terminal-only “trust demo” and one visual “showcase demo.”
+
+2. Desktop/mobile showcase layout refinement
+- Separate desktop scan path from narrow/mobile scan path in showcase docs.
+- Keep command blocks short enough for narrow widths while preserving exact copy/paste behavior.
+- Add explicit proof card ordering: trust signal, deterministic proof, refusal proof, incident wall.
+
+3. Adapter-facing demo tracks
+- Provide per-target demo snippets (CLI human mode, robot mode, export refusal mode).
+- Show how each mode maps to real user outcomes.
 
 ## Priority 2 (immediately after)
 
@@ -24,9 +30,9 @@ This checklist tracks the next visible upgrades after the current showcase profi
 - Evaluate lightweight interactive view driven by generated artifacts.
 - Keep this separate from truth-path runtime crates.
 
-2. Adapter-facing demo tracks
-- Provide per-target demo snippets (CLI human mode, robot mode, export refusal mode).
-- Show how each mode maps to real user outcomes.
+2. Publish-ready cast packaging
+- Add a short publish guide for `.cast` upload/embed paths.
+- Keep canonical evidence artifacts local and deterministic; casts are presentation assets.
 
 ## Constraints
 

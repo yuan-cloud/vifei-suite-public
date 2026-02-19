@@ -1976,3 +1976,16 @@ Context:
 3. Nondeterminism: Cast playback timing can vary by terminal/runtime; canonical truth artifacts remain deterministic and unchanged.
 4. Security: No new secret surfaces introduced; script records existing demo commands and uses local output paths.
 5. Performance: Full mode capture can be expensive due to multiple demo flows; fast mode is default to keep iteration responsive.
+
+## bd-7l39 · DOCS: refresh showcase checklist to match shipped state · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: Checklist now tracks shipped-versus-outstanding showcase work explicitly, reducing planning drift between docs and implemented scripts/assets.
+2. Untested claims: No runtime behavior claims added; checklist statements were aligned to existing files and commands already present in repo.
+3. Nondeterminism: None introduced; documentation and tracker metadata only.
+4. Security: No new secret exposure surfaces; edits are operational planning text.
+5. Performance: No runtime impact; lower maintenance overhead from reduced stale checklist entries.
