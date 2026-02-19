@@ -164,6 +164,8 @@ jobs:
 
       - name: CLI E2E suite
         run: |
+          set -euo pipefail
+          mkdir -p .tmp/full-confidence/logs
           OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
             2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
 
@@ -192,11 +194,11 @@ jobs:
           scripts/testing/demo_smoke.sh .tmp/full-confidence/demo-smoke \
             2>&1 | tee .tmp/full-confidence/logs/demo-smoke.log
 
-      - name: Validate CLI E2E contract stages
+      - name: Validate CLI E2E contract artifacts
         run: |
           test -f .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing cli-e2e run.jsonl"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
-          grep -q '"stage":"tour_metadata"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing tour_metadata stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
-          grep -q '"stage":"export_refusal_report"' .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing export_refusal_report stage"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          test -f .tmp/full-confidence/cli-e2e/summary.txt || { echo "CONTRACT_FAIL[FC1-cli] missing cli-e2e summary.txt"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          grep -q 'E2E CLI run complete: cli-e2e-v0.1' .tmp/full-confidence/cli-e2e/summary.txt || { echo "CONTRACT_FAIL[FC1-cli] missing completion marker"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
 
       - name: PTY preflight (capability probe)
         id: pty_preflight
