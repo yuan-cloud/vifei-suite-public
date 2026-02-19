@@ -2,17 +2,26 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
     tags: ["v*"]
   pull_request:
-    branches: ["**"]
+    branches: ["main"]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   fastlane:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
