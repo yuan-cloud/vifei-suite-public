@@ -11,10 +11,13 @@ scripts/demo/package_launch_bundle.sh "$bundle_dir" >/dev/null
 
 required=(
   "$bundle_dir/COMMAND_TRANSCRIPT.txt"
+  "$bundle_dir/COMMAND_ASSET_MAP.md"
   "$bundle_dir/REPLAY_NOTES.md"
   "$bundle_dir/bundle-index.json"
   "$bundle_dir/demo-proof/media-provenance.json"
   "$bundle_dir/demo-proof/tour/metrics.json"
+  "$bundle_dir/trust-cut/TRUST_DEMO_SUMMARY.txt"
+  "$bundle_dir/visual-cut/VISUAL_SHOWCASE_SUMMARY.txt"
   "$bundle_dir/assets/readme/incident-lens.txt"
 )
 

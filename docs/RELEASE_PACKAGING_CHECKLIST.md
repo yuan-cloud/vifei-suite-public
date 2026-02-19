@@ -53,6 +53,11 @@ Bundle proof assets, transcript, and replay notes:
 scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
 ```
 
+Confirm launch bundle includes:
+- `trust-cut/TRUST_DEMO_SUMMARY.txt`
+- `visual-cut/VISUAL_SHOWCASE_SUMMARY.txt`
+- `COMMAND_ASSET_MAP.md`
+
 False-positive handling and safe override:
 - Add precise regex entries to `scripts/testing/media_hygiene_allowlist.txt` only for known synthetic content.
 - Keep entries narrow (pattern + file context), with a comment explaining why.

@@ -2145,3 +2145,16 @@ Context:
 3. Nondeterminism: Visual summary hashes use deterministic file-content digesting over canonical generated assets; no truth-path ordering or hash-surface logic changed.
 4. Security: The lane avoids leaking runtime host paths and validates only canonical asset surfaces; it does not alter share-safe export semantics.
 5. Performance: Additional demo-contract checks run only in showcase workflows and do not affect ingest, reducer, projection, or export runtime paths.
+
+## bd-2mt7 · SHOWCASE: launch media bundle execution · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Launch bundle execution now explicitly composes trust-cut and visual-cut lanes, creating a single reproducible command chain from proof commands to publish assets.
+2. Untested claims: Contract validation ensures presence and structure of key outputs, but optional cast capture remains best-effort when `asciinema` is unavailable.
+3. Nondeterminism: Bundle index and command-asset map generation use deterministic ordering for included files; timestamped output directory names remain operational metadata only.
+4. Security: Bundle flow enforces provenance and hygiene checks before success and keeps path surfaces normalized to avoid host path leakage in published artifacts.
+5. Performance: Extra launch checks increase demo packaging runtime only; no impact on canonical truth-path ingest/reducer/projection behavior.

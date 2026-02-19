@@ -8,8 +8,11 @@ OUT_DIR="${1:-.tmp/launch-media-bundle-$(date -u +%Y%m%dT%H%M%SZ)}"
 RUN_DIR="$OUT_DIR/demo-proof"
 ASSET_DIR="$OUT_DIR/assets/readme"
 CAST_DIR="$OUT_DIR/casts"
+TRUST_DIR="$OUT_DIR/trust-cut"
+VISUAL_DIR="$OUT_DIR/visual-cut"
 TRANSCRIPT="$OUT_DIR/COMMAND_TRANSCRIPT.txt"
 NOTES="$OUT_DIR/REPLAY_NOTES.md"
+MAP_MD="$OUT_DIR/COMMAND_ASSET_MAP.md"
 INDEX_JSON="$OUT_DIR/bundle-index.json"
 
 mkdir -p "$OUT_DIR" "$ASSET_DIR"
@@ -27,6 +30,8 @@ run_cmd cargo run -p panopticon-tour --bin media_provenance -- \
   --verify "$RUN_DIR/media-provenance.json" \
   --base-dir "$RUN_DIR"
 run_cmd scripts/testing/check_media_hygiene.sh "$RUN_DIR"
+run_cmd scripts/demo/trust_demo_cut.sh "$TRUST_DIR" fixtures/small-session.jsonl
+run_cmd scripts/demo/visual_showcase_cut.sh "$VISUAL_DIR"
 
 cp docs/assets/readme/incident-lens.txt "$ASSET_DIR/"
 cp docs/assets/readme/forensic-lens.txt "$ASSET_DIR/"
@@ -82,11 +87,52 @@ index = {
     "schema_version": "panopticon-launch-bundle-v1",
     "git_sha": git_sha,
     "run_dir": "demo-proof",
+    "trust_cut_dir": "trust-cut",
+    "visual_cut_dir": "visual-cut",
     "media_provenance": "demo-proof/media-provenance.json",
     "files": bundle_files,
 }
 index_path.write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
 PY
+
+cat > "$MAP_MD" <<EOF
+# Command to Asset Map
+
+## Trust cut
+
+\`\`\`bash
+scripts/demo/trust_demo_cut.sh $TRUST_DIR fixtures/small-session.jsonl
+\`\`\`
+
+- \`trust-cut/TRUST_DEMO_SUMMARY.txt\`
+- \`trust-cut/tour-a/metrics.json\`
+- \`trust-cut/tour-a/viewmodel.hash\`
+- \`trust-cut/refusal-refused.json\`
+
+## Visual cut
+
+\`\`\`bash
+scripts/demo/visual_showcase_cut.sh $VISUAL_DIR
+\`\`\`
+
+- \`visual-cut/VISUAL_SHOWCASE_SUMMARY.txt\`
+- \`assets/readme/incident-lens.txt\`
+- \`assets/readme/forensic-lens.txt\`
+- \`assets/readme/truth-hud-degraded.txt\`
+- \`assets/readme/export-refusal.txt\`
+- \`assets/readme/artifacts-view.txt\`
+
+## Full proof bundle
+
+\`\`\`bash
+scripts/demo/package_launch_bundle.sh $OUT_DIR
+\`\`\`
+
+- \`demo-proof/media-provenance.json\`
+- \`COMMAND_TRANSCRIPT.txt\`
+- \`REPLAY_NOTES.md\`
+- \`bundle-index.json\`
+EOF
 
 cat > "$NOTES" <<EOF
 # Launch Bundle Replay Notes

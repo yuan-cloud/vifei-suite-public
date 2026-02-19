@@ -162,6 +162,12 @@ Create a release-friendly media bundle with replay notes and transcript:
 scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
 ```
 
+Bundle outputs include:
+
+- `trust-cut/TRUST_DEMO_SUMMARY.txt`
+- `visual-cut/VISUAL_SHOWCASE_SUMMARY.txt`
+- `COMMAND_ASSET_MAP.md`
+
 ## Failure Handling
 
 - If `tier_a_drops != 0`, stop recording and open a blocker bead.
