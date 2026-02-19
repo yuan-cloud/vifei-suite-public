@@ -2080,3 +2080,16 @@ Context:
 3. Nondeterminism: Manifest serialization is deterministic by schema and path ordering; `generated_at` is intentionally wall-clock metadata and does not feed truth-path ordering or hash contracts.
 4. Security: Provenance manifest adds tamper-evident BLAKE3 checks for launch media artifacts and improves auditability of source-command lineage per asset.
 5. Performance: Additional manifest generation and verification adds minor I/O and hashing overhead only during demo/release workflows, not during core runtime paths.
+
+## bd-2asq · BUGFIX: provenance base-dir validation allows absolute in-scope asset paths · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: Provenance create-mode validation now explicitly couples asset path admission to `strip_prefix(base_dir)` rather than absolute/relative syntax, which matches real script usage.
+2. Untested claims: Added and exercised tests confirm traversal rejection and absolute path rejection in manifest verify mode; create-mode acceptance for in-scope absolute paths is validated by existing deterministic tests.
+3. Nondeterminism: No nondeterministic behavior introduced; normalization and sorting remain deterministic.
+4. Security: Maintains path safety by requiring manifest paths to be strict relative paths with no traversal components while removing an over-strict false-positive rejection.
+5. Performance: Negligible impact; same path checks with corrected predicate ordering.

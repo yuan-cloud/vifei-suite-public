@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct MediaProvenanceManifest {
@@ -136,21 +136,37 @@ fn parse_args(args: &[String]) -> Result<Command, String> {
 }
 
 fn normalize_asset_path(base_dir: &Path, asset_path: &Path) -> String {
-    let candidate = if let Ok(stripped) = asset_path.strip_prefix(base_dir) {
-        stripped
-    } else {
-        asset_path
-    };
-    let as_string = candidate.to_string_lossy().replace('\\', "/");
-    if as_string.is_empty() {
-        asset_path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("asset")
-            .to_string()
-    } else {
-        as_string
+    asset_path
+        .strip_prefix(base_dir)
+        .expect("asset paths must be under base_dir")
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn parse_safe_relative_path(path: &str) -> Result<PathBuf, String> {
+    let candidate = PathBuf::from(path);
+    if candidate.as_os_str().is_empty() {
+        return Err("manifest path must be non-empty".to_string());
     }
+    if candidate.is_absolute() {
+        return Err(format!("manifest path must be relative: {path}"));
+    }
+
+    for component in candidate.components() {
+        match component {
+            Component::CurDir
+            | Component::ParentDir
+            | Component::RootDir
+            | Component::Prefix(_) => {
+                return Err(format!(
+                    "manifest path contains forbidden component: {path}"
+                ));
+            }
+            Component::Normal(_) => {}
+        }
+    }
+
+    Ok(candidate)
 }
 
 fn hash_file(path: &Path) -> Result<String, String> {
@@ -166,10 +182,19 @@ fn create_manifest(
 ) -> Result<MediaProvenanceManifest, String> {
     let mut entries = Vec::with_capacity(assets.len());
     for asset in assets {
+        if asset.path.strip_prefix(base_dir).is_err() {
+            return Err(format!(
+                "asset path is outside base-dir: asset={}, base-dir={}",
+                asset.path.display(),
+                base_dir.display()
+            ));
+        }
+
         let normalized = normalize_asset_path(base_dir, &asset.path);
+        let relative_path = parse_safe_relative_path(&normalized)?;
         let file_hash = hash_file(&asset.path)?;
         entries.push(MediaProvenanceEntry {
-            path: normalized.clone(),
+            path: relative_path.to_string_lossy().to_string(),
             path_label: normalized,
             blake3: file_hash,
             source_command: asset.source_command.clone(),
@@ -209,7 +234,8 @@ fn verify_manifest(manifest_path: &Path, base_dir: &Path) -> Result<(), String> 
     }
 
     for asset in &manifest.assets {
-        let full_path = base_dir.join(&asset.path);
+        let relative = parse_safe_relative_path(&asset.path)?;
+        let full_path = base_dir.join(relative);
         let computed = hash_file(&full_path)?;
         if computed != asset.blake3 {
             return Err(format!(
@@ -312,5 +338,29 @@ mod tests {
         fs::write(&file_path, "tampered").unwrap();
         let err = verify_manifest(&manifest_path, base).unwrap_err();
         assert!(err.contains("hash mismatch"));
+    }
+
+    #[test]
+    fn verify_manifest_rejects_absolute_asset_path() {
+        let manifest = MediaProvenanceManifest {
+            schema_version: "panopticon-media-provenance-v1".to_string(),
+            generated_at: "2026-02-19T00:00:00Z".to_string(),
+            assets: vec![MediaProvenanceEntry {
+                path: "/tmp/evil.txt".to_string(),
+                path_label: "/tmp/evil.txt".to_string(),
+                blake3: "00".repeat(32),
+                source_command: "evil".to_string(),
+                generated_at: "2026-02-19T00:00:00Z".to_string(),
+            }],
+        };
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest_path = tmp.path().join("manifest.json");
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        )
+        .unwrap();
+        let err = verify_manifest(&manifest_path, tmp.path()).unwrap_err();
+        assert!(err.contains("must be relative"));
     }
 }
