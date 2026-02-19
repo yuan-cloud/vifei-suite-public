@@ -1989,3 +1989,16 @@ Context:
 3. Nondeterminism: None introduced; documentation and tracker metadata only.
 4. Security: No new secret exposure surfaces; edits are operational planning text.
 5. Performance: No runtime impact; lower maintenance overhead from reduced stale checklist entries.
+
+## bd-14uf · SHOWCASE: desktop/mobile proof layout refinement · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: README and showcase docs now explicitly separate desktop and narrow/mobile proof flows, coupling narrative structure to current demo command set.
+2. Untested claims: New flow wording relies on existing script behavior; no additional script-level assertions were introduced for documentation semantics.
+3. Nondeterminism: None added to truth path; documentation-only restructuring and command presentation updates.
+4. Security: No new sensitive data handling paths were introduced; commands remain within existing share-safe and evidence workflows.
+5. Performance: No runtime impact; improved scanability should reduce operator time-to-proof during demos.

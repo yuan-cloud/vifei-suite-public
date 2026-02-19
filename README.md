@@ -10,6 +10,12 @@ Panopticon records canonical run truth as an append-only EventLog, then projects
 
 Presentation showcase: `docs/showcase/index.md`
 
+## At a Glance
+
+- Deterministic replay evidence you can rerun and verify locally.
+- Incident-first and forensic-first views with an always-visible Truth HUD.
+- Share-safe export that fails closed with explicit refusal reports.
+
 ## Why This Exists
 
 Most agent workflows have logs but weak replay guarantees under stress. Panopticon keeps truth auditable when pressure rises.
@@ -58,6 +64,10 @@ Expected artifact files:
 
 ## Core Workflows
 
+### Desktop operator flow (full triage)
+
+Use this path during active investigation on a full terminal.
+
 ### Determinism check (rerun hash)
 
 ```bash
@@ -83,6 +93,20 @@ cargo run -p panopticon-tui --bin panopticon -- view docs/assets/readme/sample-e
 ```
 
 Run in a real interactive terminal (TTY).
+
+### Mobile or narrow-screen proof scan
+
+Use this path when you need high-signal proof checks quickly in limited width.
+
+1. Run Tour and check hash + drops.
+2. Run refusal radar for export safety proof.
+3. Read the latest bakeoff report for one-file summary evidence.
+
+```bash
+scripts/demo/determinism_duel.sh --fast
+scripts/demo/refusal_radar.sh --fast
+cat .tmp/competitor-bakeoff/run-*/bakeoff-report.json
+```
 
 ### Showcase profile (visual demo mode)
 

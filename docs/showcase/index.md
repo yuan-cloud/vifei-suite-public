@@ -33,6 +33,8 @@ Truth HUD (showcase):
 
 ## Demo track
 
+### Desktop flow (operator presentation)
+
 ```bash
 scripts/demo/determinism_duel.sh --fast
 scripts/demo/refusal_radar.sh --fast
@@ -47,6 +49,14 @@ scripts/demo/determinism_duel.sh --full
 scripts/demo/refusal_radar.sh --full
 scripts/demo/live_incident_wall.sh --full
 scripts/demo/competitor_bakeoff.sh --full
+```
+
+### Mobile or narrow-width flow (proof-first)
+
+```bash
+scripts/demo/determinism_duel.sh --fast
+scripts/demo/refusal_radar.sh --fast
+cat .tmp/competitor-bakeoff/run-*/bakeoff-report.json
 ```
 
 Expected signals:
