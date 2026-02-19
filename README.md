@@ -10,6 +10,24 @@ Panopticon records canonical run truth as an append-only EventLog, then projects
 
 Presentation showcase: `docs/showcase/index.md`
 
+## First-Screen Product Vibe
+
+Trust-first cockpit with deterministic proof surfaces:
+
+![Incident Lens Showcase](docs/assets/readme/incident-lens-showcase.svg)
+
+![Forensic Lens Showcase](docs/assets/readme/forensic-lens-showcase.svg)
+
+![Truth HUD Showcase](docs/assets/readme/truth-hud-showcase.svg)
+
+Quick launch commands:
+
+```bash
+scripts/demo/trust_demo_cut.sh /tmp/panopticon_trust_cut fixtures/small-session.jsonl
+scripts/demo/visual_showcase_cut.sh /tmp/panopticon_visual_cut
+scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
+```
+
 ## At a Glance
 
 - Deterministic replay evidence you can rerun and verify locally.
