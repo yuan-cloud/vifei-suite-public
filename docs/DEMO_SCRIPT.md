@@ -25,6 +25,20 @@ cargo test
 scripts/demo_quickcheck.sh /tmp/panopticon_demo_run
 ```
 
+## Trust demo cut (45-60s)
+
+Run the trust-first short cut for launch clips:
+
+```bash
+scripts/demo/trust_demo_cut.sh /tmp/panopticon_trust_cut fixtures/small-session.jsonl
+```
+
+It outputs `TRUST_DEMO_SUMMARY.txt` with:
+
+- `deterministic_hash`
+- `tier_a_drops=0`
+- non-zero `blocked_items` from refusal-proof export
+
 Outputs:
 
 - `/tmp/panopticon_demo_run/tour/metrics.json`

@@ -2119,3 +2119,16 @@ Context:
 3. Nondeterminism: Bundle index file ordering is deterministic by sorted path traversal; git short SHA and command transcript content reflect the exact current checkout and run outputs by design.
 4. Security: Bundle generation now enforces provenance and hygiene checks before success, and avoids leaking host absolute paths in `bundle-index.json` by storing a normalized run directory label.
 5. Performance: Packaging adds extra hashing and command replay overhead only for launch/demo workflows; core ingest/reducer/projection runtime paths are unaffected.
+
+## bd-3961 · MEDIA-1: trust demo cut (45-60s) · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: The trust-demo lane now couples launch messaging to deterministic tour/hash behavior and share-safe export refusal semantics, ensuring claims map directly to executable proof.
+2. Untested claims: Contract coverage verifies core outputs and refusal evidence, but wall-clock runtime targeting (45-60s) is environment-dependent and not a strict timing gate.
+3. Nondeterminism: Hash comparison and summary generation are deterministic for the same fixture and build; no randomness or unstable ordering was introduced in script logic.
+4. Security: The lane explicitly checks refusal semantics and blocked-item evidence, reducing the risk of publishing trust claims without secret-scan enforcement proof.
+5. Performance: Added script/test overhead applies only to demo/release workflows and does not affect core ingest, reducer, projection, or export runtime paths.
