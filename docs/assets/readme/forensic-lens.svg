@@ -37,8 +37,8 @@
     <text x="24" y="112" fill="#e2e8f0" xml:space="preserve">││     1 ToolCall                              ││                                                                     ││</text>
     <text x="24" y="130" fill="#e2e8f0" xml:space="preserve">││     2 ToolResult                            ││  run_id:   run-readme-1                                             ││</text>
     <text x="24" y="148" fill="#e2e8f0" xml:space="preserve">││     3 PolicyDecision                        ││  event_id: ev-1                                                     ││</text>
-    <text x="24" y="166" fill="#fda4af" xml:space="preserve">││     4 Error                                 ││  tier:     A                                                        ││</text>
-    <text x="24" y="184" fill="#e2e8f0" xml:space="preserve">││     5 ClockSkewDetected                     ││                                                                     ││</text>
+    <text x="24" y="166" fill="#e2e8f0" xml:space="preserve">││     4 ToolCall                              ││  tier:     A                                                        ││</text>
+    <text x="24" y="184" fill="#e2e8f0" xml:space="preserve">││     5 ToolResult                            ││                                                                     ││</text>
     <text x="24" y="202" fill="#e9d5ff" xml:space="preserve">││     6 RedactionApplied                      ││  agent: codex                                                       ││</text>
     <text x="24" y="220" fill="#e2e8f0" xml:space="preserve">││     7 RunEnd                                ││  args:  capture-assets --deterministic                              ││</text>
     <text x="24" y="238" fill="#e2e8f0" xml:space="preserve">││                                             ││                                                                     ││</text>

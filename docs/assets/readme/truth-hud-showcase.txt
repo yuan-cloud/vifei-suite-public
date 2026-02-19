@@ -3,9 +3,7 @@
 │Forensic controls: j/k move, Enter expand                                                                             │
 │                                                                                                                      │
 │Action Now (Anomalies)                                                                                                │
-│Priority: ERR=1 SKEW=1 POLICY=1                                                                                       │
-│  ERR @4: transient write stall                                                                                       │
-│  SKEW @5: 0ms backward                                                                                               │
+│Priority: ERR=0 SKEW=0 POLICY=1                                                                                       │
 │  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │
 │                                                                                                                      │
 │Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │
@@ -14,14 +12,16 @@
 │  codex (run-readme-1) [OK] 8 events                                                                                  │
 │                                                                                                                      │
 │Event Breakdown (Context)                                                                                             │
-│  ClockSkewDetected          1                                                                                        │
-│  Error                      1                                                                                        │
 │  PolicyDecision             1                                                                                        │
 │  RedactionApplied           1                                                                                        │
 │  RunEnd                     1                                                                                        │
 │  RunStart                   1                                                                                        │
-│  ToolCall                   1                                                                                        │
-│  ToolResult                 1                                                                                        │
+│  ToolCall                   2                                                                                        │
+│  ToolResult                 2                                                                                        │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │
 │                                                                                                                      │

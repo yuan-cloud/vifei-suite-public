@@ -179,10 +179,9 @@ fn sample_events() -> Vec<ImportEvent> {
             source_seq: Some(5),
             timestamp_ns: 1_700_000_000_040_000_000,
             tier: Tier::A,
-            payload: EventPayload::Error {
-                kind: "io".into(),
-                message: "transient write stall".into(),
-                severity: Some("warning".into()),
+            payload: EventPayload::ToolCall {
+                tool: "cargo clippy".into(),
+                args: Some("--all-targets -- -D warnings".into()),
             },
             payload_ref: None,
             synthesized: false,
@@ -194,10 +193,10 @@ fn sample_events() -> Vec<ImportEvent> {
             source_seq: Some(6),
             timestamp_ns: 1_700_000_000_050_000_000,
             tier: Tier::A,
-            payload: EventPayload::ClockSkewDetected {
-                expected_ns: 1_700_000_000_050_000_000,
-                actual_ns: 1_700_000_000_049_900_000,
-                delta_ns: 100_000,
+            payload: EventPayload::ToolResult {
+                tool: "cargo clippy".into(),
+                result: Some("no warnings".into()),
+                status: Some("success".into()),
             },
             payload_ref: None,
             synthesized: false,
