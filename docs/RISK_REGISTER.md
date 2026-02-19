@@ -2184,3 +2184,16 @@ Context:
 3. Nondeterminism: No runtime changes and no nondeterministic behavior introduced.
 4. Security: Track keeps refusal-path and error-path expectations explicit, reducing automation ambiguity around unsafe export and invalid input handling.
 5. Performance: No runtime impact; only automation documentation surface changed.
+
+## bd-30vm · ADAPTER-3: refusal + safety demo track · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Showcase/demo docs now include a dedicated refusal-and-safety track and couple governance walkthroughs to explicit CLI envelope semantics and refusal report structure.
+2. Untested claims: This bead is docs-only; command behavior is covered by existing robot-mode and export refusal contract tests, but no new doc-snippet executor was added.
+3. Nondeterminism: No runtime changes and no new ordering/hash surfaces were introduced.
+4. Security: The new track strengthens operator guidance for fail-closed export and runtime failure visibility; it does not introduce new data paths or secret surfaces.
+5. Performance: No runtime performance impact; only documentation navigation surface changed.

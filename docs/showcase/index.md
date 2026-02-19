@@ -45,6 +45,12 @@ Automation-readable command path:
 
 `docs/showcase/adapter-robot-json-track.md`
 
+### Adapter-facing refusal and safety track
+
+Security and governance command path:
+
+`docs/showcase/adapter-refusal-safety-track.md`
+
 ### Visual launch cut (45-90s)
 
 ```bash

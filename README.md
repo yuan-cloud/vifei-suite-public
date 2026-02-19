@@ -86,11 +86,9 @@ Expected artifact files:
 
 Use this path during active investigation on a full terminal.
 
-Human CLI adapter track (operator-readable snippets):
-`docs/showcase/adapter-human-cli-track.md`
-
-Robot JSON adapter track (automation snippets + contract expectations):
-`docs/showcase/adapter-robot-json-track.md`
+- Human CLI adapter track (operator-readable snippets): `docs/showcase/adapter-human-cli-track.md`
+- Robot JSON adapter track (automation snippets + contract expectations): `docs/showcase/adapter-robot-json-track.md`
+- Refusal and safety adapter track (security and governance proofs): `docs/showcase/adapter-refusal-safety-track.md`
 
 ### Determinism check (rerun hash)
 
