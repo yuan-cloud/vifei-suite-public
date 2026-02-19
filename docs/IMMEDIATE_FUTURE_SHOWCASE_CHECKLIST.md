@@ -9,11 +9,12 @@ This checklist tracks remaining visible upgrades after the current showcase base
 3. Cast-first recording lane is available via `scripts/capture_showcase_cast.sh` (`asciinema`).
 4. Showcase page exists at `docs/showcase/index.md` with runnable demo commands.
 5. Trust-first short demo cut exists at `scripts/demo/trust_demo_cut.sh` with contract check `scripts/testing/check_trust_demo_cut_contract.sh`.
+6. Visual showcase short cut exists at `scripts/demo/visual_showcase_cut.sh` with contract check `scripts/testing/check_visual_showcase_cut_contract.sh`.
 
 ## Priority 1 (next)
 
 1. Launch media bundle
-- Keep one visual “showcase demo” path for Product Hunt/social.
+- Consolidate trust and visual cuts into final launch bundle runbook for Product Hunt/social.
 
 2. Desktop/mobile showcase layout refinement
 - Separate desktop scan path from narrow/mobile scan path in showcase docs.

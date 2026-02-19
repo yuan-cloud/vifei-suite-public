@@ -2132,3 +2132,16 @@ Context:
 3. Nondeterminism: Hash comparison and summary generation are deterministic for the same fixture and build; no randomness or unstable ordering was introduced in script logic.
 4. Security: The lane explicitly checks refusal semantics and blocked-item evidence, reducing the risk of publishing trust claims without secret-scan enforcement proof.
 5. Performance: Added script/test overhead applies only to demo/release workflows and does not affect core ingest, reducer, projection, or export runtime paths.
+
+## bd-1t6y · MEDIA-2: visual showcase cut (45-90s) · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I2, I4
+- Constitution touched: none
+
+1. Coupling: Visual launch proof now couples to deterministic README-asset generation and explicit desktop/narrow marker checks via the visual-cut contract scripts.
+2. Untested claims: We verify required assets and readability markers, but do not enforce strict wall-clock duration; runtime remains environment-dependent.
+3. Nondeterminism: Visual summary hashes use deterministic file-content digesting over canonical generated assets; no truth-path ordering or hash-surface logic changed.
+4. Security: The lane avoids leaking runtime host paths and validates only canonical asset surfaces; it does not alter share-safe export semantics.
+5. Performance: Additional demo-contract checks run only in showcase workflows and do not affect ingest, reducer, projection, or export runtime paths.

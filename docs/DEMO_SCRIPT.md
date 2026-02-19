@@ -39,6 +39,21 @@ It outputs `TRUST_DEMO_SUMMARY.txt` with:
 - `tier_a_drops=0`
 - non-zero `blocked_items` from refusal-proof export
 
+## Visual showcase cut (45-90s)
+
+Run the visual cut for desktop and narrow proof assets:
+
+```bash
+scripts/demo/visual_showcase_cut.sh /tmp/panopticon_visual_cut
+```
+
+It outputs `VISUAL_SHOWCASE_SUMMARY.txt` with deterministic asset hashes for:
+
+- `incident-lens-showcase.svg`
+- `forensic-lens-showcase.svg`
+- `truth-hud-showcase.svg`
+- `incident-lens-narrow-72.svg`
+
 Outputs:
 
 - `/tmp/panopticon_demo_run/tour/metrics.json`

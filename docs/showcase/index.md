@@ -33,6 +33,14 @@ Truth HUD (showcase):
 
 ## Demo track
 
+### Visual launch cut (45-90s)
+
+```bash
+scripts/demo/visual_showcase_cut.sh /tmp/panopticon_visual_cut
+```
+
+This produces a concise visual proof summary with deterministic hashes for showcase and narrow assets.
+
 ### Desktop flow (operator presentation)
 
 ```bash
