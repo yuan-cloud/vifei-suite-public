@@ -19,7 +19,7 @@
 //! - Always visible in BOTH lenses (Incident and Forensic).
 //! - At L4 (Freeze UI), non-HUD panes may freeze, but Truth HUD remains live.
 
-use crate::UiProfile;
+use crate::{visual_tone, UiProfile};
 use panopticon_core::projection::{ExportSafetyState, LadderLevel, ViewModel};
 use ratatui::{
     layout::Rect,
@@ -135,19 +135,14 @@ pub fn render_truth_hud_with_profile(
     let block = Block::default()
         .title(match profile {
             UiProfile::Standard => " Truth HUD ",
-            UiProfile::Showcase => " Truth HUD · Showcase ",
+            UiProfile::Showcase => " Truth HUD · Showcase · confession strip ",
         })
         .borders(Borders::ALL)
         .border_type(match profile {
             UiProfile::Standard => BorderType::Plain,
             UiProfile::Showcase => BorderType::Rounded,
         })
-        .border_style(match profile {
-            UiProfile::Standard => Style::default().fg(Color::Magenta),
-            UiProfile::Showcase => Style::default()
-                .fg(Color::LightMagenta)
-                .add_modifier(Modifier::BOLD),
-        });
+        .border_style(visual_tone::panel_border_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);

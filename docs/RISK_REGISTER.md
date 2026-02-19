@@ -2002,3 +2002,16 @@ Context:
 3. Nondeterminism: None added to truth path; documentation-only restructuring and command presentation updates.
 4. Security: No new sensitive data handling paths were introduced; commands remain within existing share-safe and evidence workflows.
 5. Performance: No runtime impact; improved scanability should reduce operator time-to-proof during demos.
+
+## bd-2s2u · SHOWCASE: high-impact visual skin inspired by Frankentui aesthetics · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I2, I4
+- Constitution touched: none
+
+1. Coupling: Showcase profile now has stronger styling and adaptive forensic pane layout, coupling visual affordances to `UiProfile` and terminal width buckets.
+2. Untested claims: Rendering behavior is covered by existing TUI/modality tests, but we did not add a new dedicated visual snapshot suite for all style states in this bead.
+3. Nondeterminism: No truth-path nondeterminism introduced; changes are render-only and preserve reducer/projection/hash contracts.
+4. Security: No new data paths introduced; styling and layout changes do not alter export or redaction surfaces.
+5. Performance: Additional style/layout branching is minor; narrow-mode stacked forensic layout may improve readability at small widths with negligible runtime cost.

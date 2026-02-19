@@ -75,14 +75,14 @@ pub fn render_forensic_lens_with_profile(
     let block = Block::default()
         .title(match profile {
             UiProfile::Standard => " Forensic Lens (Tab to toggle) ",
-            UiProfile::Showcase => " Forensic Lens · Showcase (Tab to toggle) ",
+            UiProfile::Showcase => " Forensic Lens · Showcase · Tab toggle ",
         })
         .borders(Borders::ALL)
         .border_type(match profile {
             UiProfile::Standard => BorderType::Plain,
             UiProfile::Showcase => BorderType::Rounded,
         })
-        .border_style(visual_tone::warning_for(profile));
+        .border_style(visual_tone::panel_border_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -96,11 +96,18 @@ pub fn render_forensic_lens_with_profile(
         return;
     }
 
-    // Split into timeline (left) and inspector (right)
-    let columns = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
-        .split(inner);
+    // Desktop gets side-by-side panes; narrow/mobile-like widths stack timeline above inspector.
+    let columns = if inner.width >= 100 {
+        Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .split(inner)
+    } else {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(inner)
+    };
 
     render_timeline(frame, columns[0], events, forensic, profile);
     render_inspector(frame, columns[1], events, forensic, profile);
@@ -115,13 +122,16 @@ fn render_timeline(
     profile: UiProfile,
 ) {
     let block = Block::default()
-        .title(" Timeline ")
+        .title(match profile {
+            UiProfile::Standard => " Timeline ",
+            UiProfile::Showcase => " Timeline · j/k move · Enter expand ",
+        })
         .borders(Borders::ALL)
         .border_type(match profile {
             UiProfile::Standard => BorderType::Plain,
             UiProfile::Showcase => BorderType::Rounded,
         })
-        .border_style(visual_tone::muted_for(profile));
+        .border_style(visual_tone::panel_border_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -139,9 +149,7 @@ fn render_timeline(
         let type_name = ev.payload.event_type_name();
 
         let line_style = if is_selected {
-            Style::default()
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD)
+            visual_tone::selected_for(profile)
         } else {
             Style::default()
         };
@@ -193,13 +201,16 @@ fn render_inspector(
     profile: UiProfile,
 ) {
     let block = Block::default()
-        .title(" Inspector ")
+        .title(match profile {
+            UiProfile::Standard => " Inspector ",
+            UiProfile::Showcase => " Inspector · event details ",
+        })
         .borders(Borders::ALL)
         .border_type(match profile {
             UiProfile::Standard => BorderType::Plain,
             UiProfile::Showcase => BorderType::Rounded,
         })
-        .border_style(visual_tone::muted_for(profile));
+        .border_style(visual_tone::panel_border_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);

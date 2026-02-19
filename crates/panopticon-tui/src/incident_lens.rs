@@ -58,14 +58,14 @@ pub fn render_incident_lens_with_profile(
     let block = Block::default()
         .title(match profile {
             UiProfile::Standard => " Incident Lens (Tab to toggle) ",
-            UiProfile::Showcase => " Incident Lens · Showcase (Tab to toggle) ",
+            UiProfile::Showcase => " Incident Lens · Showcase · Tab toggle ",
         })
         .borders(Borders::ALL)
         .border_type(match profile {
             UiProfile::Standard => BorderType::Plain,
             UiProfile::Showcase => BorderType::Rounded,
         })
-        .border_style(visual_tone::info_for(profile));
+        .border_style(visual_tone::panel_border_for(profile));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);

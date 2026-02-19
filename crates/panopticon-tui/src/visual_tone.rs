@@ -39,6 +39,25 @@ pub fn header() -> Style {
     Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
 }
 
+pub fn panel_border_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => Style::default().fg(Color::Gray),
+        UiProfile::Showcase => Style::default()
+            .fg(Color::LightBlue)
+            .add_modifier(Modifier::BOLD),
+    }
+}
+
+pub fn selected_for(profile: UiProfile) -> Style {
+    match profile {
+        UiProfile::Standard => Style::default().add_modifier(Modifier::BOLD),
+        UiProfile::Showcase => Style::default()
+            .fg(Color::White)
+            .bg(Color::Blue)
+            .add_modifier(Modifier::BOLD),
+    }
+}
+
 pub fn info_for(profile: UiProfile) -> Style {
     match profile {
         UiProfile::Standard => info(),
