@@ -39,6 +39,12 @@ Operator-readable command path:
 
 `docs/showcase/adapter-human-cli-track.md`
 
+### Adapter-facing robot JSON track
+
+Automation-readable command path:
+
+`docs/showcase/adapter-robot-json-track.md`
+
 ### Visual launch cut (45-90s)
 
 ```bash

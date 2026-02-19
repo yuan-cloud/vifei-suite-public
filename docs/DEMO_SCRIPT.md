@@ -13,6 +13,7 @@ Show four proof moments, in order:
 
 Adapter-facing operator snippets:
 - `docs/showcase/adapter-human-cli-track.md`
+- `docs/showcase/adapter-robot-json-track.md`
 
 ## Preflight
 

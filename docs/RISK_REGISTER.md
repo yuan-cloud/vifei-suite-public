@@ -2171,3 +2171,16 @@ Context:
 3. Nondeterminism: No runtime behavior changed and no new nondeterminism surfaces were introduced.
 4. Security: Track emphasizes share-safe export usage and keeps sample paths local/test-scoped; no new secret exposure surface added.
 5. Performance: No runtime performance impact; only operator documentation surface changed.
+
+## bd-20ez · ADAPTER-2: robot JSON demo track · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Robot demo guidance is now explicitly coupled to CLI envelope and exit-code contract (`panopticon-cli-robot-v1.1`); contract changes must update this track.
+2. Untested claims: This bead is docs-only and relies on existing robot-mode contract tests for behavioral guarantees rather than adding new execution harnesses.
+3. Nondeterminism: No runtime changes and no nondeterministic behavior introduced.
+4. Security: Track keeps refusal-path and error-path expectations explicit, reducing automation ambiguity around unsafe export and invalid input handling.
+5. Performance: No runtime impact; only automation documentation surface changed.
