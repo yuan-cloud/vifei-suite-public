@@ -282,6 +282,10 @@ fn secret_seeded_export_refused_with_report() {
 
 fn verify_refusal_report(report: &RefusalReport) {
     assert_eq!(report.report_version, "refusal-v0.1");
+    assert_eq!(
+        report.eventlog_path, "eventlog.jsonl",
+        "refusal report should expose a share-safe eventlog label"
+    );
     assert!(!report.blocked_items.is_empty());
 
     // Verify specific blocked items

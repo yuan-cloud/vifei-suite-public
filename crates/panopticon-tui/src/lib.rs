@@ -137,7 +137,7 @@ impl App {
             invariants,
             active_lens: ActiveLens::Incident,
             should_quit: false,
-            eventlog_path: eventlog_path.display().to_string(),
+            eventlog_path: eventlog_display_label(eventlog_path),
             total_events,
             events,
             forensic_state: forensic_lens::ForensicState::new(),
@@ -184,6 +184,14 @@ impl App {
         self.invariants.degradation_level = level;
         self.viewmodel = project(&self.state, &self.invariants);
     }
+}
+
+fn eventlog_display_label(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .map(str::to_owned)
+        .unwrap_or_else(|| path.display().to_string())
 }
 
 /// Render an EventLog to a buffer string for snapshot testing.
@@ -392,6 +400,7 @@ mod tests {
     use panopticon_core::eventlog::EventLogWriter;
     use ratatui::backend::TestBackend;
     use ratatui::layout::Rect;
+    use std::path::Path;
 
     fn make_test_event(id: &str, ts: u64) -> ImportEvent {
         ImportEvent {
@@ -459,6 +468,18 @@ mod tests {
     #[test]
     fn test_active_lens_default() {
         assert_eq!(ActiveLens::default(), ActiveLens::Incident);
+    }
+
+    #[test]
+    fn eventlog_display_label_uses_file_name_when_available() {
+        let label = eventlog_display_label(Path::new("/tmp/demo/sample-eventlog.jsonl"));
+        assert_eq!(label, "sample-eventlog.jsonl");
+    }
+
+    #[test]
+    fn eventlog_display_label_falls_back_for_root_like_paths() {
+        let label = eventlog_display_label(Path::new("/"));
+        assert!(!label.trim().is_empty());
     }
 
     // --- Key handling tests ---

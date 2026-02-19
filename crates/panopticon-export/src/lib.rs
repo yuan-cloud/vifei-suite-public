@@ -327,7 +327,7 @@ pub fn run_export(config: &ExportConfig) -> io::Result<ExportResult> {
 
     // Stage 3: Decide
     if !findings.is_empty() {
-        let eventlog_str = config.eventlog_path.display().to_string();
+        let eventlog_str = share_safe_path_label(&config.eventlog_path);
         let report = RefusalReport::new(&eventlog_str, findings);
 
         // Write refusal report if path configured
@@ -342,6 +342,14 @@ pub fn run_export(config: &ExportConfig) -> io::Result<ExportResult> {
     let success = create_bundle(&content, blob_store.as_ref(), &config.output_path)?;
 
     Ok(ExportResult::Success(success))
+}
+
+fn share_safe_path_label(path: &Path) -> String {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .map(str::to_owned)
+        .unwrap_or_else(|| path.display().to_string())
 }
 
 #[cfg(test)]

@@ -8,9 +8,9 @@
 │  SKEW @5: 0ms backward                                               │
 │  POLICY @3: L0 → L2 (QueuePressure)                                  │
 │                                                                      │
-│Run Context                                                           │
-│/data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-eventlog│
-│.jsonl (8 events)                                                     │
+│Run Context  sample-eventlog.jsonl (8 events)                         │
+│  codex (run-readme-1) [OK] 8 events                                  │
+│                                                                      │
 │Event Breakdown (Context)                                             │
 │  ClockSkewDetected          1                                        │
 │  Error                      1                                        │

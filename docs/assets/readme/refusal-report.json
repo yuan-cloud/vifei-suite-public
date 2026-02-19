@@ -1,6 +1,6 @@
 {
   "report_version": "refusal-v0.1",
-  "eventlog_path": "/data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-refusal-eventlog.jsonl",
+  "eventlog_path": "sample-refusal-eventlog.jsonl",
   "blocked_items": [
     {
       "event_id": "ref-1",
@@ -27,7 +27,7 @@
       "redacted_match": "0123***6789"
     }
   ],
-  "scan_timestamp_utc": "2026-02-18T16:56:00Z",
+  "scan_timestamp_utc": "2026-02-19T05:39:40Z",
   "scanner_version": "secret-scanner-v0.1",
   "summary": "Export refused: 4 secret(s) detected in 1 location(s)"
 }

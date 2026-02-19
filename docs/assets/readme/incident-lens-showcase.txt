@@ -1,4 +1,4 @@
-╭ Incident Lens · Showcase (Tab to toggle) ────────────────────────────────────────────────────────────────────────────╮
+╭ Incident Lens · Showcase · Tab toggle ───────────────────────────────────────────────────────────────────────────────╮
 │First run: Tab switch lens | q quit                                                                                   │
 │Forensic controls: j/k move, Enter expand                                                                             │
 │                                                                                                                      │
@@ -10,7 +10,7 @@
 │                                                                                                                      │
 │Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │
 │                                                                                                                      │
-│Run Context  /data/projects/PanopticonAliveca2.5/docs/assets/readme/sample-eventlog.jsonl (8 events)                  │
+│Run Context  sample-eventlog.jsonl (8 events)                                                                         │
 │  codex (run-readme-1) [OK] 8 events                                                                                  │
 │                                                                                                                      │
 │Event Breakdown (Context)                                                                                             │
@@ -30,7 +30,7 @@
 │                                                                                                                      │
 │                                                                                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭ Truth HUD · Showcase ────────────────────────────────────────────────────────────────────────────────────────────────╮
+╭ Truth HUD · Showcase · confession strip ─────────────────────────────────────────────────────────────────────────────╮
 │ Level: L0 | Agg: 1:1 | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                                    │
 │ Version: projection-invariants-v0.1                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

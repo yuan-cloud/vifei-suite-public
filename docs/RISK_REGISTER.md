@@ -2015,3 +2015,42 @@ Context:
 3. Nondeterminism: No truth-path nondeterminism introduced; changes are render-only and preserve reducer/projection/hash contracts.
 4. Security: No new data paths introduced; styling and layout changes do not alter export or redaction surfaces.
 5. Performance: Additional style/layout branching is minor; narrow-mode stacked forensic layout may improve readability at small widths with negligible runtime cost.
+
+## bd-fcjd · SECURITY-3: redact absolute local paths from rendered UI/docs assets · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: TUI and export refusal-report rendering now share a path-labeling strategy (filename-first), which reduces coupling to host filesystem layout in public artifacts.
+2. Untested claims: Path-label behavior is tested for normal file paths and root-like fallback cases; exotic Unicode normalization edge cases are still covered by fallback behavior but not fuzzed.
+3. Nondeterminism: Label generation is deterministic for a given input path and does not affect `commit_index`, reducer state, or projection hash inputs.
+4. Security: Eliminates absolute local path leakage from generated README demo artifacts and refusal reports, reducing host metadata exposure risk when publishing.
+5. Performance: Negligible string/path processing overhead; no meaningful runtime impact.
+
+## bd-1xgd · PERF-1: replace benchmark placeholder with executable Criterion lane · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I4
+- Constitution touched: none
+
+1. Coupling: The benchmark lane now couples directly to `run_tour` and the large-stress fixture, ensuring drift is visible when tour execution semantics change.
+2. Untested claims: This lane validates execution viability and core outputs, but it is not yet a full statistical regression gate with p95/p99 threshold assertions in CI.
+3. Nondeterminism: Benchmark smoke reads deterministic fixture data and exercises the same deterministic tour pipeline; no truth ordering/hash behavior changed.
+4. Security: No new secret/PII surfaces; benchmark output stays local and fixture-scoped.
+5. Performance: Small additional compile/test surface for bench target; runtime overhead only when explicitly invoking the benchmark lane.
+
+## bd-erqm · AUDIT: repo-wide stub/placeholder/mock gap audit · 2026-02-19
+
+Context:
+- Bead owner: Codex (gpt-5)
+- Invariants referenced: I3, I4
+- Constitution touched: none
+
+1. Coupling: Audit formalizes a maintenance coupling: future placeholder-like regressions should be routed through explicit beads instead of lingering in runtime paths.
+2. Untested claims: Audit confirms current crate runtime paths, but third-party tooling/docs outside crate runtime are still allowed to contain planning language and historical placeholders.
+3. Nondeterminism: No runtime logic changed by the audit itself; changes spawned by the audit preserved deterministic contracts.
+4. Security: Audit surfaced and removed a real publish-safety leak (absolute paths in generated artifacts), improving operational privacy posture.
+5. Performance: No direct runtime cost from audit process; replacement of placeholder benchmark lane adds only minimal maintenance overhead.
