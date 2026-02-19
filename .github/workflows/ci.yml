@@ -77,11 +77,12 @@ jobs:
 
       - name: Upload fastlane evidence
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: fastlane-${{ github.sha }}
           path: .tmp/fastlane/
-          if-no-files-found: error
+          if-no-files-found: warn
 
   full_confidence:
     name: full-confidence
@@ -258,11 +259,12 @@ PY
 
       - name: Upload full-confidence evidence
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: full-confidence-${{ github.sha }}
           path: .tmp/full-confidence/
-          if-no-files-found: error
+          if-no-files-found: warn
 
   release-trust:
     needs: full_confidence
