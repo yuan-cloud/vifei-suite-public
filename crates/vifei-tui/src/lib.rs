@@ -202,8 +202,10 @@ fn eventlog_display_label(path: &Path) -> String {
 pub fn render_to_buffer(eventlog_path: &Path, width: u16, height: u16) -> io::Result<String> {
     let app = App::new(eventlog_path)?;
     let backend = ratatui::backend::TestBackend::new(width, height);
-    let mut terminal = Terminal::new(backend)?;
-    terminal.draw(|frame| render(frame, &app, UiProfile::Standard))?;
+    let mut terminal = Terminal::new(backend).map_err(infallible_to_io)?;
+    terminal
+        .draw(|frame| render(frame, &app, UiProfile::Standard))
+        .map_err(infallible_to_io)?;
 
     let buf = terminal.backend().buffer();
     let mut text = String::new();
@@ -293,8 +295,10 @@ pub fn render_degraded_incident_multiline_with_profile(
 
 fn render_multiline(app: &App, width: u16, height: u16, profile: UiProfile) -> io::Result<String> {
     let backend = ratatui::backend::TestBackend::new(width, height);
-    let mut terminal = Terminal::new(backend)?;
-    terminal.draw(|frame| render(frame, app, profile))?;
+    let mut terminal = Terminal::new(backend).map_err(infallible_to_io)?;
+    terminal
+        .draw(|frame| render(frame, app, profile))
+        .map_err(infallible_to_io)?;
 
     let buf = terminal.backend().buffer();
     let mut text = String::new();
@@ -354,6 +358,10 @@ pub fn run_viewer(eventlog_path: &Path, profile: UiProfile) -> io::Result<()> {
     stdout().execute(LeaveAlternateScreen)?;
 
     Ok(())
+}
+
+fn infallible_to_io(err: std::convert::Infallible) -> io::Error {
+    match err {}
 }
 
 /// Render the application to a frame.
