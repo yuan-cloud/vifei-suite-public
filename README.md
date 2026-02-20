@@ -49,6 +49,14 @@ Teams lose deals when execution context is fragmented across tools and people. V
 - More consistent follow-through with explicit, inspectable run evidence.
 - Safer automation boundaries with fail-closed export and refusal diagnostics.
 
+### CloudForge-Style Workflow Demo
+
+Treat this repository as a reliability reference for revenue-critical workflows such as lead -> quote -> procurement handoff.
+
+- `time_to_first_quote`: deterministic traces help isolate where quote flow stalls.
+- `followup_sla_breach_rate`: incident/forensic surfaces make missed follow-through visible.
+- `stage_leakage_rate`: replayable evidence clarifies where transitions lose momentum.
+
 ## 60-Second Quickstart
 
 1. Run deterministic stress Tour:
