@@ -6,10 +6,10 @@
 │Priority: ERR=0 SKEW=0 POLICY=1                                                                                       │
 │  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │
 │                                                                                                                      │
-│Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │
+│Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab, q                                      │
 │                                                                                                                      │
 │Run Context  sample-eventlog.jsonl (8 events)                                                                         │
-│  codex (run-readme-1) [OK] 8 events                                                                                  │
+│  agent-cli (run-readme-1) [OK] 8 events                                                                              │
 │                                                                                                                      │
 │Event Breakdown (Context)                                                                                             │
 │  PolicyDecision             1                                                                                        │
@@ -31,6 +31,6 @@
 │                                                                                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭ Truth HUD · Showcase · confession strip ─────────────────────────────────────────────────────────────────────────────╮
-│ Level: L3 | Agg: collapsed | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                              │
+│ Level: L3 | Agg: collapsed | Pressure: 82% | Drops: 0 | Export: SAFE                                                 │
 │ Version: projection-invariants-v0.1                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

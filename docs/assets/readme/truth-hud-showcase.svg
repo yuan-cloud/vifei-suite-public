@@ -39,10 +39,10 @@
     <text x="24" y="148" fill="#e9d5ff" xml:space="preserve">│Priority: ERR=0 SKEW=0 POLICY=1                                                                                       │</text>
     <text x="24" y="166" fill="#e9d5ff" xml:space="preserve">│  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │</text>
     <text x="24" y="184" fill="#e2e8f0" xml:space="preserve">│                                                                                                                      │</text>
-    <text x="24" y="202" fill="#fde68a" xml:space="preserve">│Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │</text>
+    <text x="24" y="202" fill="#fde68a" xml:space="preserve">│Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab, q                                      │</text>
     <text x="24" y="220" fill="#e2e8f0" xml:space="preserve">│                                                                                                                      │</text>
     <text x="24" y="238" fill="#e2e8f0" xml:space="preserve">│Run Context  sample-eventlog.jsonl (8 events)                                                                         │</text>
-    <text x="24" y="256" fill="#e2e8f0" xml:space="preserve">│  codex (run-readme-1) [OK] 8 events                                                                                  │</text>
+    <text x="24" y="256" fill="#e2e8f0" xml:space="preserve">│  agent-cli (run-readme-1) [OK] 8 events                                                                              │</text>
     <text x="24" y="274" fill="#e2e8f0" xml:space="preserve">│                                                                                                                      │</text>
     <text x="24" y="292" fill="#e2e8f0" xml:space="preserve">│Event Breakdown (Context)                                                                                             │</text>
     <text x="24" y="310" fill="#e2e8f0" xml:space="preserve">│  PolicyDecision             1                                                                                        │</text>
@@ -64,7 +64,7 @@
     <text x="24" y="598" fill="#e2e8f0" xml:space="preserve">│                                                                                                                      │</text>
     <text x="24" y="616" fill="#e2e8f0" xml:space="preserve">╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
     <text x="24" y="634" fill="#67e8f9" xml:space="preserve">╭ Truth HUD · Showcase · confession strip ─────────────────────────────────────────────────────────────────────────────╮</text>
-    <text x="24" y="652" fill="#67e8f9" xml:space="preserve">│ Level: L3 | Agg: collapsed | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                              │</text>
+    <text x="24" y="652" fill="#67e8f9" xml:space="preserve">│ Level: L3 | Agg: collapsed | Pressure: 82% | Drops: 0 | Export: SAFE                                                 │</text>
     <text x="24" y="670" fill="#e2e8f0" xml:space="preserve">│ Version: projection-invariants-v0.1                                                                                  │</text>
     <text x="24" y="688" fill="#e2e8f0" xml:space="preserve">╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
   </g>
