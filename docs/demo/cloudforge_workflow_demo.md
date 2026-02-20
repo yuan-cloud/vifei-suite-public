@@ -29,15 +29,16 @@ The fixture at `fixtures/metals-commercial-workflow.jsonl` models a commercial m
 
 ## KPI Proxy Mapping
 
-- `time_to_first_quote`: infer from transition timestamps in `timetravel.capture`.
-- `followup_sla_breach_rate`: infer from cadence/response timing + anomaly windows.
-- `stage_leakage_rate`: infer from missing or delayed expected transitions in replay.
+- `kpi_proxy_time_to_first_quote_hours`: computed from fixture transition timestamps (`rfq.intake` -> `quote.commit`).
+- `kpi_proxy_followup_sla_breach_rate`: computed from synthetic cadence response windows (demo SLA threshold: 4 hours).
+- `kpi_proxy_stage_leakage_rate`: computed from expected-vs-observed transition sequence coverage.
 
 ## Security and Safety Posture
 
 - Synthetic-only data: no real customer identifiers, credentials, or tokens.
 - Demo enforces `--share-safe` for export.
-- Demo validates fail-closed behavior by expecting refusal-path exit code `3` on a synthetic refusal fixture.
+- Demo validates fail-closed behavior by expecting refusal-path exit code `3` on a metals-specific synthetic refusal fixture.
+- Demo prints first blocked pattern and `redacted_match` from `refusal-report.json` as explicit redaction evidence.
 
 ## Public References
 

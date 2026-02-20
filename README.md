@@ -53,10 +53,11 @@ Teams lose deals when execution context is fragmented across tools and people. V
 ### CloudForge-Style Workflow Demo
 
 Treat this repository as a reliability reference for revenue-critical workflows such as lead -> quote -> procurement handoff.
+This demo uses synthetic, representative metals workflow data (not customer-proprietary schemas or records).
 
-- `time_to_first_quote`: deterministic traces help isolate where quote flow stalls.
-- `followup_sla_breach_rate`: incident/forensic surfaces make missed follow-through visible.
-- `stage_leakage_rate`: replayable evidence clarifies where transitions lose momentum.
+- `kpi_proxy_time_to_first_quote_hours`: deterministic transitions quantify quote-flow latency.
+- `kpi_proxy_followup_sla_breach_rate`: cadence response windows expose missed follow-through risk.
+- `kpi_proxy_stage_leakage_rate`: expected-vs-observed transitions surface momentum loss points.
 
 ## 60-Second Quickstart
 
