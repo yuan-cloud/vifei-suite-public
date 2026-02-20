@@ -1,0 +1,10 @@
+Artifacts:
+- metrics.json
+- viewmodel.hash
+- ansi.capture
+- timetravel.capture
+
+Events: 19480
+Tier A drops: 0
+Final level: L0
+Hash: 000573091386a86cabe6935bbe997897a83f42cf89595238e55c2f9c8d45eda6

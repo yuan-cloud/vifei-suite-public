@@ -1,0 +1,65 @@
+name: Determinism regression
+description: Report hash drift, ordering drift, or artifact mismatch
+title: "[Determinism] "
+labels:
+  - bug
+  - determinism
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for invariants and reproducibility failures.
+        Vifei's north star is deterministic evidence integrity.
+  - type: input
+    id: invariant
+    attributes:
+      label: Invariant(s) impacted
+      description: Reference I1..I5 if known.
+      placeholder: I2, I4
+    validations:
+      required: true
+  - type: textarea
+    id: command_set
+    attributes:
+      label: Exact commands run
+      description: Include all commands in order.
+      placeholder: |
+        cargo test
+        cargo run -p vifei-tour -- ...
+    validations:
+      required: true
+  - type: textarea
+    id: artifact_diff
+    attributes:
+      label: Artifact mismatch details
+      description: Describe what drifted.
+      placeholder: viewmodel.hash differs across repeated runs with identical input.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include hashes, captured output snippets, and fixture IDs.
+      placeholder: |
+        run1 hash: ...
+        run2 hash: ...
+        fixture: fixtures/cassette/small-session.jsonl
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, terminal, rustc, CPU architecture.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Validation
+      options:
+        - label: Reproduced at least twice with identical input.
+          required: true
+        - label: Included deterministic artifacts and exact command transcript.
+          required: true

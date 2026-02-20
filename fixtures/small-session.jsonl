@@ -1,0 +1,11 @@
+{"type":"session_start","session_id":"sess-001","timestamp":"2026-02-16T10:00:00.000Z","agent":"claude-code","model":"claude-opus-4-6"}
+{"type":"tool_use","session_id":"sess-001","timestamp":"2026-02-16T10:00:01.500Z","tool":"Read","id":"tu_001","args":{"file_path":"/project/src/main.rs"}}
+{"type":"tool_result","session_id":"sess-001","timestamp":"2026-02-16T10:00:02.200Z","tool":"Read","id":"tr_001","tool_use_id":"tu_001","status":"success","result":"fn main() {\n    println!(\"hello\");\n}"}
+{"type":"tool_use","session_id":"sess-001","timestamp":"2026-02-16T10:00:05.000Z","tool":"Edit","id":"tu_002","args":{"file_path":"/project/src/main.rs","old_string":"hello","new_string":"world"}}
+{"type":"tool_result","session_id":"sess-001","timestamp":"2026-02-16T10:00:05.800Z","tool":"Edit","id":"tr_002","tool_use_id":"tu_002","status":"success","result":"Edit applied successfully"}
+{"type":"tool_use","session_id":"sess-001","timestamp":"2026-02-16T10:00:08.000Z","tool":"Bash","id":"tu_003","args":{"command":"cargo test"}}
+{"type":"tool_result","session_id":"sess-001","timestamp":"2026-02-16T10:00:12.000Z","tool":"Bash","id":"tr_003","tool_use_id":"tu_003","status":"success","result":"running 3 tests\ntest test_one ... ok\ntest test_two ... ok\ntest test_three ... ok\n\ntest result: ok. 3 passed; 0 failed;"}
+{"type":"error","session_id":"sess-001","timestamp":"2026-02-16T10:00:15.000Z","id":"err_001","kind":"permission","message":"Cannot write to /etc/hosts","severity":"warning"}
+{"type":"tool_use","session_id":"sess-001","timestamp":"2026-02-16T10:00:18.000Z","tool":"Write","id":"tu_004","args":{"file_path":"/project/README.md","content":"# My Project\n\nA sample project."}}
+{"type":"tool_result","session_id":"sess-001","timestamp":"2026-02-16T10:00:18.500Z","tool":"Write","id":"tr_004","tool_use_id":"tu_004","status":"success","result":"File written successfully"}
+{"type":"session_end","session_id":"sess-001","timestamp":"2026-02-16T10:00:20.000Z","exit_code":0,"reason":"Task completed successfully"}

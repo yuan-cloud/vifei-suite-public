@@ -1,0 +1,5 @@
+{"type":"response.created","schema_version":"openai-responses-v1","response_id":"resp_001","event_id":"ev_001","created_at_ms":1739700000000,"model":"gpt-5-mini","status":"in_progress"}
+{"type":"response.output_item.added","schema_version":"openai-responses-v1","response_id":"resp_001","event_id":"ev_002","created_at_ms":1739700000100,"item":{"id":"item_001","type":"function_call","name":"web_search","arguments":{"q":"deterministic replay"}}}
+{"type":"response.output_item.done","schema_version":"openai-responses-v1","response_id":"resp_001","event_id":"ev_003","created_at_ms":1739700000200,"item":{"id":"item_002","type":"function_call_output","name":"web_search","output":"result payload"}}
+{"type":"response.error","schema_version":"openai-responses-v1","response_id":"resp_001","event_id":"ev_004","created_at_ms":1739700000300,"error":{"code":"tool_timeout","message":"tool call exceeded budget"}}
+{"type":"response.completed","schema_version":"openai-responses-v1","response_id":"resp_001","event_id":"ev_005","created_at_ms":1739700000400,"status":"completed"}

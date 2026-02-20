@@ -1,0 +1,33 @@
+{
+  "report_version": "refusal-v0.1",
+  "eventlog_path": "sample-refusal-eventlog.jsonl",
+  "blocked_items": [
+    {
+      "event_id": "ref-1",
+      "field_path": "payload",
+      "matched_pattern": "openai_key",
+      "redacted_match": "sk-0***cdef"
+    },
+    {
+      "event_id": "ref-1",
+      "field_path": "payload",
+      "matched_pattern": "phone",
+      "redacted_match": "0123***6789"
+    },
+    {
+      "event_id": "ref-1",
+      "field_path": "payload",
+      "matched_pattern": "phone",
+      "redacted_match": "0123***6789"
+    },
+    {
+      "event_id": "ref-1",
+      "field_path": "payload",
+      "matched_pattern": "phone",
+      "redacted_match": "0123***6789"
+    }
+  ],
+  "scan_timestamp_utc": "2026-02-19T21:09:22Z",
+  "scanner_version": "secret-scanner-v0.1",
+  "summary": "Export refused: 4 secret(s) detected in 1 location(s)"
+}

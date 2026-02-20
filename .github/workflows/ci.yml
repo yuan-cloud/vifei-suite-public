@@ -1,0 +1,307 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fastlane:
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: stable
+
+      - name: Cache cargo
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Fastlane smoke suite
+        run: scripts/e2e/fastlane.sh
+
+      - name: Demo smoke suite (fast)
+        run: scripts/testing/demo_smoke.sh .tmp/demo-smoke-fastlane
+
+      - name: Validate fastlane contract artifacts
+        run: |
+          test -f .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/run.jsonl"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          test -f .tmp/fastlane/summary.txt || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/summary.txt"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          test -f .tmp/fastlane/pty-preflight.log || { echo "CONTRACT_FAIL[FL0-artifacts] missing .tmp/fastlane/pty-preflight.log"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"cli_export_refusal_report"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing cli_export_refusal_report stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"tui_pty_preflight"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing tui_pty_preflight stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"tui_interactive_smoke"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing tui_interactive_smoke stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+          grep -q '"stage":"fastlane_total"' .tmp/fastlane/run.jsonl || { echo "CONTRACT_FAIL[FL1-stages] missing fastlane_total stage"; echo "replay: scripts/e2e/fastlane.sh"; exit 1; }
+
+      - name: Validate coverage contract references
+        run: |
+          scripts/testing/check_coverage_contract.sh \
+            2>&1 | tee .tmp/fastlane/coverage-contract.log
+
+      - name: Adapter conformance drift gate
+        run: |
+          scripts/testing/check_adapter_drift.sh .tmp/fastlane/adapter-conformance \
+            2>&1 | tee .tmp/fastlane/adapter-conformance.log
+
+      - name: Validate defer register
+        run: scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json
+
+      - name: Bead closure evidence guard
+        run: |
+          scripts/testing/check_bead_closure_evidence.py \
+            --audit-output-json .tmp/fastlane/bead-risk-parity-audit.json \
+            --audit-output-markdown .tmp/fastlane/bead-risk-parity-audit.md \
+            2>&1 | tee .tmp/fastlane/bead-closure-evidence.log
+
+      - name: Upload fastlane evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fastlane-${{ github.sha }}
+          path: .tmp/fastlane/
+          if-no-files-found: warn
+
+  full_confidence:
+    name: full-confidence
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Prepare output directories
+        run: mkdir -p .tmp/full-confidence/logs .tmp/full-confidence/coverage .tmp/full-confidence/perf
+
+      - name: Validate defer register
+        run: |
+          scripts/testing/validate_defer_register.py docs/testing/defer-register-v0.1.json \
+            2>&1 | tee .tmp/full-confidence/logs/defer-register.log
+
+      - name: Bead closure evidence guard
+        run: |
+          scripts/testing/check_bead_closure_evidence.py \
+            --audit-output-json .tmp/full-confidence/logs/bead-risk-parity-audit.json \
+            --audit-output-markdown .tmp/full-confidence/logs/bead-risk-parity-audit.md \
+            2>&1 | tee .tmp/full-confidence/logs/bead-closure-evidence.log
+
+      - name: Format check
+        run: cargo fmt --check 2>&1 | tee .tmp/full-confidence/logs/fmt.log
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings 2>&1 | tee .tmp/full-confidence/logs/clippy.log
+
+      - name: Test
+        run: |
+          cargo test -- --skip interactive_tui_flow_lens_toggle_nav_and_quit --skip interactive_tui_narrow_terminal_profile_stays_healthy \
+            2>&1 | tee .tmp/full-confidence/logs/cargo-test.log
+
+      - name: Generate coverage inventory snapshot
+        run: |
+          cargo test --workspace --all-targets -- --list > .tmp/full-confidence/coverage/test-inventory.txt
+          cp docs/testing/coverage-matrix-v0.1.md .tmp/full-confidence/coverage/coverage-matrix-v0.1.md
+          cp docs/testing/defer-register-v0.1.json .tmp/full-confidence/coverage/defer-register-v0.1.json
+          cp docs/testing/FASTLANE.md .tmp/full-confidence/coverage/FASTLANE.md
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@1cf3de8de323df92fe08c793e53eaef58799aec4 # v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Numeric coverage report
+        run: |
+          scripts/testing/coverage_numeric.sh .tmp/full-confidence/coverage/numeric \
+            2>&1 | tee .tmp/full-confidence/logs/coverage-numeric.log
+
+      - name: Validate coverage contract references
+        run: |
+          scripts/testing/check_coverage_contract.sh \
+            2>&1 | tee .tmp/full-confidence/logs/coverage-contract.log
+
+      - name: Adapter conformance drift gate
+        run: |
+          scripts/testing/check_adapter_drift.sh .tmp/full-confidence/adapter-conformance \
+            2>&1 | tee .tmp/full-confidence/logs/adapter-conformance.log
+
+      - name: CLI E2E suite
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/full-confidence/logs
+          OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh \
+            2>&1 | tee .tmp/full-confidence/logs/cli-e2e.log
+
+      - name: Replay benchmark artifact (warn-only calibration)
+        run: |
+          VIFEI_TOUR_BENCH_ARTIFACT=.tmp/full-confidence/perf/bench_tour_metrics.json \
+          VIFEI_PERF_TREND_DIR=.tmp/full-confidence/perf/trends \
+          VIFEI_GIT_SHA=${{ github.sha }} \
+          cargo run -q -p vifei-tour --bin bench_tour --release \
+            2>&1 | tee .tmp/full-confidence/logs/bench-tour.log
+
+      - name: Perf regression fail gate (phase-2)
+        run: |
+          scripts/testing/check_perf_regression_fail.sh \
+            .tmp/full-confidence/perf/bench_tour_metrics.json \
+            docs/testing/perf-baseline-lock-v1.json \
+            2>&1 | tee .tmp/full-confidence/logs/perf-gate.log
+
+      - name: Snapshot baseline candidate artifact
+        run: |
+          cp .tmp/full-confidence/perf/bench_tour_metrics.json \
+            .tmp/full-confidence/perf/bench_tour_metrics.${{ github.sha }}.json
+
+      - name: Demo smoke suite (fast)
+        run: |
+          scripts/testing/demo_smoke.sh .tmp/full-confidence/demo-smoke \
+            2>&1 | tee .tmp/full-confidence/logs/demo-smoke.log
+
+      - name: Validate CLI E2E contract artifacts
+        run: |
+          test -f .tmp/full-confidence/cli-e2e/run.jsonl || { echo "CONTRACT_FAIL[FC1-cli] missing cli-e2e run.jsonl"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          test -f .tmp/full-confidence/cli-e2e/summary.txt || { echo "CONTRACT_FAIL[FC1-cli] missing cli-e2e summary.txt"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+          grep -q 'E2E CLI run complete: cli-e2e-v0.1' .tmp/full-confidence/cli-e2e/summary.txt || { echo "CONTRACT_FAIL[FC1-cli] missing completion marker"; echo "replay: OUT_DIR=.tmp/full-confidence/cli-e2e scripts/e2e/cli_e2e.sh"; exit 1; }
+
+      - name: PTY preflight (capability probe)
+        id: pty_preflight
+        run: |
+          set +e
+          OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh \
+            > .tmp/full-confidence/pty-preflight.log 2>&1
+          rc=$?
+          set -e
+
+          cat .tmp/full-confidence/pty-preflight.log | tee .tmp/full-confidence/logs/pty-preflight.log
+
+          status="$(python3 - <<'PY'
+          import json
+          import pathlib
+
+          path = pathlib.Path(".tmp/full-confidence/pty-preflight.log")
+          line = path.read_text(encoding="utf-8").strip()
+          payload = json.loads(line) if line else {}
+          status = payload.get("status")
+          print(status if status in {"pass", "fail"} else "invalid")
+          PY
+          )"
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [[ "$status" == "pass" ]]; then
+            echo "PTY preflight passed; interactive PTY suite will run."
+          elif [[ "$status" == "fail" ]]; then
+            echo "PTY preflight failed with capability reason; interactive PTY suite is gated for this runner."
+          else
+            echo "CONTRACT_FAIL[PTY0-preflight-schema] invalid preflight payload"
+            echo "replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh"
+            exit 1
+          fi
+
+          if [[ "$rc" -ne 0 && "$status" != "fail" ]]; then
+            echo "CONTRACT_FAIL[PTY0-preflight-exit] non-zero preflight exit without fail status"
+            echo "replay: OUT_DIR=.tmp/full-confidence scripts/e2e/pty_preflight.sh"
+            exit 1
+          fi
+
+      - name: TUI E2E interactive suite
+        if: steps.pty_preflight.outputs.status == 'pass'
+        run: |
+          set +e
+          TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e \
+            cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture \
+            2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt1.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            TERM=xterm-256color VIFEI_E2E_OUT=.tmp/full-confidence/tui-e2e \
+              cargo test -p vifei-tui --test tui_e2e_interactive -- --nocapture \
+              2>&1 | tee .tmp/full-confidence/logs/tui-e2e-interactive.attempt2.log
+            rc=$?
+          fi
+          set -e
+          exit "$rc"
+
+      - name: Validate PTY capability + flake budget contract
+        if: always()
+        run: |
+          PTY_MAX_RETRY_PASSES=1 \
+            scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence \
+            2>&1 | tee .tmp/full-confidence/logs/pty-contract.log
+
+      - name: Upload full-confidence evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: full-confidence-${{ github.sha }}
+          path: .tmp/full-confidence/
+          if-no-files-found: warn
+
+  release-trust:
+    needs: full_confidence
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: stable
+
+      - name: Build and package release artifacts
+        run: scripts/release_artifacts.sh dist
+
+      - name: Verify release artifact checksums
+        run: scripts/verify_release_artifacts.sh dist
+
+      - name: Upload release artifact bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-bundle-${{ github.sha }}
+          path: dist/
+
+      - name: Attest release artifact provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: "dist/*"

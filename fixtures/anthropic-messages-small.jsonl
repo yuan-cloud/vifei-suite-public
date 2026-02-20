@@ -1,0 +1,5 @@
+{"type":"message_start","schema_version":"anthropic-messages-v1","message_id":"msg_001","event_id":"ev_001","created_at_ms":1739700000000,"model":"claude-3-5-sonnet"}
+{"type":"content_block_start","schema_version":"anthropic-messages-v1","message_id":"msg_001","event_id":"ev_002","created_at_ms":1739700000100,"content_block":{"id":"cb_001","type":"tool_use","name":"web_search","input":{"q":"deterministic replay"}}}
+{"type":"content_block_stop","schema_version":"anthropic-messages-v1","message_id":"msg_001","event_id":"ev_003","created_at_ms":1739700000200,"content_block":{"id":"cb_002","type":"tool_result","name":"web_search","content":"result payload","is_error":false}}
+{"type":"message.error","schema_version":"anthropic-messages-v1","message_id":"msg_001","event_id":"ev_004","created_at_ms":1739700000300,"error":{"type":"tool_timeout","message":"tool call exceeded budget"}}
+{"type":"message_stop","schema_version":"anthropic-messages-v1","message_id":"msg_001","event_id":"ev_005","created_at_ms":1739700000400,"stop_reason":"end_turn"}

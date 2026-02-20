@@ -1,0 +1,5 @@
+Export REFUSED: Export refused: 4 secret(s) detected in 1 location(s)
+- event:ref-1 @ payload: openai_key (sk-0***cdef)
+- event:ref-1 @ payload: phone (0123***6789)
+- event:ref-1 @ payload: phone (0123***6789)
+- event:ref-1 @ payload: phone (0123***6789)

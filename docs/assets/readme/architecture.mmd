@@ -1,0 +1,13 @@
+flowchart TD
+    A[Agent Cassette JSONL] --> B[Importer]
+    B --> C[Append Writer<br/>assigns commit_index]
+    C --> D[EventLog JSONL + Blob Store]
+    D --> E[Reducer]
+    E --> F[Projection]
+    F --> G[ViewModel]
+    G --> H[Incident Lens + Forensic Lens + Truth HUD]
+    D --> I[Tour stress harness]
+    I --> J[metrics.json]
+    I --> K[viewmodel.hash]
+    I --> L[ansi.capture]
+    I --> M[timetravel.capture]

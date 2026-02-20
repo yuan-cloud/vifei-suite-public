@@ -1,0 +1,12 @@
+{
+  "projection_invariants_version": "projection-invariants-v0.1",
+  "event_count_total": 19480,
+  "tier_a_drops": 0,
+  "max_degradation_level": "L0",
+  "degradation_level_final": "L0",
+  "degradation_transitions": [],
+  "aggregation_mode": "1:1",
+  "aggregation_bin_size": null,
+  "queue_pressure": 0.0,
+  "export_safety_state": "UNKNOWN"
+}

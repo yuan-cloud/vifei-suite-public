@@ -1,0 +1,100 @@
+{
+  "schema_version": "bead-closure-exemptions-v0.1",
+  "policy_doc": "docs/testing/BEAD_CLOSURE_EVIDENCE_POLICY.md",
+  "owner": "Vifei maintainers",
+  "last_reviewed_utc": "2026-02-18T00:00:00Z",
+  "notes": [
+    "This ledger is temporary and explicit. Entries must be removed as A3 backfills risk evidence.",
+    "Only beads currently classified as gap_requires_entry may appear here."
+  ],
+  "exempt_gap_beads": [
+    {
+      "id": "bd-1wh",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-24k.1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-24k.2",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-24k.3",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-2b4",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-3fw.1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-3fw.2",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-3fw.3",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-80v",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-bjv",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-bjv.1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-bjv.5",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-bjv.7",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-bjv.8",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-c7m",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-c7m.1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-d7c",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-d7c.1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-d7c.2",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-d7c.3",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-lh8",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    },
+    {
+      "id": "bd-yh1",
+      "rationale": "Historical closure before closure-evidence guard; tracked by bd-25a0."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"commit_index":0,"run_id":"run-refusal-1","event_id":"ref-1","source_id":"readme-capture","source_seq":1,"timestamp_ns":1700000100000000000,"tier":"A","payload":{"type":"ToolCall","tool":"openai","args":"sk-0123456789abcdef0123456789abcdef0123456789abcdef"}}

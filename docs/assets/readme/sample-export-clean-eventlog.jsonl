@@ -1,0 +1,3 @@
+{"commit_index":0,"run_id":"run-export-clean","event_id":"clean-1","source_id":"readme-capture","source_seq":1,"timestamp_ns":1000,"tier":"A","payload":{"type":"RunStart","agent":"demo","args":"check"}}
+{"commit_index":1,"run_id":"run-export-clean","event_id":"clean-2","source_id":"readme-capture","source_seq":2,"timestamp_ns":2000,"tier":"A","payload":{"type":"ToolResult","tool":"verify","result":"ok","status":"success"}}
+{"commit_index":2,"run_id":"run-export-clean","event_id":"clean-3","source_id":"readme-capture","source_seq":3,"timestamp_ns":3000,"tier":"A","payload":{"type":"RunEnd","exit_code":0,"reason":"done"}}

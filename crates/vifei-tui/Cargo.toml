@@ -1,0 +1,23 @@
+[package]
+name = "vifei-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "vifei"
+path = "src/main.rs"
+
+[dependencies]
+vifei-core = { path = "../vifei-core" }
+vifei-export = { path = "../vifei-export" }
+vifei-import = { path = "../vifei-import" }
+vifei-tour = { path = "../vifei-tour" }
+ratatui = "0.30"
+crossterm = "0.28"
+clap = { version = "4", features = ["derive"] }
+serde_json = "1"
+blake3 = "1"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,36 @@
+┌ Incident Lens (Tab to toggle) ───────────────────────────────────────────────────────────────────────────────────────┐
+│First run: Tab switch lens | q quit                                                                                   │
+│Forensic controls: j/k move, Enter expand                                                                             │
+│                                                                                                                      │
+│Action Now (Anomalies)                                                                                                │
+│Priority: ERR=0 SKEW=0 POLICY=1                                                                                       │
+│  POLICY @3: L0 → L2 (QueuePressure)                                                                                  │
+│                                                                                                                      │
+│Next action: Tab to Forensic, then j/k + Enter on anomaly events. Keys: Tab=toggle lens, q=quit                       │
+│                                                                                                                      │
+│Run Context  sample-eventlog.jsonl (8 events)                                                                         │
+│  codex (run-readme-1) [OK] 8 events                                                                                  │
+│                                                                                                                      │
+│Event Breakdown (Context)                                                                                             │
+│  PolicyDecision             1                                                                                        │
+│  RedactionApplied           1                                                                                        │
+│  RunEnd                     1                                                                                        │
+│  RunStart                   1                                                                                        │
+│  ToolCall                   2                                                                                        │
+│  ToolResult                 2                                                                                        │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+│                                                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Truth HUD ───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Level: L0 | Agg: 1:1 | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                                    │
+│ Version: projection-invariants-v0.1                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘

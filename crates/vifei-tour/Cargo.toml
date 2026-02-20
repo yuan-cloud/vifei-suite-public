@@ -1,0 +1,17 @@
+[package]
+name = "vifei-tour"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "gen-large-stress"
+path = "src/bin/gen_large_stress.rs"
+
+[dependencies]
+blake3 = "1"
+vifei-core = { path = "../vifei-core" }
+vifei-import = { path = "../vifei-import" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"

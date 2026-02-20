@@ -1,0 +1,26 @@
+{
+  "schema_version": "vifei-tour-bench-v1",
+  "stats": {
+    "iters": 10,
+    "run_ms_p50": 1518.8076079999998,
+    "run_ms_p95": 1570.414082,
+    "run_ms_p99": 1570.414082,
+    "run_ms_mean": 1522.267543,
+    "throughput_events_per_sec_p50": 12825.850948726615,
+    "throughput_events_per_sec_p95": 12404.371702520175,
+    "throughput_events_per_sec_p99": 12404.371702520175,
+    "peak_rss_kib": 26248
+  },
+  "command": {
+    "argv": [
+      "target/debug/bench_tour",
+      "--help"
+    ],
+    "fixture_path": "/data/projects/VifeiAliveca2.5/fixtures/large-stress.jsonl",
+    "fixture_bytes": 6974442,
+    "fixture_line_count": 19475,
+    "package_version": "0.1.0",
+    "target_os": "linux",
+    "target_arch": "x86_64"
+  }
+}

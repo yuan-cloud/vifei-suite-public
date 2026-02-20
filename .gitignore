@@ -1,0 +1,13 @@
+/target
+
+# bv (beads viewer) local config and caches
+.bv/
+
+# local agent/runtime artifacts
+.ntm/
+.beads/.br_history/
+.tmp/
+
+# Python cache
+__pycache__/
+*.pyc

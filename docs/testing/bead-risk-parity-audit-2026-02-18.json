@@ -1,0 +1,2128 @@
+{
+  "generated_at": "2026-02-18T00:00:00Z",
+  "inputs": {
+    "issues_jsonl": ".beads/issues.jsonl",
+    "risk_register": "docs/RISK_REGISTER.md"
+  },
+  "rows": [
+    {
+      "classification": "covered_exact",
+      "close_reason": "Fresh-eyes audit completed; export commit-index range robustness fixed and launch docs manually tightened",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-10s",
+      "issue_type": "task",
+      "title": "FRESH-EYE-AUDIT: random deep code traversal and flake hardening"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-12m",
+      "issue_type": "task",
+      "title": "TEST-4.4: expand export/tour end-to-end refusal and artifact integrity coverage"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Published A3 closeout report with C2 proof, post-C2 deltas, and C3 no-go rationale.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-141p",
+      "issue_type": "task",
+      "title": "A3-5: enterprise closeout report for parse/append round"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Opportunity matrix completed with evidence-linked ranking, isomorphism oracles, rollback plans, and selected next optimization candidate (C1).",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-14f",
+      "issue_type": "task",
+      "title": "A2-3: opportunity matrix and candidate selection"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-15z",
+      "issue_type": "task",
+      "title": "TEST-4.3: harden interactive TUI e2e reliability and diagnostics"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "Child beads 3n5/d9m/3lr closed and 3vv preflight completed",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3lr",
+        "bd-3n5",
+        "bd-3vv",
+        "bd-d9m"
+      ],
+      "evidence_refs": [
+        "bd-3lr",
+        "bd-3n5",
+        "bd-3vv",
+        "bd-d9m"
+      ],
+      "id": "bd-170",
+      "issue_type": "feature",
+      "title": "STRUCT-2: phased internal module decomposition (no behavior changes)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added test guard for canonical issue-template contact links",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-179",
+      "issue_type": "task",
+      "title": "COMM-7: guard canonical GitHub routing in issue template config"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Completed desktop+narrow investigation UX audit with evidence and selected top friction lever for implementation.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-18m",
+      "issue_type": "task",
+      "title": "A2-4: investigation-flow UX audit (desktop + narrow)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Plan-only reorganization strategy documented",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-18u",
+      "issue_type": "task",
+      "title": "STRUCT-1: plan-only code/file reorganization audit"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "Community health and public-readiness governance docs complete",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-1bv.1",
+        "bd-1bv.2"
+      ],
+      "evidence_refs": [
+        "bd-1bv.1",
+        "bd-1bv.2"
+      ],
+      "id": "bd-1bv",
+      "issue_type": "feature",
+      "title": "PUBLIC-READINESS: community health and repo hygiene"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Community health docs and issue templates complete",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1bv.1",
+      "issue_type": "task",
+      "title": "COMM-1: community health docs pass"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Public repository settings checklist added",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1bv.2",
+      "issue_type": "task",
+      "title": "COMM-2: public repo settings checklist"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Lightweight public-doc local-link guard test added",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1de",
+      "issue_type": "task",
+      "title": "COMM-10: lightweight public-doc local-link guard"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Parser authority and change-policy guard documented in AGENTS/README",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1ey",
+      "issue_type": "task",
+      "title": "CLI contract durability: add parser authority docs and change-policy guard"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M4 complete: Pure reducer (State, CommittedEvent) -> State for all 9 payload variants. BTreeMap-only State (no HashMap). Checkpoint every 5000 events with versioned format. state_hash = BLAKE3(reducer_version + canonical State). Determinism verified: 10-run tests pass. 33 tests total. Quality gates: fmt \u2713, clippy \u2713, 108 tests \u2713. UBS: 1 critical fixed (f64 quantization), 6 warnings noted. Risk assessment appended.",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-1fm.1",
+        "bd-1fm.2",
+        "bd-1fm.3",
+        "bd-1fm.4",
+        "bd-1fm.5",
+        "bd-1fm.6"
+      ],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm",
+      "issue_type": "feature",
+      "title": "M4: Reducer plus checkpoints v0.1"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "State struct with 11 fields, all BTreeMap (no HashMap), Serialize/Deserialize/Clone/PartialEq/Eq. Supporting structs: RunInfo, ToolSummary, PolicyTransition, ErrorEntry, ClockSkewEntry, RedactionEntry.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.1",
+      "issue_type": "task",
+      "title": "M4.1: State struct definition"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Pure reduce(state, event) -> State for all 9 variants. f64 queue_pressure quantized to u64 millionths with clamp+round. Synthesized events treated identically. 14 unit tests.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.2",
+      "issue_type": "task",
+      "title": "M4.2: Pure reduce function for all Tier A events"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Checkpoint struct with reducer_version + commit_index + State. create/serialize/load_checkpoint functions. Version mismatch returns None. Interval at 5000 events.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.3",
+      "issue_type": "task",
+      "title": "M4.3: Checkpoint serialization and interval-based checkpointing"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "state_hash = BLAKE3(reducer_version + canonical_serialize(State)). 64-char hex. Include/exclude list documented. 4 tests including version sensitivity.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.4",
+      "issue_type": "task",
+      "title": "M4.4: state_hash computation (BLAKE3)"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Checkpoint rebuild equivalence verified at 4 boundaries: 6000 events (mixed types), exact 5000, 5001, 10001. state == state_checkpoint and state_hash matches in all cases.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.5",
+      "issue_type": "task",
+      "title": "M4.5: Checkpoint rebuild equivalence test"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Determinism 10-run test: 100 diverse events (all 9 variants) x10 runs, all hashes identical. Plus 5500-event large test x10 runs crossing checkpoint boundary.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M4"
+      ],
+      "id": "bd-1fm.6",
+      "issue_type": "task",
+      "title": "M4.6: Reducer determinism test (10 runs)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1ggs",
+      "issue_type": "task",
+      "title": "SHOWCASE-7: implement fast/full runtime modes and demo2+demo3 scripts with CI smoke"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met: UBS criticals zero on diff; full quality gates green",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1iv",
+      "issue_type": "task",
+      "title": "UBS-HARDEN: production-path panic/unwrap cleanup and parser-context improvements"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1jr",
+      "issue_type": "task",
+      "title": "TEST-4.2: close CLI contract matrix gaps for success/error topology"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1kt1",
+      "issue_type": "task",
+      "title": "SHOWCASE-5: three-demo track plan (Determinism Duel, Refusal Radar, Incident Wall)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Defined v0.1 completeness contract, no-mock policy, and invariant ownership map",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1lh",
+      "issue_type": "task",
+      "title": "TEST-4.1: define v0.1 test completeness contract (unit + e2e + logging)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Retry now triggers on missing transcript markers as well as non-zero exit; PTY interactive suite stabilized against capture jitter",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1rl",
+      "issue_type": "task",
+      "title": "TEST-E2E-PTY-FLAKE-HARDEN: stabilize interactive transcript assertions"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1siy",
+      "issue_type": "task",
+      "title": "SHOWCASE-2: implement showcase UI profile in vifei-tui"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1un",
+      "issue_type": "task",
+      "title": "TEST-E2E-PTY-CI: enforce PTY capability preflight in CI env docs/check"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "All README beautification sub-beads complete",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-1w9.1",
+        "bd-1w9.2",
+        "bd-1w9.3",
+        "bd-1w9.4",
+        "bd-1w9.5"
+      ],
+      "evidence_refs": [
+        "bd-1w9.1",
+        "bd-1w9.2",
+        "bd-1w9.3",
+        "bd-1w9.4",
+        "bd-1w9.5"
+      ],
+      "id": "bd-1w9",
+      "issue_type": "feature",
+      "title": "README-BEAUTIFY: premium clarity and visual polish without AI art"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Tool decision matrix completed",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1w9.1",
+      "issue_type": "task",
+      "title": "README-TOOLS: evaluate and select beautification tooling"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "README information architecture rewrite completed",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1w9.2",
+      "issue_type": "task",
+      "title": "README-IA: redesign information architecture and story flow"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Deterministic README asset playbook and refresh script added",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1w9.3",
+      "issue_type": "task",
+      "title": "README-ASSETS: deterministic terminal-native visual asset pack"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Polished README layout with badges and verified examples implemented",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1w9.4",
+      "issue_type": "task",
+      "title": "README-IMPLEMENT: apply polished layout, badges, and verified examples"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "README QA validation and report completed",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1w9.5",
+      "issue_type": "task",
+      "title": "README-QA: readability, command validity, and launch-quality review"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Audit matrix added with done/active/manual classification and evidence",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1wc1",
+      "issue_type": "task",
+      "title": "DOCS-2: full audit matrix for plan/checklist/strategy docs"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Alias authority moved to clap; normalization bounded to option-shape repairs",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1wh",
+      "issue_type": "task",
+      "title": "CLI parser authority: move aliases to clap and bound normalization"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Public docs refreshed to current-state wording with anti-slop pass",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1xi",
+      "issue_type": "task",
+      "title": "COMM-9: public docs current-state refresh and anti-slop editorial pass"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "All child beads complete: baseline refresh, targeted test-gap closure, and e2e logging polish",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-1z3.1",
+        "bd-1z3.2",
+        "bd-1z3.3"
+      ],
+      "evidence_refs": [
+        "bd-1z3.1",
+        "bd-1z3.2",
+        "bd-1z3.3"
+      ],
+      "id": "bd-1z3",
+      "issue_type": "feature",
+      "title": "POST-A1: coverage hardening and evidence depth"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Coverage matrix refreshed with current per-crate test counts, updated risk mapping, and post-bd-2fp.5 benchmark evidence",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1z3.1",
+      "issue_type": "task",
+      "title": "COV-1: reproducible coverage baseline capture"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added CLI robot-mode success-path integration coverage for export/tour JSON contracts; full gates green",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1z3.2",
+      "issue_type": "task",
+      "title": "COV-2: close high-risk uncovered paths with tests"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Enhanced e2e observability with replay hints, JSON-contract assertions, and benchmark snapshot logging; validated via cli_e2e + fastlane",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-1z3.3",
+      "issue_type": "task",
+      "title": "COV-3: e2e evidence/logging polish"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-219",
+      "issue_type": "task",
+      "title": "TEST-4.6: coverage initiative closeout (risk, sync, docs handoff)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-224u",
+      "issue_type": "task",
+      "title": "PRODUCT-2: founder one-pager and execution roadmap"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-22i",
+      "issue_type": "task",
+      "title": "TEST-4.8: fastlane PTY capability-gating contract"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-233m",
+      "issue_type": "task",
+      "title": "SHOWCASE-3: deterministic screenshot artifacts from README captures"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Strict robot-mode contract guarantees implemented and verified",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-24k.1",
+        "bd-24k.2",
+        "bd-24k.3"
+      ],
+      "evidence_refs": [],
+      "id": "bd-24k",
+      "issue_type": "feature",
+      "title": "ROBOT-MODE-CLI-V1.1: strict contract guarantees"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Unified robot-mode envelope with schema_version and no-arg JSON behavior",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-24k.1",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.1.1: unify JSON envelope shape + schema_version"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Added binary integration tests that lock key envelope fields and exit code mappings",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-24k.2",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.1.2: integration tests for JSON contract"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Synced README and CLI design docs with explicit robot-mode contract key table",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-24k.3",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.1.3: docs contract table sync"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added README badge canonical-slug guard assertions",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-27t",
+      "issue_type": "task",
+      "title": "COMM-8: guard README canonical GitHub slug links"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Captured post-C2 p50/p95/p99 + hotspot split + memory/I-O envelope and documented deltas versus A2 closeout.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2aum",
+      "issue_type": "task",
+      "title": "A3-2: re-profile hotspots and memory envelope after C2"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "A3 completed: C2 implemented with proof, post-change profiling captured, C3 decision gate executed (no-go), and closeout report published.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2b4",
+      "issue_type": "feature",
+      "title": "POST-A3: parse+append optimization proof round"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "A1 implemented for high-confidence candidates; profile-gated spike deferred pending privileged profiling evidence",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-2fp.1",
+        "bd-2fp.2",
+        "bd-2fp.3",
+        "bd-2fp.4",
+        "bd-2fp.5"
+      ],
+      "evidence_refs": [
+        "bd-2fp.1",
+        "bd-2fp.2",
+        "bd-2fp.3",
+        "bd-2fp.4",
+        "bd-2fp.5"
+      ],
+      "id": "bd-2fp",
+      "issue_type": "feature",
+      "title": "A1 track: deterministic-safe optimization execution"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented local benchmark harness, captured baseline sample, and passed quality gates",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2fp.1",
+      "issue_type": "task",
+      "title": "A1-1: Tour benchmark harness + baseline capture"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Cached fixture parsing and expected transition derivation in Tour tests; quality gates pass",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2fp.2",
+      "issue_type": "task",
+      "title": "A1-2: Remove duplicated parse/replay in Tour invariant tests"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added CI attestation/checksum workflow and release trust verification docs",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2fp.3",
+      "issue_type": "task",
+      "title": "A1-5: Release trust hardening (attestations + verify docs)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Documented artifact serialization policy and added enforcement tests",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2fp.4",
+      "issue_type": "task",
+      "title": "A1-3: Deterministic artifact serialization policy decision"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Completed profile-gated spike: removed Tour reread pass via append-result sequence, added sequence parity test, full gates green",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2fp.5",
+      "issue_type": "task",
+      "title": "A1-4: Pipeline pass-reduction spike (profile-gated)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2gs",
+      "issue_type": "task",
+      "title": "TEST-4.9: clarify PTY flake checker lane-scope errors"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Context-aware deterministic parse guidance implemented for JSON and human paths",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2j0",
+      "issue_type": "task",
+      "title": "CLI UX polish: precise machine+human parse-error guidance"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Privileged profiler blocked by host policy; completed fallback stage-profile hotspots + memory/I-O envelope + reproducible privileged-profile recipe.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2jw",
+      "issue_type": "task",
+      "title": "A2-2: hotspot profiling evidence (CPU/allocation/I-O)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2kni",
+      "issue_type": "task",
+      "title": "SHOWCASE-4: presentation showcase page from deterministic assets"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Issue-template contact links now target canonical repository",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2n8",
+      "issue_type": "bug",
+      "title": "COMM-6: fix issue-template contact links to canonical repository"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Community-next maintainer workflow track completed",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3ou",
+        "bd-qip",
+        "bd-zfj"
+      ],
+      "evidence_refs": [],
+      "id": "bd-2se",
+      "issue_type": "feature",
+      "title": "COMMUNITY-NEXT: maintainer workflow and repo health automation"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Checklist reconciled, README verification refreshed, launch plan wording sanitized",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2sep",
+      "issue_type": "task",
+      "title": "DOCS-1: reconcile launch/checklist docs with current repo state"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Parity audit script, taxonomy, and remediation reports completed",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2ykd",
+      "issue_type": "task",
+      "title": "A1: audit closed-bead risk-register parity and define exemption taxonomy"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "All TEST-HARDEN subtasks completed with CI gating and defer ledger",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-2yv.1",
+        "bd-2yv.2",
+        "bd-2yv.3",
+        "bd-2yv.4",
+        "bd-2yv.5",
+        "bd-2yv.6",
+        "bd-2yv.7",
+        "bd-2yv.8"
+      ],
+      "evidence_refs": [],
+      "id": "bd-2yv",
+      "issue_type": "feature",
+      "title": "TEST-HARDEN: full coverage map + no-mock E2E and UI validation"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.1",
+      "issue_type": "task",
+      "title": "TEST-AUDIT: coverage baseline and gap matrix"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.2",
+      "issue_type": "task",
+      "title": "TEST-E2E-CLI: end-to-end script suite with detailed structured logs"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.3",
+      "issue_type": "task",
+      "title": "TEST-CORE: close no-mock unit/integration gaps in core crates"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.4",
+      "issue_type": "task",
+      "title": "TEST-E2E-TUI: interactive TUI end-to-end harness"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.5",
+      "issue_type": "task",
+      "title": "TEST-UX: operator usability protocol and scoring"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.6",
+      "issue_type": "task",
+      "title": "TEST-CI-GATE: enforce coverage and E2E suites in CI"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.7",
+      "issue_type": "task",
+      "title": "TEST-DEFER-REGISTER: explicit uncovered-path waiver ledger"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-2yv.8",
+      "issue_type": "task",
+      "title": "TEST-FASTLANE: sub-5-minute smoke suite for developer feedback"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added claim-to-diff pre-handoff check and reviewer checklist guidance",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-38h",
+      "issue_type": "task",
+      "title": "Process: enforce handoff/commit-message accuracy checks"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Robot-mode CLI v1 contract implemented and documented",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3fw.1",
+        "bd-3fw.2",
+        "bd-3fw.3"
+      ],
+      "evidence_refs": [],
+      "id": "bd-3fw",
+      "issue_type": "feature",
+      "title": "ROBOT-MODE-CLI-V1: agent-optimized deterministic CLI contract"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Implemented global robot-mode output controls: --json/--human, auto-JSON for non-TTY, deterministic exit-code mapping, and compact no-arg quick-help",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3fw.1",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.1: output contract + exit codes + TTY auto-JSON"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Implemented safe intent-repair plus structured JSON error envelopes for parse/runtime failures",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3fw.2",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.2: intent-repair + structured error envelope"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Updated AGENTS/README/CLI guide and added CLI tests for output-mode, quick-help compactness, and normalization behavior",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3fw.3",
+      "issue_type": "task",
+      "title": "ROBOT-MODE-CLI-V1.3: docs + tests + AGENTS blurb"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3fx",
+      "issue_type": "task",
+      "title": "TEST-4.5: CI enforcement lane for coverage contract and diagnostics quality"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Showcase UX profile research completed with phased plan and source-backed recommendations",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3gxs",
+      "issue_type": "task",
+      "title": "SHOWCASE-1: detailed research for Vifei showcase UX profile"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "M5 complete: Deterministic projection (State + ProjectionInvariants -> ViewModel). LadderLevel enum (L0-L5). ExportSafetyState enum. ViewModel with all confession fields. viewmodel.hash via BLAKE3. 10-run determinism test. All sub-beads (M5.1-M5.5) closed. Total 153 tests in vifei-core.",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3gy.1",
+        "bd-3gy.2",
+        "bd-3gy.3",
+        "bd-3gy.4",
+        "bd-3gy.5"
+      ],
+      "evidence_refs": [
+        "bd-3gy.1",
+        "bd-3gy.2",
+        "bd-3gy.3",
+        "bd-3gy.4",
+        "bd-3gy.5"
+      ],
+      "id": "bd-3gy",
+      "issue_type": "feature",
+      "title": "M5: Projection plus viewmodel.hash v0.1"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M5.1 complete: LadderLevel enum (L0-L5) with ordering, Display, FromStr, Serialize. ProjectionInvariants struct with version and degradation_level. 18 tests. Quality gates pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M5.1"
+      ],
+      "id": "bd-3gy.1",
+      "issue_type": "task",
+      "title": "M5.1: ProjectionInvariants and LadderLevel"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M5.2 complete: ViewModel struct with all confession fields (tier_a_summaries, aggregation_mode/bin_size, degradation_level, queue_pressure_fixed, tier_a_drops, export_safety_state, projection_invariants_version). ExportSafetyState enum (Unknown/Clean/Dirty/Refused). BTreeMap-only, quantized f64 for determinism. 20 new tests.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M5.2"
+      ],
+      "id": "bd-3gy.2",
+      "issue_type": "task",
+      "title": "M5.2: ViewModel struct with all confession fields"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M5.3 complete: Deterministic project(State, ProjectionInvariants) -> ViewModel. Pure function (no IO, no randomness, no wall clock). Ladder-level aggregation modes (1:1, 10:1, collapsed, frozen). Extracts Tier A summaries, queue pressure from policy decisions. 13 new tests including determinism and byte-stability.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M5.3"
+      ],
+      "id": "bd-3gy.3",
+      "issue_type": "task",
+      "title": "M5.3: Deterministic project() function"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M5.4"
+      ],
+      "id": "bd-3gy.4",
+      "issue_type": "task",
+      "title": "M5.4: viewmodel.hash computation (BLAKE3)"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M5.5"
+      ],
+      "id": "bd-3gy.5",
+      "issue_type": "task",
+      "title": "M5.5: viewmodel.hash stability test (10 runs)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3lr",
+      "issue_type": "task",
+      "title": "STRUCT-2.3: split vifei-tui CLI internals by contract and command execution"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3ly8",
+      "issue_type": "task",
+      "title": "PRODUCT-1: foundational product and GTM docs"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M1 complete: all 6 subtasks closed. Event schema v0.1 with two-type pattern, 8 Tier A variants, Generic extensible, deterministic serde, 32 round-trip tests. Risk assessment appended.",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3ml.1",
+        "bd-3ml.2",
+        "bd-3ml.3",
+        "bd-3ml.4",
+        "bd-3ml.5",
+        "bd-3ml.6"
+      ],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml",
+      "issue_type": "feature",
+      "title": "M1: Event schema v0.1"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Tier enum implemented with Display, FromStr, serde (string), Ord (A>B>C). All tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.1",
+      "issue_type": "task",
+      "title": "M1.1: Tier enum (A/B/C) with Display, FromStr, serde"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Two-type pattern: ImportEvent (no commit_index) + CommittedEvent (commit_index via ::commit()). D6 enforced at compile time.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.2",
+      "issue_type": "task",
+      "title": "M1.2: Event type hierarchy with commit_index ownership"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "All 8 Tier A payload variants + Generic extensible variant defined. BTreeMap for Generic data, f64 for queue_pressure with Ryu determinism.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.3",
+      "issue_type": "task",
+      "title": "M1.3: Tier A event payload variants"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Serde audit complete: no HashMap, no serde_json::Value, field order verified, skip_serializing_if for optionals, BTreeMap sorted keys verified.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.4",
+      "issue_type": "task",
+      "title": "M1.4: Canonical serde audit and configuration"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "32 round-trip tests: all 8 Tier A variants, payload_ref, synthesized:true, source_seq:None, Generic, empty strings, unicode, u64::MAX, float determinism.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.5",
+      "issue_type": "task",
+      "title": "M1.5: Round-trip byte stability tests"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Module docs: type hierarchy, byte stability strategy, canonical field order, invariants I1/I4/D6, payload variant docs, inline threshold reference.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M1"
+      ],
+      "id": "bd-3ml.6",
+      "issue_type": "task",
+      "title": "M1.6: Event module documentation"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3n5",
+      "issue_type": "task",
+      "title": "STRUCT-2.1: split vifei-export internals by concern"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Community health guard test added and wired",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3ou",
+      "issue_type": "task",
+      "title": "COMM-4: add docs_guard-adjacent community health presence check"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Published A2 closeout report with baseline deltas, hotspot closure, UX gains, safety checks, and remaining risks.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3q5",
+      "issue_type": "task",
+      "title": "A2-7: enterprise-ready closeout report (before/after usefulness proof)"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "All release-ops child beads complete",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3qq.1",
+        "bd-3qq.2",
+        "bd-3qq.3",
+        "bd-3qq.4",
+        "bd-3qq.5"
+      ],
+      "evidence_refs": [
+        "bd-3qq.1",
+        "bd-3qq.2",
+        "bd-3qq.3",
+        "bd-3qq.4",
+        "bd-3qq.5"
+      ],
+      "id": "bd-3qq",
+      "issue_type": "feature",
+      "title": "Release ops v0.1: distribution + launch execution"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3qq.1",
+      "issue_type": "task",
+      "title": "LAUNCH-MEDIA: demo script + screenshots + terminal capture"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3qq.2",
+      "issue_type": "task",
+      "title": "RELEASE-OPS: automate release build and artifact verification"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3qq.3",
+      "issue_type": "task",
+      "title": "RELEASE-OPS: packaging matrix + publish checklist"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3qq.4",
+      "issue_type": "task",
+      "title": "LAUNCH-COMMS: release notes + social copy pack"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3qq.5",
+      "issue_type": "task",
+      "title": "POST-LAUNCH-LEARN: feedback intake and prioritization rubric"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Decision gate complete: C3 is no-go for A3 due to parse>append hotspot share and higher proof/complexity burden.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3ufi",
+      "issue_type": "task",
+      "title": "A3-3: C3 decision gate using updated hotspot evidence"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Expanded argv edge-case corpus and invariants coverage without new dependencies",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3vs",
+      "issue_type": "task",
+      "title": "CLI invariants hardening: argv contract corpus and idempotence checks"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3vv",
+      "issue_type": "task",
+      "title": "STRUCT-2.4: core truth-path split preflight plan (plan-only)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Not executed in A3 per decision gate no-go; append is not dominant after C2 and added durability branching cost is not justified this round.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-3vv0",
+      "issue_type": "task",
+      "title": "A3-4: implement C3 tour-local append durability mode if justified"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M2 complete: all 6 subtasks closed. Append writer (sole commit_index assigner), BLAKE3 blob store, clock skew detection. 20 tests, risk assessment appended.",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-3w2.1",
+        "bd-3w2.2",
+        "bd-3w2.3",
+        "bd-3w2.4",
+        "bd-3w2.5",
+        "bd-3w2.6"
+      ],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2",
+      "issue_type": "feature",
+      "title": "M2: Append writer v0.1"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "JSONL append writer: monotonic commit_index (sole assigner), fsync per Tier A, max line bytes rejection, resume from existing file. 7 tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.1",
+      "issue_type": "task",
+      "title": "M2.1: JSONL append writer with monotonic commit_index"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Content-addressed blob store: BLAKE3 payload_ref, deduplication, atomic writes, prefix directories. 7 tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.2",
+      "issue_type": "task",
+      "title": "M2.2: Content-addressed blob store (BLAKE3)"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Clock skew detection: per-source timestamp tracking, tolerance 50ms, ClockSkewDetected emitted before triggering event, synthesized:true. 5 tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.3",
+      "issue_type": "task",
+      "title": "M2.3: Clock skew detection"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Append writer tests: 1000-event monotonicity, resume, start-at-zero, writer-assigned index, max line rejection, JSONL format, read roundtrip.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.4",
+      "issue_type": "task",
+      "title": "M2.4: Append writer monotonicity tests"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Blob store tests: write+read, deduplication, BLAKE3 match, threshold boundary, nonexistent read, large blob, prefix dirs.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.5",
+      "issue_type": "task",
+      "title": "M2.5: Blob store tests"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Clock skew tests: beyond tolerance, within tolerance, just-beyond boundary, multi-source independence, event field verification.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M2"
+      ],
+      "id": "bd-3w2.6",
+      "issue_type": "task",
+      "title": "M2.6: Clock skew detection tests"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented C2 streaming parse path with reader-mode equivalence test and full quality gate pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-6wkf",
+      "issue_type": "task",
+      "title": "A3-1: implement C2 stream fixture parsing with equivalence proof"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "CLI contract matrix expanded; alias parity and normalization invariants covered",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-7cy",
+      "issue_type": "task",
+      "title": "CLI contract matrix: deterministic parse/error/output invariants"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-7ww",
+      "issue_type": "bug",
+      "title": "BUG: Harden blob payload_ref handling and resume clock-skew state"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "All A2 component tasks completed: baseline, profiling, matrix, single-lever perf win with proof, UX audit, UX implementation, and enterprise closeout report.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-80v",
+      "issue_type": "feature",
+      "title": "POST-A2: product-focused perf+ux proof round"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "All M6 child beads (bd-bjv.1..8) are closed and acceptance criteria are satisfied by merged commits and passing tests.",
+      "covered": false,
+      "dependencies_parent_children": [
+        "bd-bjv.1",
+        "bd-bjv.2",
+        "bd-bjv.3",
+        "bd-bjv.4",
+        "bd-bjv.5",
+        "bd-bjv.6",
+        "bd-bjv.7",
+        "bd-bjv.8"
+      ],
+      "evidence_refs": [],
+      "id": "bd-bjv",
+      "issue_type": "feature",
+      "title": "M6: TUI shell plus Incident Lens v0.1"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "M6.1 complete: TUI shell with CLI (vifei view), terminal init (crossterm), main event loop, EventLog loading pipeline (read \u2192 reduce \u2192 project), panic hook for cleanup. Incident Lens and Forensic Lens (stub) with Tab toggle. Truth HUD renders all confession fields. 3 tests. Dependencies: ratatui 0.29, crossterm 0.28, clap 4.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.1",
+      "issue_type": "task",
+      "title": "M6.1: TUI shell setup and main event loop"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "done",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.2",
+      "issue_type": "task",
+      "title": "M6.2: Incident Lens (default view)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Forensic Lens implemented with timeline scrubber, event inspector, synthesized markers, j/k/Enter nav. Truth HUD clipping fixed. 12 new tests, all 268 pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.3",
+      "issue_type": "task",
+      "title": "M6.3: Forensic Lens (timeline + inspector)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Truth HUD extracted to truth_hud.rs with 10 unit tests. All 6 required fields covered. Gates pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.4",
+      "issue_type": "task",
+      "title": "M6.4: Truth HUD strip"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Tests added for all Tab toggle + clean exit behaviors. Functional code committed by MistyForge (829a9b5), tests by CloudyLake (1315de9). 7 new tests, 282 total pass.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.5",
+      "issue_type": "task",
+      "title": "M6.5: Tab lens toggle and clean exit"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "4 integration tests, all 6 HUD fields asserted through full render pipeline. 286 tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.6",
+      "issue_type": "task",
+      "title": "M6.6: Truth HUD snapshot test"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Docs alignment landed in 829a9b5 (State/ViewModel/Event sources clarified in lib.rs module docs).",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.7",
+      "issue_type": "task",
+      "title": "TUI docs: align render pipeline comments with State/ViewModel split"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Implemented by commit e296a95; duplicate tracking with bd-yh1. Reviewer PASS (MistyForge id 42).",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-bjv.8",
+      "issue_type": "bug",
+      "title": "BUG: Forensic lens truncation panics on UTF-8 boundaries"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "All M7 child beads (bd-c7m.1..5) are closed and Tour acceptance criteria are covered by tests/artifacts.",
+      "covered": false,
+      "dependencies_parent_children": [
+        "bd-c7m.1",
+        "bd-c7m.2",
+        "bd-c7m.3",
+        "bd-c7m.4",
+        "bd-c7m.5"
+      ],
+      "evidence_refs": [],
+      "id": "bd-c7m",
+      "issue_type": "feature",
+      "title": "M7: Tour stress harness v0.1"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "done",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-c7m.1",
+      "issue_type": "task",
+      "title": "M7.1: Tour CLI subcommand with --stress"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented in a3a6b7f with independent review PASS (MistyForge id 59).",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-c7m.2",
+      "issue_type": "task",
+      "title": "M7.2: Large stress fixture (10K events)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented in aaf11a5; independent review PASS via Agent Mail id 66 (CloudyLake).",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-c7m.3",
+      "issue_type": "task",
+      "title": "M7.3: Proof artifact emission (metrics, hash, timetravel)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented CI invariant tests in crates/vifei-tour/tests/tour_invariants.rs with full gates passing.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-c7m.4",
+      "issue_type": "task",
+      "title": "M7.4: CI assertion tests for Tour invariants"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented in 8a32ed5; independent review PASS from CloudyLake (mail summary).",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-c7m.5",
+      "issue_type": "task",
+      "title": "M7.5: ansi.capture emission (requires TUI)"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Acceptance criteria met: workspace builds, tests pass, docs_guard passes, CI config exists, all stub modules present",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M0"
+      ],
+      "id": "bd-cb5",
+      "issue_type": "task",
+      "title": "M0: Repo bootstrap & workspace wiring"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "done",
+      "covered": false,
+      "dependencies_parent_children": [
+        "bd-d7c.1",
+        "bd-d7c.2",
+        "bd-d7c.3",
+        "bd-d7c.4",
+        "bd-d7c.5",
+        "bd-d7c.6",
+        "bd-d7c.7"
+      ],
+      "evidence_refs": [],
+      "id": "bd-d7c",
+      "issue_type": "feature",
+      "title": "M8: Share-safe export v0.1"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "done",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.1",
+      "issue_type": "task",
+      "title": "M8.1: Export CLI subcommand and pipeline"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "done",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.2",
+      "issue_type": "task",
+      "title": "M8.2: Secret scanner (pattern matching)"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Refusal report schema matches PLANS.md contract. Blocked items stably sorted. 4 new tests (schema conformance, deterministic ordering, blob_ref presence/absence). All 219 tests pass.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.3",
+      "issue_type": "task",
+      "title": "M8.3: Refusal report generation"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met: deterministic tar+zstd bundling with normalized metadata, sorted entries, BLAKE3 hash, 5 tests passing",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.4",
+      "issue_type": "task",
+      "title": "M8.4: Deterministic tar+zstd bundling"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met: integrity manifest with file BLAKE3 digests, commit_index range, projection_invariants_version, 5 tests passing",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.5",
+      "issue_type": "task",
+      "title": "M8.5: Integrity manifest for clean bundles"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met: 8 integration tests covering all 6 required scenarios",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.6",
+      "issue_type": "task",
+      "title": "M8.6: Export tests (clean, refusal, re-export)"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "4 integration tests covering empty EventLog export: success, manifest shape, bundle contents, determinism. All pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d7c.7",
+      "issue_type": "task",
+      "title": "Export tests: add empty EventLog integration test"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-d9m",
+      "issue_type": "task",
+      "title": "STRUCT-2.2: split vifei-tour internals by pipeline and artifact emitters"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-fdf",
+      "issue_type": "bug",
+      "title": "BUG: Fix EventLog empty-file resume index and cassette scalar payload fidelity"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "All planned UX polish subtasks completed and validated",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-gxd.1",
+        "bd-gxd.10",
+        "bd-gxd.2",
+        "bd-gxd.3",
+        "bd-gxd.4",
+        "bd-gxd.5",
+        "bd-gxd.6",
+        "bd-gxd.7",
+        "bd-gxd.8",
+        "bd-gxd.9"
+      ],
+      "evidence_refs": [],
+      "id": "bd-gxd",
+      "issue_type": "feature",
+      "title": "UX-POLISH: premium operator experience for Vifei CLI/TUI"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Scope doc completed at docs/UX_SCOPE.md with terminal-first principles, surface mapping, non-goals, and ranked pain points linked to active UX beads.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.1",
+      "issue_type": "task",
+      "title": "UX-SCOPE: map premium UX goals to terminal-first constraints"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.10",
+      "issue_type": "task",
+      "title": "UX-EVIDENCE-ASSETS: deterministic UX captures for README and release proof"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "CLI failure/refusal outputs standardized with cause + likely mistake + exact recovery commands + evidence hints in main.rs; added unit tests for message structure and command numbering.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.2",
+      "issue_type": "task",
+      "title": "UX-CLI-RECOVERY: actionable error and refusal guidance"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Added deterministic first-run onboarding strip in Incident Lens, progressive hide-after-interaction behavior, and tests covering default visibility, dismissal, and onboarding render output.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.3",
+      "issue_type": "task",
+      "title": "UX-ONBOARDING: first-run guidance strip and progressive hints"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.4",
+      "issue_type": "task",
+      "title": "UX-INCIDENT-HIERARCHY: triage-first incident lens layout"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.5",
+      "issue_type": "task",
+      "title": "UX-CONTEXT-HINTS: lens-aware key hints and next actions"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.6",
+      "issue_type": "task",
+      "title": "UX-VISUAL-TONE: cohesive color and copy style standard"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.7",
+      "issue_type": "task",
+      "title": "UX-VALIDATION: run operator-task polish validation and convert findings"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Canonical modality matrix completed at docs/UX_MODALITY_MATRIX.md and linked from docs/UX_SCOPE.md; includes width buckets, required/optional/deferred first-screen elements, narrow copy rules, and mobile README constraints.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.8",
+      "issue_type": "task",
+      "title": "UX-MODALITY-SPEC: define desktop, narrow-terminal, and mobile-readme UX matrix"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-gxd.9",
+      "issue_type": "task",
+      "title": "UX-MODALITY-VALIDATION: execute width-bucket and mobile-readability validation"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented narrow-safe Incident next-action guidance with wrap-aware layout budgeting, tests, and refreshed evidence artifacts.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-hov",
+      "issue_type": "task",
+      "title": "A2-6: implement one high-impact investigation UX improvement"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "CI numeric coverage enabled and defer waiver retired",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-im6j",
+      "issue_type": "task",
+      "title": "Enable numeric coverage reporting and retire coverage waiver"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-kko",
+      "issue_type": "bug",
+      "title": "TEST-E2E-PTY-PATH: normalize TUI e2e output path to workspace root"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "Quality gates, UBS, risk register, and parser hardening closeout complete",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-lh8",
+      "issue_type": "task",
+      "title": "CLI hardening closeout: quality gates, UBS, risk register append, bead sync"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-q1la",
+      "issue_type": "task",
+      "title": "SHOWCASE-6: implement Determinism Duel demo script and docs wiring"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Single-lever fractional timestamp parser optimization implemented; tests/gates/profiling complete",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-qhgs",
+      "issue_type": "task",
+      "title": "A4-2: zero-allocation fractional timestamp parse in cassette importer"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-qhk",
+      "issue_type": "task",
+      "title": "A2-1: baseline refresh pack for representative workloads"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "PR template and contribution guidance added",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-qip",
+      "issue_type": "task",
+      "title": "COMM-3: maintainer-facing PR template and submission gate guidance"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-qra",
+      "issue_type": "task",
+      "title": "TEST-4.7: capability-gated PTY CI and flake-budget enforcement"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented single-lever C1 in-place reducer optimization with parity proof test and before/after hotspot evidence.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-qx4",
+      "issue_type": "task",
+      "title": "A2-5: implement one-lever performance optimization with proof"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Checklist closure pass complete; readiness report and waiver revalidation recorded",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-rqeg",
+      "issue_type": "task",
+      "title": "Release readiness closure pass: public checklist + waiver decision"
+    },
+    {
+      "classification": "covered_parent_rollup",
+      "close_reason": "All child README launch beads complete",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-x7q.1",
+        "bd-x7q.2",
+        "bd-x7q.3",
+        "bd-x7q.4",
+        "bd-x7q.5"
+      ],
+      "evidence_refs": [
+        "bd-x7q.1",
+        "bd-x7q.2",
+        "bd-x7q.3",
+        "bd-x7q.4",
+        "bd-x7q.5"
+      ],
+      "id": "bd-x7q",
+      "issue_type": "feature",
+      "title": "Launch docs: README showcase + trust-verification track"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-x7q.1",
+      "issue_type": "task",
+      "title": "README-PLAN: finalize launch plan + acceptance checklist"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-x7q.2",
+      "issue_type": "task",
+      "title": "README-CORE: rewrite README with proof-first structure"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-x7q.3",
+      "issue_type": "task",
+      "title": "README-ASSETS: capture curated screenshots and architecture visual"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-x7q.4",
+      "issue_type": "task",
+      "title": "README-VERIFY: validate all commands and trust challenge steps"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Acceptance criteria met",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-x7q.5",
+      "issue_type": "task",
+      "title": "README-REVIEW: independent docs QA and final polish gate"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Implemented typed cassette parser path, validated equivalence via full importer/tour tests, and captured post-change profile evidence.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-xx6w",
+      "issue_type": "task",
+      "title": "A4-1: typed cassette parser path to reduce parse-stage overhead"
+    },
+    {
+      "classification": "gap_requires_entry",
+      "close_reason": "UTF-8 safe truncation with floor_char_boundary. 7 regression tests covering emoji, CJK, mixed, and boundary logic.",
+      "covered": false,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-yh1",
+      "issue_type": "task",
+      "title": "BUG: Forensic lens truncation panics on UTF-8 boundaries"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "M3 complete: Agent Cassette importer with streaming parser, 5-type event mapping, synthesized marking, test fixture with provenance, 3 integration tests. 22 tests total (19 unit + 3 integration). Quality gates: fmt \u2713, clippy \u2713, 75 tests \u2713. UBS: 0 critical. Risk assessment appended.",
+      "covered": true,
+      "dependencies_parent_children": [
+        "bd-yuc.1",
+        "bd-yuc.2",
+        "bd-yuc.3",
+        "bd-yuc.4",
+        "bd-yuc.5"
+      ],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc",
+      "issue_type": "feature",
+      "title": "M3: Agent Cassette importer v0.1"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Agent Cassette JSONL parser implemented: parse_cassette() streaming parser, map_record(), map_payload(), parse_iso8601_ns(). 19 unit tests pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc.1",
+      "issue_type": "task",
+      "title": "M3.1: Agent Cassette JSONL format parser"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "Event type mapping: session_start\u2192RunStart, session_end\u2192RunEnd, tool_use\u2192ToolCall, tool_result\u2192ToolResult, error\u2192Error, unknown\u2192Generic(Tier B). Tested.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc.2",
+      "issue_type": "task",
+      "title": "M3.2: Event type mapping (Cassette \u2192 Vifei)"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "All cassette events marked synthesized=true (source_seq always synthesized). Event IDs from source id field when present, else synthesized as cassette:{seq}. Tested.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc.3",
+      "issue_type": "task",
+      "title": "M3.3: Synthesized field detection and marking"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "fixtures/small-session.jsonl (11 synthetic events) + fixtures/README.md (provenance, redaction status, coverage). Fully synthetic, no PII.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc.4",
+      "issue_type": "task",
+      "title": "M3.4: Test fixture with provenance README"
+    },
+    {
+      "classification": "covered_milestone_alias",
+      "close_reason": "3 integration tests: full pipeline (fixture\u2192parser\u2192writer\u2192readback\u2192verify), empty input, single event. All pass.",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [
+        "M3"
+      ],
+      "id": "bd-yuc.5",
+      "issue_type": "task",
+      "title": "M3.5: Importer integration tests"
+    },
+    {
+      "classification": "covered_exact",
+      "close_reason": "Maintainer triage playbook added and linked",
+      "covered": true,
+      "dependencies_parent_children": [],
+      "evidence_refs": [],
+      "id": "bd-zfj",
+      "issue_type": "task",
+      "title": "COMM-5: maintainer triage and labeling playbook"
+    }
+  ],
+  "summary": {
+    "action_required": 22,
+    "classification_counts": {
+      "covered_exact": 122,
+      "covered_milestone_alias": 33,
+      "covered_parent_rollup": 8,
+      "gap_requires_entry": 22
+    },
+    "closed_total": 185
+  },
+  "taxonomy": {
+    "covered_exact": {
+      "code": "covered_exact",
+      "rationale": "Exact bead heading found in risk register.",
+      "severity": "ok"
+    },
+    "covered_milestone_alias": {
+      "code": "covered_milestone_alias",
+      "rationale": "No exact bead heading, but milestone heading exists (legacy style). Counts as covered for transitional compatibility.",
+      "severity": "ok"
+    },
+    "covered_parent_rollup": {
+      "code": "covered_parent_rollup",
+      "rationale": "Feature/program parent has child beads and all children are covered; parent bead may remain rollup-only.",
+      "severity": "ok"
+    },
+    "exempt_program_meta": {
+      "code": "exempt_program_meta",
+      "rationale": "Program/track meta bead intentionally exempt from per-bead risk entry.",
+      "severity": "info"
+    },
+    "gap_requires_entry": {
+      "code": "gap_requires_entry",
+      "rationale": "Closed bead lacks acceptable evidence mapping and needs risk-register action.",
+      "severity": "action"
+    }
+  }
+}
