@@ -41,6 +41,14 @@ Most agent workflows have logs but weak replay guarantees under stress. Vifei ke
 - Truth stays intact under overload; only projection quality degrades.
 - Share-safe export refuses unsafe bundles and emits explicit refusal reports.
 
+## Why This Matters for Revenue Ops
+
+Teams lose deals when execution context is fragmented across tools and people. Vifei demonstrates an engineering posture that keeps operational workflows fast and trustworthy.
+
+- Faster root-cause analysis for stalled workflow states through deterministic replay.
+- More consistent follow-through with explicit, inspectable run evidence.
+- Safer automation boundaries with fail-closed export and refusal diagnostics.
+
 ## 60-Second Quickstart
 
 1. Run deterministic stress Tour:
