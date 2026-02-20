@@ -6,7 +6,7 @@
 ││     3 PolicyDecision                        ││  event_id: ev-1                                                     ││
 ││     4 ToolCall                              ││  tier:     A                                                        ││
 ││     5 ToolResult                            ││                                                                     ││
-││     6 RedactionApplied                      ││  agent: agent-cli                                                   ││
+││     6 RedactionApplied                      ││  agent: codex                                                       ││
 ││     7 RunEnd                                ││  args:  capture-assets --deterministic                              ││
 ││                                             ││                                                                     ││
 ││Next: #0 RunStart | Enter=expand | j/k       ││  Press Enter to expand details                                      ││
@@ -31,6 +31,6 @@
 │╰─────────────────────────────────────────────╯╰─────────────────────────────────────────────────────────────────────╯│
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭ Truth HUD · Showcase · confession strip ─────────────────────────────────────────────────────────────────────────────╮
-│ Level: L0 | Agg: 1:1 | Pressure: 82% | Drops: 0 | Export: SAFE                                                       │
+│ Level: L0 | Agg: 1:1 | Pressure: 82% | Drops: 0 | Export: UNKNOWN                                                    │
 │ Version: projection-invariants-v0.1                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
