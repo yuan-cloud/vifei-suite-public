@@ -25,6 +25,7 @@ Quick launch commands:
 scripts/demo/trust_demo_cut.sh /tmp/vifei_trust_cut fixtures/small-session.jsonl
 scripts/demo/visual_showcase_cut.sh /tmp/vifei_visual_cut
 scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
+scripts/demo/cloudforge_workflow_demo.sh
 ```
 
 ## At a Glance
