@@ -8,6 +8,20 @@ This demo uses synthetic metals RFQ data and maps reliability evidence to revenu
 scripts/demo/cloudforge_workflow_demo.sh
 ```
 
+## Optional Visual Capture
+
+Generate deterministic TUI visuals for presentation screenshots:
+
+```bash
+cargo run -p vifei-tui --bin capture_readme_assets
+```
+
+Primary output paths:
+
+- `docs/assets/readme/incident-lens-showcase.svg`
+- `docs/assets/readme/forensic-lens-showcase.svg`
+- `docs/assets/readme/truth-hud-showcase.svg`
+
 ## Domain-Specific Payload Syntax Used
 
 The fixture at `fixtures/metals-commercial-workflow.jsonl` models a commercial metals RFQ with:
