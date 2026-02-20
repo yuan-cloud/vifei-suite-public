@@ -41,7 +41,6 @@ The fixture at `fixtures/metals-commercial-workflow.jsonl` models a commercial m
 
 ## Public References
 
-- ASTM A36/A36M overview: https://store.astm.org/a0036_a0036m-19.html
-- ICC Academy (Incoterms FCA guidance): https://academy.iccwbo.org/incoterms/article/incoterms-2020-fca-or-fob/
-- Example EN 10204 3.1 certificate (includes heat-number style marking):
-  https://www.tzb-arseco.cz/user/documents/upload/Potrub%C3%AD%20INOX%20304/Inspek%C4%8Dn%C3%AD%20certifik%C3%A1t%20-%20nerezov%C3%A9%20trubky%2015052024%201.pdf
+- [ASTM A36/A36M overview](https://store.astm.org/a0036_a0036m-19.html)
+- [ICC Academy Incoterms FCA guidance](https://academy.iccwbo.org/incoterms/article/incoterms-2020-fca-or-fob/)
+- [EN 10204 overview](https://en.wikipedia.org/wiki/EN_10204)
