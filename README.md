@@ -25,7 +25,6 @@ Quick launch commands:
 scripts/demo/trust_demo_cut.sh /tmp/vifei_trust_cut fixtures/small-session.jsonl
 scripts/demo/visual_showcase_cut.sh /tmp/vifei_visual_cut
 scripts/demo/package_launch_bundle.sh .tmp/launch-media-bundle
-scripts/demo/cloudforge_workflow_demo.sh
 ```
 
 ## At a Glance
@@ -49,15 +48,6 @@ Teams lose deals when execution context is fragmented across tools and people. V
 - Faster root-cause analysis for stalled workflow states through deterministic replay.
 - More consistent follow-through with explicit, inspectable run evidence.
 - Safer automation boundaries with fail-closed export and refusal diagnostics.
-
-### CloudForge-Style Workflow Demo
-
-Treat this repository as a reliability reference for revenue-critical workflows such as lead -> quote -> procurement handoff.
-This demo uses synthetic, representative metals workflow data (not customer-proprietary schemas or records).
-
-- `kpi_proxy_time_to_first_quote_hours`: deterministic transitions quantify quote-flow latency.
-- `kpi_proxy_followup_sla_breach_rate`: cadence response windows expose missed follow-through risk.
-- `kpi_proxy_stage_leakage_rate`: expected-vs-observed transitions surface momentum loss points.
 
 ## 60-Second Quickstart
 
