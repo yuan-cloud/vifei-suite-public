@@ -377,7 +377,7 @@ Workspace crates:
 - `crates/vifei-tour`: stress harness and proof artifact emission
 - `crates/vifei-tui`: CLI and terminal UI lenses
 
-## Governance Docs
+## Technical Docs
 
 - `docs/CAPACITY_ENVELOPE.md`
 - `docs/BACKPRESSURE_POLICY.md`
@@ -385,18 +385,13 @@ Workspace crates:
 - `docs/UX_MODALITY_MATRIX.md`
 - `docs/UX_VISUAL_TONE.md`
 - `docs/PUBLIC_REPO_SETTINGS_CHECKLIST.md`
-- `PLANS.md`
-- `AGENTS.md`
 
-## Product Docs
+## Additional Docs
 
-- `docs/product/positioning.md`
-- `docs/product/messaging.md`
-- `docs/product/go-to-market-checklist.md`
-- `docs/product/business-model-v1.md`
-- `docs/product/founder-one-pager.md`
-- `docs/product/roadmap-30-60-90.md`
-- `docs/product/showcase-three-demo-plan.md`
+- `docs/TESTING.md`
+- `docs/DEMO_SCRIPT.md`
+- `docs/RELEASE_TRUST_VERIFICATION.md`
+- `docs/RELEASE_PACKAGING_CHECKLIST.md`
 
 ## Community and Security
 
@@ -409,14 +404,7 @@ Workspace crates:
 
 ## Status
 
-Vifei v0.1 implements the core truth pipeline. Release and public documentation work continues.
-
-Track current work:
-
-- `.beads/issues.jsonl`
-- `docs/README_LAUNCH_PLAN.md`
-- `docs/RELEASE_PACKAGING_CHECKLIST.md`
-- `docs/RELEASE_TRUST_VERIFICATION.md`
+Vifei v0.1 implements the core truth pipeline with deterministic replay, share-safe export, and evidence artifacts.
 
 ## Development
 
