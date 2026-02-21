@@ -385,7 +385,6 @@ Workspace crates:
 - `docs/UX_MODALITY_MATRIX.md`
 - `docs/UX_VISUAL_TONE.md`
 - `docs/PUBLIC_REPO_SETTINGS_CHECKLIST.md`
-- `PLANS.md`
 
 ## Community and Security
 
