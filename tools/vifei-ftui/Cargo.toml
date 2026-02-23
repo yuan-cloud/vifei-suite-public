@@ -13,7 +13,7 @@ serde_json = "1"
 
 vifei-core = { path = "../../crates/vifei-core" }
 
-# Pinned FrankenTUI facade crate (nightly)
-ftui = { git = "https://github.com/Dicklesworthstone/frankentui", rev = "f72043a1b692e253bf0591c285cd9c5ee1103e85", package = "ftui", features = ["crossterm"] }
+# FrankenTUI facade crate (vendored submodule at vendor/frankentui)
+ftui = { path = "../../vendor/frankentui/crates/ftui", features = ["crossterm"] }
 
 [workspace]
