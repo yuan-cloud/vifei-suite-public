@@ -1,0 +1,19 @@
+[package]
+name = "vifei-ftui"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+anyhow = "1"
+blake3 = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+vifei-core = { path = "../../crates/vifei-core" }
+
+# Pinned FrankenTUI facade crate (nightly)
+ftui = { git = "https://github.com/Dicklesworthstone/frankentui", rev = "f72043a1b692e253bf0591c285cd9c5ee1103e85", package = "ftui", features = ["crossterm"] }
+
+[workspace]
