@@ -123,6 +123,36 @@ cargo run -p vifei-tui --bin vifei -- view docs/assets/readme/sample-eventlog.js
 
 Run in a real interactive terminal (TTY).
 
+### FrankenTUI Cockpit (sidecar viewer)
+
+A standalone read-only cockpit built on [FrankenTUI](https://github.com/Dicklesworthstone/frankentui) with animated gradient title, live spinner, color-coded event breakdown, and deterministic BLAKE3 viewmodel hash.
+
+![Cockpit Sample](docs/assets/ftui-demos/cockpit-sample.gif)
+
+```bash
+cargo run --release -p vifei-ftui -- --events docs/assets/readme/sample-eventlog.jsonl
+```
+
+Headless mode for CI and scripted verification:
+
+```bash
+cargo run --release -p vifei-ftui -- --events docs/assets/readme/sample-eventlog.jsonl --headless
+```
+
+<details>
+<summary>Export-clean eventlog (3 events)</summary>
+
+![Cockpit Export Clean](docs/assets/ftui-demos/cockpit-export-clean.gif)
+
+</details>
+
+<details>
+<summary>Refusal eventlog (1 event)</summary>
+
+![Cockpit Refusal](docs/assets/ftui-demos/cockpit-refusal.gif)
+
+</details>
+
 ### Mobile or narrow-screen proof scan
 
 Use this path when you need high-signal proof checks quickly in limited width.
@@ -376,6 +406,7 @@ Workspace crates:
 - `crates/vifei-export`: bundle export and share-safe scanning
 - `crates/vifei-tour`: stress harness and proof artifact emission
 - `crates/vifei-tui`: CLI and terminal UI lenses
+- `tools/vifei-ftui`: FrankenTUI cockpit sidecar viewer
 
 ## Governance Docs
 

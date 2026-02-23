@@ -47,6 +47,10 @@ struct CommandLineArguments {
     /// Print cockpit summary to stdout and exit (no TUI)
     #[arg(long)]
     headless: bool,
+
+    /// Auto-quit after N seconds (for demo recordings)
+    #[arg(long)]
+    demo_seconds: Option<f64>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, Default)]
@@ -110,6 +114,7 @@ struct FrankenTuiModel {
     cockpit_viewmodel_hash: String,
     start_time: Instant,
     tick_count: u64,
+    demo_seconds: Option<f64>,
     quit: bool,
 }
 
@@ -124,6 +129,12 @@ impl Model for FrankenTuiModel {
         let cmd = match message {
             Message::Terminal(Event::Tick) => {
                 self.tick_count = self.tick_count.wrapping_add(1);
+                if let Some(limit) = self.demo_seconds {
+                    if self.start_time.elapsed().as_secs_f64() >= limit {
+                        self.quit = true;
+                        return Cmd::quit();
+                    }
+                }
                 Cmd::none()
             }
             Message::Terminal(Event::Key(key_event)) if key_event.kind == KeyEventKind::Press => {
@@ -543,9 +554,10 @@ fn main() -> Result<()> {
         cockpit_viewmodel_hash,
         start_time: Instant::now(),
         tick_count: 0,
+        demo_seconds: command_line_arguments.demo_seconds,
         quit: false,
     };
 
-    App::new(model).run().context("run ftui app")?;
+    App::fullscreen(model).run().context("run ftui app")?;
     Ok(())
 }
