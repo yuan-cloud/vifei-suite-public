@@ -1,0 +1,15 @@
+Vifei x FrankenTUI (read-only cockpit bootstrap)
+
+total_events: 8
+tier_a_events: 8
+clock_skew_detected_count: 0
+tier_a_dropped: 0
+viewmodel.hash: ed8c9d7021619a45e9c2404f52f7e3e890e513395478b81ff7e63238e84b1a98
+
+counts_by_type:
+  - PolicyDecision: 1
+  - RedactionApplied: 1
+  - RunEnd: 1
+  - RunStart: 1
+  - ToolCall: 2
+  - ToolResult: 2

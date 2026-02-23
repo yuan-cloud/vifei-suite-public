@@ -1,0 +1,3 @@
+[submodule "vendor/frankentui"]
+	path = vendor/frankentui
+	url = https://github.com/Dicklesworthstone/frankentui
