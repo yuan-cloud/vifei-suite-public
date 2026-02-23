@@ -1,2 +1,2 @@
 {"version": 2, "width": 80, "height": 30, "timestamp": 1771830350, "env": {"SHELL": "/usr/bin/zsh", "TERM": "screen-256color"}}
-[0.02, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\r\n\r\ntotal_events: 3\r\ntier_a_events: 3\r\nclock_skew_detected_count: 0\r\ntier_a_dropped: 0\r\nviewmodel.hash: 03ccfd1176b446c934d8ecd7d6254b1f8b6be3c38348a9278b785131f895c300\r\n\r\ncounts_by_type:\r\n  - RunEnd: 1\r\n  - RunStart: 1\r\n  - ToolResult: 1\r\n"]
+[0.02, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\n\ntotal_events: 3\ntier_a_events: 3\nclock_skew_detected_count: 0\ntier_a_dropped: 0\nviewmodel.hash: 03ccfd1176b446c934d8ecd7d6254b1f8b6be3c38348a9278b785131f895c300\n\ncounts_by_type:\n  - RunEnd: 1\n  - RunStart: 1\n  - ToolResult: 1\n"]

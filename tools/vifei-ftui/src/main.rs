@@ -15,6 +15,7 @@ use ftui_extras::glowing_text::GlowingText;
 use ftui_extras::text_effects::{ColorGradient, StyledText, TextEffect};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::time::Duration;
 use vifei_core::event::{CommittedEvent, EventPayload, Tier};
 use vifei_core::eventlog::read_eventlog;
 use web_time::Instant;
@@ -32,6 +33,11 @@ const ACCENT_ORANGE: PackedRgba = PackedRgba::rgb(255, 160, 40);
 const BORDER_COLOR: PackedRgba = PackedRgba::rgb(60, 60, 90);
 const HASH_COLOR: PackedRgba = PackedRgba::rgb(180, 140, 255);
 const HASH_GLOW: PackedRgba = PackedRgba::rgb(120, 80, 200);
+
+const SPINNER_FRAMES: &[&str] = &[
+    "\u{280b}", "\u{2819}", "\u{2839}", "\u{2838}", "\u{283c}", "\u{2834}", "\u{2826}", "\u{2827}",
+    "\u{2807}", "\u{280f}",
+];
 
 #[derive(Parser, Debug)]
 struct CommandLineArguments {
@@ -103,15 +109,24 @@ struct FrankenTuiModel {
     cockpit_viewmodel: CockpitViewModel,
     cockpit_viewmodel_hash: String,
     start_time: Instant,
+    tick_count: u64,
     quit: bool,
 }
 
 impl Model for FrankenTuiModel {
     type Message = Message;
 
+    fn init(&mut self) -> Cmd<Self::Message> {
+        Cmd::tick(Duration::from_millis(50))
+    }
+
     fn update(&mut self, message: Self::Message) -> Cmd<Self::Message> {
-        if let Message::Terminal(Event::Key(key_event)) = message {
-            if key_event.kind == KeyEventKind::Press {
+        let cmd = match message {
+            Message::Terminal(Event::Tick) => {
+                self.tick_count = self.tick_count.wrapping_add(1);
+                Cmd::none()
+            }
+            Message::Terminal(Event::Key(key_event)) if key_event.kind == KeyEventKind::Press => {
                 match key_event.code {
                     KeyCode::Char('q') | KeyCode::Char('Q') => {
                         self.quit = true;
@@ -121,11 +136,12 @@ impl Model for FrankenTuiModel {
                         self.quit = true;
                         return Cmd::quit();
                     }
-                    _ => {}
+                    _ => Cmd::none(),
                 }
             }
-        }
-        Cmd::none()
+            _ => Cmd::none(),
+        };
+        Cmd::batch(vec![cmd, Cmd::tick(Duration::from_millis(50))])
     }
 
     fn view(&self, frame: &mut Frame) {
@@ -197,10 +213,21 @@ impl Model for FrankenTuiModel {
         }
 
         // ── [6] Footer ──
-        let footer = Paragraph::new(Text::from(Line::styled(
-            "  Press q to quit",
-            Style::new().fg(FG_MUTED),
-        )));
+        let uptime_secs = self.start_time.elapsed().as_secs();
+        let mins = uptime_secs / 60;
+        let secs = uptime_secs % 60;
+        let spinner_char = SPINNER_FRAMES[(self.tick_count as usize) % SPINNER_FRAMES.len()];
+        let footer = Paragraph::new(Text::from(Line::from_spans([
+            Span::styled("  q ", Style::new().fg(FG_MUTED)),
+            Span::styled("quit", Style::new().fg(FG_LABEL)),
+            Span::styled("  \u{2502}  ", Style::new().fg(BORDER_COLOR)),
+            Span::styled(
+                format!("{} 20fps", spinner_char),
+                Style::new().fg(ACCENT_GREEN),
+            ),
+            Span::styled("  \u{2502}  ", Style::new().fg(BORDER_COLOR)),
+            Span::styled(format!("{}:{:02}", mins, secs), Style::new().fg(FG_MUTED)),
+        ])));
         footer.render(sections[6], frame);
     }
 }
@@ -209,10 +236,30 @@ impl Model for FrankenTuiModel {
 
 impl FrankenTuiModel {
     fn render_title(&self, frame: &mut Frame, area: ftui::core::geometry::Rect, time: f64) {
-        // Split title area: gradient text on left, badge on right
+        // Split title area: spinner, gradient text, badge
         let cols = Flex::horizontal()
-            .constraints([Constraint::Min(20), Constraint::Fixed(14)])
+            .constraints([
+                Constraint::Fixed(3),
+                Constraint::Min(17),
+                Constraint::Fixed(14),
+            ])
             .split(area);
+
+        // Spinner (centered vertically in 3-line area)
+        let spinner_rows = Flex::vertical()
+            .constraints([
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+            ])
+            .split(cols[0]);
+
+        let spinner_char = SPINNER_FRAMES[(self.tick_count as usize) % SPINNER_FRAMES.len()];
+        let spinner = Paragraph::new(Text::from(Line::styled(
+            format!(" {}", spinner_char),
+            Style::new().fg(ACCENT_GREEN),
+        )));
+        spinner.render(spinner_rows[1], frame);
 
         // Center the title vertically in the 3-line area
         let title_rows = Flex::vertical()
@@ -221,7 +268,7 @@ impl FrankenTuiModel {
                 Constraint::Fixed(1),
                 Constraint::Fixed(1),
             ])
-            .split(cols[0]);
+            .split(cols[1]);
 
         // Animated gradient title
         let gradient = ColorGradient::new(vec![
@@ -230,7 +277,7 @@ impl FrankenTuiModel {
             (0.7, HASH_COLOR),
             (1.0, ACCENT_GREEN),
         ]);
-        StyledText::new("  VIFEI \u{00d7} FrankenTUI Cockpit")
+        StyledText::new("VIFEI \u{00d7} FrankenTUI Cockpit")
             .effect(TextEffect::AnimatedGradient {
                 gradient,
                 speed: 0.3,
@@ -246,7 +293,7 @@ impl FrankenTuiModel {
                 Constraint::Fixed(1),
                 Constraint::Fixed(1),
             ])
-            .split(cols[1]);
+            .split(cols[2]);
 
         let (badge_label, badge_style) = self.health_badge();
         Badge::new(badge_label)
@@ -495,6 +542,7 @@ fn main() -> Result<()> {
         cockpit_viewmodel,
         cockpit_viewmodel_hash,
         start_time: Instant::now(),
+        tick_count: 0,
         quit: false,
     };
 
