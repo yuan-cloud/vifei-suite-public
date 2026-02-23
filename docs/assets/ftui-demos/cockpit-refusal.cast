@@ -1,2 +1,2 @@
-{"version": 2, "width": 80, "height": 30, "timestamp": 1771828008, "env": {"SHELL": "/usr/bin/zsh", "TERM": "screen-256color"}}
-[0.032916, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\r\n\r\ntotal_events: 1\r\ntier_a_events: 1\r\nclock_skew_detected_count: 0\r\ntier_a_dropped: 0\r\nviewmodel.hash: 123242fefce91a7d27f59dca10c152b58aa4dddbca050fdc6f47405d473c52e7\r\n\r\ncounts_by_type:\r\n  - ToolCall: 1\r\n"]
+{"version": 2, "width": 80, "height": 30, "timestamp": 1771830350, "env": {"SHELL": "/usr/bin/zsh", "TERM": "screen-256color"}}
+[0.02, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\r\n\r\ntotal_events: 1\r\ntier_a_events: 1\r\nclock_skew_detected_count: 0\r\ntier_a_dropped: 0\r\nviewmodel.hash: 123242fefce91a7d27f59dca10c152b58aa4dddbca050fdc6f47405d473c52e7\r\n\r\ncounts_by_type:\r\n  - ToolCall: 1\r\n"]

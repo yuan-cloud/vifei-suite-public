@@ -337,6 +337,11 @@ dependencies = [
 name = "ftui-extras"
 version = "0.2.1"
 dependencies = [
+ "ftui-core",
+ "ftui-render",
+ "ftui-style",
+ "ftui-text",
+ "ftui-widgets",
  "web-time",
 ]
 
@@ -874,9 +879,11 @@ dependencies = [
  "blake3",
  "clap",
  "ftui",
+ "ftui-extras",
  "serde",
  "serde_json",
  "vifei-core",
+ "web-time",
 ]
 
 [[package]]

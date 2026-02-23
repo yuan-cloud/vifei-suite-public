@@ -10,10 +10,14 @@ blake3 = "1"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+web-time = "1"
 
 vifei-core = { path = "../../crates/vifei-core" }
 
 # FrankenTUI facade crate (vendored submodule at vendor/frankentui)
 ftui = { path = "../../vendor/frankentui/crates/ftui", features = ["crossterm"] }
+
+# FrankenTUI extras: text effects, glowing text, charts
+ftui-extras = { path = "../../vendor/frankentui/crates/ftui-extras", features = ["text-effects"] }
 
 [workspace]

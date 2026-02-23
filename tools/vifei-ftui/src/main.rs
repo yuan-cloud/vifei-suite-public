@@ -1,17 +1,23 @@
 use anyhow::{Context as AnyhowContext, Result};
 use clap::Parser;
+use ftui::layout::{Constraint, Flex};
 use ftui::prelude::*;
 use ftui::render::cell::PackedRgba;
 use ftui::text::{Line, Span, Text};
 use ftui::widgets::block::{Alignment, Block};
 use ftui::widgets::borders::{BorderType, Borders};
 use ftui::widgets::paragraph::Paragraph;
-use ftui::widgets::Widget;
+use ftui::widgets::rule::Rule;
+use ftui::widgets::table::{Row, Table};
+use ftui::widgets::{Badge, Widget};
 use ftui::KeyEventKind;
+use ftui_extras::glowing_text::GlowingText;
+use ftui_extras::text_effects::{ColorGradient, StyledText, TextEffect};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use vifei_core::event::{CommittedEvent, EventPayload, Tier};
 use vifei_core::eventlog::read_eventlog;
+use web_time::Instant;
 
 // ── Colors ──────────────────────────────────────────────────────────────
 const BG_DEEP: PackedRgba = PackedRgba::rgb(18, 18, 30);
@@ -25,6 +31,7 @@ const ACCENT_RED: PackedRgba = PackedRgba::rgb(255, 80, 80);
 const ACCENT_ORANGE: PackedRgba = PackedRgba::rgb(255, 160, 40);
 const BORDER_COLOR: PackedRgba = PackedRgba::rgb(60, 60, 90);
 const HASH_COLOR: PackedRgba = PackedRgba::rgb(180, 140, 255);
+const HASH_GLOW: PackedRgba = PackedRgba::rgb(120, 80, 200);
 
 #[derive(Parser, Debug)]
 struct CommandLineArguments {
@@ -95,6 +102,7 @@ impl From<Event> for Message {
 struct FrankenTuiModel {
     cockpit_viewmodel: CockpitViewModel,
     cockpit_viewmodel_hash: String,
+    start_time: Instant,
     quit: bool,
 }
 
@@ -120,109 +128,16 @@ impl Model for FrankenTuiModel {
         Cmd::none()
     }
 
-    #[allow(clippy::vec_init_then_push)]
     fn view(&self, frame: &mut Frame) {
         let area = frame.bounds();
+        let time = self.start_time.elapsed().as_secs_f64();
 
         // Fill background
-        let bg_block = Block::new().style(Style::new().bg(BG_DEEP));
-        bg_block.render(area, frame);
+        Block::new()
+            .style(Style::new().bg(BG_DEEP))
+            .render(area, frame);
 
-        // Build styled lines
-        let mut lines: Vec<Line<'_>> = Vec::new();
-
-        // Title
-        lines.push(Line::new());
-        lines.push(Line::from_spans([
-            Span::styled("  VIFEI ", Style::new().fg(ACCENT_GREEN).bold()),
-            Span::styled(" \u{00d7} ", Style::new().fg(FG_MUTED)),
-            Span::styled("FrankenTUI ", Style::new().fg(ACCENT_CYAN).bold()),
-            Span::styled("Cockpit", Style::new().fg(FG_PRIMARY)),
-        ]));
-        lines.push(Line::new());
-
-        // Separator
-        lines.push(Line::styled(
-            "  \u{2500}\u{2500}\u{2500} Truth Kernel Summary \u{2500}\u{2500}\u{2500}",
-            Style::new().fg(BORDER_COLOR),
-        ));
-        lines.push(Line::new());
-
-        // Metrics
-        let total_str = self.cockpit_viewmodel.total_events.to_string();
-        let tier_a_str = self.cockpit_viewmodel.tier_a_events.to_string();
-        let skew_str = self.cockpit_viewmodel.clock_skew_detected_count.to_string();
-        let dropped_str = self.cockpit_viewmodel.tier_a_dropped.to_string();
-
-        lines.push(kv_line("  total_events", &total_str, ACCENT_GREEN));
-        lines.push(kv_line("  tier_a_events", &tier_a_str, ACCENT_CYAN));
-        lines.push(kv_line(
-            "  clock_skew",
-            &skew_str,
-            if self.cockpit_viewmodel.clock_skew_detected_count > 0 {
-                ACCENT_YELLOW
-            } else {
-                ACCENT_GREEN
-            },
-        ));
-        lines.push(kv_line(
-            "  tier_a_dropped",
-            &dropped_str,
-            if self.cockpit_viewmodel.tier_a_dropped > 0 {
-                ACCENT_RED
-            } else {
-                ACCENT_GREEN
-            },
-        ));
-        lines.push(Line::new());
-
-        // Hash
-        lines.push(Line::from_spans([
-            Span::styled("  viewmodel.hash ", Style::new().fg(FG_LABEL)),
-            Span::styled(&self.cockpit_viewmodel_hash, Style::new().fg(HASH_COLOR)),
-        ]));
-        lines.push(Line::new());
-
-        // Separator
-        lines.push(Line::styled(
-            "  \u{2500}\u{2500}\u{2500} Event Breakdown \u{2500}\u{2500}\u{2500}",
-            Style::new().fg(BORDER_COLOR),
-        ));
-        lines.push(Line::new());
-
-        // Event type counts
-        for (event_type, count) in &self.cockpit_viewmodel.event_counts_by_type {
-            let color = event_type_color(event_type);
-            lines.push(Line::from_spans([
-                Span::styled(format!("  {:<22}", event_type), Style::new().fg(color)),
-                Span::styled(format!("{:>6}", count), Style::new().fg(FG_PRIMARY).bold()),
-            ]));
-        }
-
-        // Error section
-        if let Some((commit_index, kind, detail)) = &self.cockpit_viewmodel.latest_error {
-            lines.push(Line::new());
-            lines.push(Line::styled(
-                "  \u{2500}\u{2500}\u{2500} Latest Error \u{2500}\u{2500}\u{2500}",
-                Style::new().fg(ACCENT_RED),
-            ));
-            lines.push(Line::from_spans([
-                Span::styled("  commit_index=", Style::new().fg(FG_LABEL)),
-                Span::styled(commit_index.to_string(), Style::new().fg(ACCENT_ORANGE)),
-                Span::styled("  kind=", Style::new().fg(FG_LABEL)),
-                Span::styled(kind, Style::new().fg(ACCENT_RED).bold()),
-            ]));
-            lines.push(Line::from_spans([
-                Span::styled("  detail=", Style::new().fg(FG_LABEL)),
-                Span::styled(detail, Style::new().fg(FG_PRIMARY)),
-            ]));
-        }
-
-        // Footer
-        lines.push(Line::new());
-        lines.push(Line::styled("  Press q to quit", Style::new().fg(FG_MUTED)));
-
-        // Render in a bordered block
+        // Outer bordered block
         let block = Block::new()
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
@@ -233,17 +148,303 @@ impl Model for FrankenTuiModel {
         let inner = block.inner(area);
         block.render(area, frame);
 
-        let text = Text::from_lines(lines);
-        let paragraph = Paragraph::new(text);
-        paragraph.render(inner, frame);
+        if inner.height < 5 || inner.width < 20 {
+            return;
+        }
+
+        // Calculate dynamic sizes
+        let event_type_count = self.cockpit_viewmodel.event_counts_by_type.len() as u16;
+        let has_error = self.cockpit_viewmodel.latest_error.is_some();
+        let error_height = if has_error { 4 } else { 0 };
+
+        // Major vertical sections
+        let sections = Flex::vertical()
+            .constraints([
+                Constraint::Fixed(3),                    // [0] Title + badge
+                Constraint::Fixed(1),                    // [1] Rule: Truth Kernel Summary
+                Constraint::Fixed(6),                    // [2] Metrics + hash
+                Constraint::Fixed(1),                    // [3] Rule: Event Breakdown
+                Constraint::Fixed(event_type_count + 1), // [4] Event table
+                Constraint::Fixed(error_height),         // [5] Error section
+                Constraint::Min(1),                      // [6] Footer
+            ])
+            .split(inner);
+
+        // ── [0] Title with animated gradient + health badge ──
+        self.render_title(frame, sections[0], time);
+
+        // ── [1] Rule: Truth Kernel Summary ──
+        Rule::new()
+            .title("Truth Kernel Summary")
+            .style(Style::new().fg(BORDER_COLOR))
+            .render(sections[1], frame);
+
+        // ── [2] Metrics + hash ──
+        self.render_metrics(frame, sections[2]);
+
+        // ── [3] Rule: Event Breakdown ──
+        Rule::new()
+            .title("Event Breakdown")
+            .style(Style::new().fg(BORDER_COLOR))
+            .render(sections[3], frame);
+
+        // ── [4] Event table ──
+        self.render_event_table(frame, sections[4]);
+
+        // ── [5] Error section ──
+        if has_error {
+            self.render_error(frame, sections[5]);
+        }
+
+        // ── [6] Footer ──
+        let footer = Paragraph::new(Text::from(Line::styled(
+            "  Press q to quit",
+            Style::new().fg(FG_MUTED),
+        )));
+        footer.render(sections[6], frame);
     }
 }
 
-fn kv_line<'a>(label: &'a str, value: &'a str, value_color: PackedRgba) -> Line<'a> {
-    Line::from_spans([
+// ── View helpers ────────────────────────────────────────────────────────
+
+impl FrankenTuiModel {
+    fn render_title(&self, frame: &mut Frame, area: ftui::core::geometry::Rect, time: f64) {
+        // Split title area: gradient text on left, badge on right
+        let cols = Flex::horizontal()
+            .constraints([Constraint::Min(20), Constraint::Fixed(14)])
+            .split(area);
+
+        // Center the title vertically in the 3-line area
+        let title_rows = Flex::vertical()
+            .constraints([
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+            ])
+            .split(cols[0]);
+
+        // Animated gradient title
+        let gradient = ColorGradient::new(vec![
+            (0.0, ACCENT_GREEN),
+            (0.3, ACCENT_CYAN),
+            (0.7, HASH_COLOR),
+            (1.0, ACCENT_GREEN),
+        ]);
+        StyledText::new("  VIFEI \u{00d7} FrankenTUI Cockpit")
+            .effect(TextEffect::AnimatedGradient {
+                gradient,
+                speed: 0.3,
+            })
+            .bold()
+            .time(time)
+            .render(title_rows[1], frame);
+
+        // Health badge (centered vertically)
+        let badge_rows = Flex::vertical()
+            .constraints([
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+                Constraint::Fixed(1),
+            ])
+            .split(cols[1]);
+
+        let (badge_label, badge_style) = self.health_badge();
+        Badge::new(badge_label)
+            .with_style(badge_style)
+            .with_padding(1, 1)
+            .render(badge_rows[1], frame);
+    }
+
+    fn health_badge(&self) -> (&str, Style) {
+        if self.cockpit_viewmodel.tier_a_dropped > 0 {
+            ("DROPPED", Style::new().fg(BG_DEEP).bg(ACCENT_RED).bold())
+        } else if self.cockpit_viewmodel.clock_skew_detected_count > 0 {
+            ("SKEW", Style::new().fg(BG_DEEP).bg(ACCENT_YELLOW).bold())
+        } else if self.cockpit_viewmodel.latest_error.is_some() {
+            ("ERROR", Style::new().fg(BG_DEEP).bg(ACCENT_ORANGE).bold())
+        } else {
+            ("HEALTHY", Style::new().fg(BG_DEEP).bg(ACCENT_GREEN).bold())
+        }
+    }
+
+    fn render_metrics(&self, frame: &mut Frame, area: ftui::core::geometry::Rect) {
+        let total_str = self.cockpit_viewmodel.total_events.to_string();
+        let tier_a_str = self.cockpit_viewmodel.tier_a_events.to_string();
+        let skew_str = self.cockpit_viewmodel.clock_skew_detected_count.to_string();
+        let dropped_str = self.cockpit_viewmodel.tier_a_dropped.to_string();
+
+        let rows = Flex::vertical()
+            .constraints([
+                Constraint::Fixed(1), // total_events
+                Constraint::Fixed(1), // tier_a_events
+                Constraint::Fixed(1), // clock_skew
+                Constraint::Fixed(1), // tier_a_dropped
+                Constraint::Fixed(1), // spacer
+                Constraint::Fixed(1), // hash
+            ])
+            .split(area);
+
+        render_metric_line(frame, rows[0], "  total_events", &total_str, ACCENT_GREEN);
+        render_metric_line(frame, rows[1], "  tier_a_events", &tier_a_str, ACCENT_CYAN);
+        render_metric_line(
+            frame,
+            rows[2],
+            "  clock_skew",
+            &skew_str,
+            if self.cockpit_viewmodel.clock_skew_detected_count > 0 {
+                ACCENT_YELLOW
+            } else {
+                ACCENT_GREEN
+            },
+        );
+        render_metric_line(
+            frame,
+            rows[3],
+            "  tier_a_dropped",
+            &dropped_str,
+            if self.cockpit_viewmodel.tier_a_dropped > 0 {
+                ACCENT_RED
+            } else {
+                ACCENT_GREEN
+            },
+        );
+
+        // Hash line with glowing text
+        let hash_cols = Flex::horizontal()
+            .constraints([Constraint::Fixed(22), Constraint::Min(1)])
+            .split(rows[5]);
+
+        let hash_label = Paragraph::new(Text::from(Line::styled(
+            "  viewmodel.hash",
+            Style::new().fg(FG_LABEL),
+        )));
+        hash_label.render(hash_cols[0], frame);
+
+        GlowingText::new(&self.cockpit_viewmodel_hash)
+            .color(HASH_COLOR)
+            .glow(HASH_GLOW)
+            .glow_intensity(0.6)
+            .bold()
+            .render(hash_cols[1], frame);
+    }
+
+    fn render_event_table(&self, frame: &mut Frame, area: ftui::core::geometry::Rect) {
+        let max_count = self
+            .cockpit_viewmodel
+            .event_counts_by_type
+            .values()
+            .max()
+            .copied()
+            .unwrap_or(1);
+
+        let header = Row::new([
+            Text::from(Line::styled(
+                "  Event Type",
+                Style::new().fg(ACCENT_CYAN).bold(),
+            )),
+            Text::from(Line::styled(" Count", Style::new().fg(ACCENT_CYAN).bold())),
+            Text::from(Line::styled(
+                "Distribution",
+                Style::new().fg(ACCENT_CYAN).bold(),
+            )),
+        ]);
+
+        let data_rows: Vec<Row> = self
+            .cockpit_viewmodel
+            .event_counts_by_type
+            .iter()
+            .map(|(event_type, count)| {
+                let color = event_type_color(event_type);
+                Row::new([
+                    Text::from(Line::styled(
+                        format!("  {}", event_type),
+                        Style::new().fg(color),
+                    )),
+                    Text::from(Line::styled(
+                        format!("{:>6}", count),
+                        Style::new().fg(FG_PRIMARY).bold(),
+                    )),
+                    Text::from(Line::styled(
+                        bar_string(*count, max_count, 12),
+                        Style::new().fg(color),
+                    )),
+                ])
+            })
+            .collect();
+
+        let table = Table::new(
+            data_rows,
+            [
+                Constraint::Min(20),
+                Constraint::Fixed(8),
+                Constraint::Fixed(14),
+            ],
+        )
+        .header(header)
+        .style(Style::new().fg(FG_PRIMARY).bg(BG_DEEP))
+        .theme(TableTheme::preset(TablePresetId::Midnight));
+
+        table.render(area, frame);
+    }
+
+    fn render_error(&self, frame: &mut Frame, area: ftui::core::geometry::Rect) {
+        if let Some((commit_index, kind, detail)) = &self.cockpit_viewmodel.latest_error {
+            let error_rows = Flex::vertical()
+                .constraints([
+                    Constraint::Fixed(1), // Rule
+                    Constraint::Fixed(1), // commit_index + kind
+                    Constraint::Fixed(1), // detail
+                    Constraint::Min(1),   // spacer
+                ])
+                .split(area);
+
+            Rule::new()
+                .title("Latest Error")
+                .style(Style::new().fg(ACCENT_RED))
+                .render(error_rows[0], frame);
+
+            let idx_line = Paragraph::new(Text::from(Line::from_spans([
+                Span::styled("  commit_index=", Style::new().fg(FG_LABEL)),
+                Span::styled(commit_index.to_string(), Style::new().fg(ACCENT_ORANGE)),
+                Span::styled("  kind=", Style::new().fg(FG_LABEL)),
+                Span::styled(kind, Style::new().fg(ACCENT_RED).bold()),
+            ])));
+            idx_line.render(error_rows[1], frame);
+
+            let detail_line = Paragraph::new(Text::from(Line::from_spans([
+                Span::styled("  detail=", Style::new().fg(FG_LABEL)),
+                Span::styled(detail, Style::new().fg(FG_PRIMARY)),
+            ])));
+            detail_line.render(error_rows[2], frame);
+        }
+    }
+}
+
+// ── Free functions ──────────────────────────────────────────────────────
+
+fn render_metric_line(
+    frame: &mut Frame,
+    area: ftui::core::geometry::Rect,
+    label: &str,
+    value: &str,
+    value_color: PackedRgba,
+) {
+    let paragraph = Paragraph::new(Text::from(Line::from_spans([
         Span::styled(format!("{:<22}", label), Style::new().fg(FG_LABEL)),
         Span::styled(value.to_string(), Style::new().fg(value_color).bold()),
-    ])
+    ])));
+    paragraph.render(area, frame);
+}
+
+fn bar_string(count: u64, max: u64, width: usize) -> String {
+    let ratio = if max > 0 {
+        count as f64 / max as f64
+    } else {
+        0.0
+    };
+    let filled = (ratio * width as f64).round() as usize;
+    let empty = width.saturating_sub(filled);
+    format!("{}{}", "\u{2593}".repeat(filled), "\u{2591}".repeat(empty))
 }
 
 fn event_type_color(event_type: &str) -> PackedRgba {
@@ -293,6 +494,7 @@ fn main() -> Result<()> {
     let model = FrankenTuiModel {
         cockpit_viewmodel,
         cockpit_viewmodel_hash,
+        start_time: Instant::now(),
         quit: false,
     };
 
