@@ -1,12 +1,30 @@
 use anyhow::{Context as AnyhowContext, Result};
 use clap::Parser;
 use ftui::prelude::*;
+use ftui::render::cell::PackedRgba;
+use ftui::text::{Line, Span, Text};
+use ftui::widgets::block::{Alignment, Block};
+use ftui::widgets::borders::{BorderType, Borders};
 use ftui::widgets::paragraph::Paragraph;
 use ftui::widgets::Widget;
+use ftui::KeyEventKind;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use vifei_core::event::{CommittedEvent, EventPayload, Tier};
 use vifei_core::eventlog::read_eventlog;
+
+// ── Colors ──────────────────────────────────────────────────────────────
+const BG_DEEP: PackedRgba = PackedRgba::rgb(18, 18, 30);
+const FG_PRIMARY: PackedRgba = PackedRgba::rgb(220, 220, 230);
+const FG_MUTED: PackedRgba = PackedRgba::rgb(120, 120, 140);
+const FG_LABEL: PackedRgba = PackedRgba::rgb(140, 180, 220);
+const ACCENT_GREEN: PackedRgba = PackedRgba::rgb(0, 255, 136);
+const ACCENT_CYAN: PackedRgba = PackedRgba::rgb(100, 220, 255);
+const ACCENT_YELLOW: PackedRgba = PackedRgba::rgb(255, 200, 60);
+const ACCENT_RED: PackedRgba = PackedRgba::rgb(255, 80, 80);
+const ACCENT_ORANGE: PackedRgba = PackedRgba::rgb(255, 160, 40);
+const BORDER_COLOR: PackedRgba = PackedRgba::rgb(60, 60, 90);
+const HASH_COLOR: PackedRgba = PackedRgba::rgb(180, 140, 255);
 
 #[derive(Parser, Debug)]
 struct CommandLineArguments {
@@ -62,7 +80,6 @@ fn build_cockpit_viewmodel(committed_events: &[CommittedEvent]) -> CockpitViewMo
     cockpit_viewmodel
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Message {
     Terminal(Event),
@@ -78,57 +95,166 @@ impl From<Event> for Message {
 struct FrankenTuiModel {
     cockpit_viewmodel: CockpitViewModel,
     cockpit_viewmodel_hash: String,
+    quit: bool,
 }
 
 impl Model for FrankenTuiModel {
     type Message = Message;
 
-    fn update(&mut self, _message: Self::Message) -> Cmd<Self::Message> {
+    fn update(&mut self, message: Self::Message) -> Cmd<Self::Message> {
+        if let Message::Terminal(Event::Key(key_event)) = message {
+            if key_event.kind == KeyEventKind::Press {
+                match key_event.code {
+                    KeyCode::Char('q') | KeyCode::Char('Q') => {
+                        self.quit = true;
+                        return Cmd::quit();
+                    }
+                    KeyCode::Char('c') if key_event.modifiers.contains(Modifiers::CTRL) => {
+                        self.quit = true;
+                        return Cmd::quit();
+                    }
+                    _ => {}
+                }
+            }
+        }
         Cmd::none()
     }
 
+    #[allow(clippy::vec_init_then_push)]
     fn view(&self, frame: &mut Frame) {
-        let mut text_lines: Vec<String> = Vec::new();
+        let area = frame.bounds();
 
-        text_lines.push("Vifei x FrankenTUI (read-only cockpit bootstrap)".to_string());
-        text_lines.push("Exit: Ctrl-C (q-to-quit wiring in next step).".to_string());
-        text_lines.push(String::new());
+        // Fill background
+        let bg_block = Block::new().style(Style::new().bg(BG_DEEP));
+        bg_block.render(area, frame);
 
-        text_lines.push(format!(
-            "total_events: {}",
-            self.cockpit_viewmodel.total_events
-        ));
-        text_lines.push(format!(
-            "tier_a_events: {}",
-            self.cockpit_viewmodel.tier_a_events
-        ));
-        text_lines.push(format!(
-            "clock_skew_detected_count: {}",
-            self.cockpit_viewmodel.clock_skew_detected_count
-        ));
-        text_lines.push(format!(
-            "tier_a_dropped: {}",
-            self.cockpit_viewmodel.tier_a_dropped
-        ));
-        text_lines.push(format!("viewmodel.hash: {}", self.cockpit_viewmodel_hash));
-        text_lines.push(String::new());
+        // Build styled lines
+        let mut lines: Vec<Line<'_>> = Vec::new();
 
-        text_lines.push("counts_by_type:".to_string());
+        // Title
+        lines.push(Line::new());
+        lines.push(Line::from_spans([
+            Span::styled("  VIFEI ", Style::new().fg(ACCENT_GREEN).bold()),
+            Span::styled(" \u{00d7} ", Style::new().fg(FG_MUTED)),
+            Span::styled("FrankenTUI ", Style::new().fg(ACCENT_CYAN).bold()),
+            Span::styled("Cockpit", Style::new().fg(FG_PRIMARY)),
+        ]));
+        lines.push(Line::new());
+
+        // Separator
+        lines.push(Line::styled(
+            "  \u{2500}\u{2500}\u{2500} Truth Kernel Summary \u{2500}\u{2500}\u{2500}",
+            Style::new().fg(BORDER_COLOR),
+        ));
+        lines.push(Line::new());
+
+        // Metrics
+        let total_str = self.cockpit_viewmodel.total_events.to_string();
+        let tier_a_str = self.cockpit_viewmodel.tier_a_events.to_string();
+        let skew_str = self.cockpit_viewmodel.clock_skew_detected_count.to_string();
+        let dropped_str = self.cockpit_viewmodel.tier_a_dropped.to_string();
+
+        lines.push(kv_line("  total_events", &total_str, ACCENT_GREEN));
+        lines.push(kv_line("  tier_a_events", &tier_a_str, ACCENT_CYAN));
+        lines.push(kv_line(
+            "  clock_skew",
+            &skew_str,
+            if self.cockpit_viewmodel.clock_skew_detected_count > 0 {
+                ACCENT_YELLOW
+            } else {
+                ACCENT_GREEN
+            },
+        ));
+        lines.push(kv_line(
+            "  tier_a_dropped",
+            &dropped_str,
+            if self.cockpit_viewmodel.tier_a_dropped > 0 {
+                ACCENT_RED
+            } else {
+                ACCENT_GREEN
+            },
+        ));
+        lines.push(Line::new());
+
+        // Hash
+        lines.push(Line::from_spans([
+            Span::styled("  viewmodel.hash ", Style::new().fg(FG_LABEL)),
+            Span::styled(&self.cockpit_viewmodel_hash, Style::new().fg(HASH_COLOR)),
+        ]));
+        lines.push(Line::new());
+
+        // Separator
+        lines.push(Line::styled(
+            "  \u{2500}\u{2500}\u{2500} Event Breakdown \u{2500}\u{2500}\u{2500}",
+            Style::new().fg(BORDER_COLOR),
+        ));
+        lines.push(Line::new());
+
+        // Event type counts
         for (event_type, count) in &self.cockpit_viewmodel.event_counts_by_type {
-            text_lines.push(format!("  - {}: {}", event_type, count));
+            let color = event_type_color(event_type);
+            lines.push(Line::from_spans([
+                Span::styled(format!("  {:<22}", event_type), Style::new().fg(color)),
+                Span::styled(format!("{:>6}", count), Style::new().fg(FG_PRIMARY).bold()),
+            ]));
         }
 
+        // Error section
         if let Some((commit_index, kind, detail)) = &self.cockpit_viewmodel.latest_error {
-            text_lines.push(String::new());
-            text_lines.push(format!(
-                "latest_error: commit_index={} kind={}",
-                commit_index, kind
+            lines.push(Line::new());
+            lines.push(Line::styled(
+                "  \u{2500}\u{2500}\u{2500} Latest Error \u{2500}\u{2500}\u{2500}",
+                Style::new().fg(ACCENT_RED),
             ));
-            text_lines.push(format!("  detail={}", detail));
+            lines.push(Line::from_spans([
+                Span::styled("  commit_index=", Style::new().fg(FG_LABEL)),
+                Span::styled(commit_index.to_string(), Style::new().fg(ACCENT_ORANGE)),
+                Span::styled("  kind=", Style::new().fg(FG_LABEL)),
+                Span::styled(kind, Style::new().fg(ACCENT_RED).bold()),
+            ]));
+            lines.push(Line::from_spans([
+                Span::styled("  detail=", Style::new().fg(FG_LABEL)),
+                Span::styled(detail, Style::new().fg(FG_PRIMARY)),
+            ]));
         }
 
-        let paragraph = Paragraph::new(text_lines.join("\n"));
-        paragraph.render(frame.bounds(), frame);
+        // Footer
+        lines.push(Line::new());
+        lines.push(Line::styled("  Press q to quit", Style::new().fg(FG_MUTED)));
+
+        // Render in a bordered block
+        let block = Block::new()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .title(" Vifei Cockpit ")
+            .title_alignment(Alignment::Center)
+            .style(Style::new().fg(ACCENT_CYAN).bg(BG_DEEP));
+
+        let inner = block.inner(area);
+        block.render(area, frame);
+
+        let text = Text::from_lines(lines);
+        let paragraph = Paragraph::new(text);
+        paragraph.render(inner, frame);
+    }
+}
+
+fn kv_line<'a>(label: &'a str, value: &'a str, value_color: PackedRgba) -> Line<'a> {
+    Line::from_spans([
+        Span::styled(format!("{:<22}", label), Style::new().fg(FG_LABEL)),
+        Span::styled(value.to_string(), Style::new().fg(value_color).bold()),
+    ])
+}
+
+fn event_type_color(event_type: &str) -> PackedRgba {
+    match event_type {
+        "RunStart" | "RunEnd" => ACCENT_CYAN,
+        "ToolCall" | "ToolResult" => ACCENT_GREEN,
+        "PolicyDecision" => ACCENT_YELLOW,
+        "RedactionApplied" => ACCENT_ORANGE,
+        "Error" => ACCENT_RED,
+        "ClockSkewDetected" => ACCENT_YELLOW,
+        _ => FG_PRIMARY,
     }
 }
 
@@ -167,6 +293,7 @@ fn main() -> Result<()> {
     let model = FrankenTuiModel {
         cockpit_viewmodel,
         cockpit_viewmodel_hash,
+        quit: false,
     };
 
     App::new(model).run().context("run ftui app")?;

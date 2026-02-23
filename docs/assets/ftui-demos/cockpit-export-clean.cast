@@ -1,5 +1,2 @@
-{"version": 2, "width": 80, "height": 24, "timestamp": 1771823689, "env": {"SHELL": "/usr/bin/zsh", "TERM": "screen-256color"}, "title": "Vifei x FrankenTUI Cockpit (export-clean)"}
-[0.375706, "o", "\u001b[1m\u001b[92m    Finished\u001b[0m `dev` profile [unoptimized + debuginfo] target(s) in 0.23s\r\n"]
-[0.402231, "o", "\u001b[1m\u001b[92m     Running\u001b[0m `tools/vifei-ftui/target/debug/vifei-ftui --events docs/assets/readme/sample-export-clean-eventlog.jsonl --headless`\r\n"]
-[0.425678, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\r\n"]
-[0.435398, "o", "\r\ntotal_events: 3\r\ntier_a_events: 3\r\nclock_skew_detected_count: 0\r\ntier_a_dropped: 0\r\nviewmodel.hash: 03ccfd1176b446c934d8ecd7d6254b1f8b6be3c38348a9278b785131f895c300\r\n\r\ncounts_by_type:\r\n  - RunEnd: 1\r\n  - RunStart: 1\r\n  - ToolResult: 1\r\n"]
+{"version": 2, "width": 80, "height": 30, "timestamp": 1771828003, "env": {"SHELL": "/usr/bin/zsh", "TERM": "screen-256color"}}
+[0.026607, "o", "Vifei x FrankenTUI (read-only cockpit bootstrap)\r\n\r\ntotal_events: 3\r\ntier_a_events: 3\r\nclock_skew_detected_count: 0\r\ntier_a_dropped: 0\r\nviewmodel.hash: 03ccfd1176b446c934d8ecd7d6254b1f8b6be3c38348a9278b785131f895c300\r\n\r\ncounts_by_type:\r\n  - RunEnd: 1\r\n  - RunStart: 1\r\n  - ToolResult: 1\r\n"]
