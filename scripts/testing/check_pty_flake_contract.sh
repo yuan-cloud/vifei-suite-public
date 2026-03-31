@@ -33,7 +33,7 @@ EOF
 }
 
 if [[ -f "$FASTLANE_RUN_JSONL" && -f "$FASTLANE_SUMMARY" ]]; then
-  if rg -q '"run_id":"fastlane-v0\.1"' "$FASTLANE_RUN_JSONL"; then
+  if grep -qE '"run_id":"fastlane-v0\.1"' "$FASTLANE_RUN_JSONL"; then
     echo "CONTRACT_FAIL[PTY0-lane-scope] wrong lane directory: '$OUT_DIR' is a fastlane output bundle."
     echo "hint: this checker validates full-confidence PTY assertion logs only."
     echo "replay: scripts/testing/check_pty_flake_contract.sh .tmp/full-confidence"

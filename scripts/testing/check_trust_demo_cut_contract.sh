@@ -24,17 +24,17 @@ for file in "${required[@]}"; do
   fi
 done
 
-if ! rg -q '^trust_demo_status=PASS$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
+if ! grep -qE '^trust_demo_status=PASS$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
   echo "[trust-demo-contract] summary missing PASS marker" >&2
   exit 1
 fi
 
-if ! rg -q '^tier_a_drops=0$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
+if ! grep -qE '^tier_a_drops=0$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
   echo "[trust-demo-contract] summary missing zero-drop proof" >&2
   exit 1
 fi
 
-if ! rg -q '^blocked_items=[1-9][0-9]*$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
+if ! grep -qE '^blocked_items=[1-9][0-9]*$' "$out_dir/TRUST_DEMO_SUMMARY.txt"; then
   echo "[trust-demo-contract] refusal summary missing blocked items" >&2
   exit 1
 fi

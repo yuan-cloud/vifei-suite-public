@@ -20,13 +20,13 @@ for file in "${required[@]}"; do
   fi
 done
 
-if ! rg -q '^visual_showcase_status=PASS$' "$out_dir/VISUAL_SHOWCASE_SUMMARY.txt"; then
+if ! grep -qE '^visual_showcase_status=PASS$' "$out_dir/VISUAL_SHOWCASE_SUMMARY.txt"; then
   echo "[visual-cut-contract] summary missing PASS marker" >&2
   exit 1
 fi
 
 for asset in incident-lens-showcase.svg forensic-lens-showcase.svg truth-hud-showcase.svg incident-lens-narrow-72.svg; do
-  if ! rg -q "^${asset}_blake2s=[0-9a-f]{64}$" "$out_dir/VISUAL_SHOWCASE_SUMMARY.txt"; then
+  if ! grep -qE "^${asset}_blake2s=[0-9a-f]{64}$" "$out_dir/VISUAL_SHOWCASE_SUMMARY.txt"; then
     echo "[visual-cut-contract] summary missing hash for $asset" >&2
     exit 1
   fi

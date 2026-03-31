@@ -33,18 +33,18 @@ done
 
 required_truth_tokens=("Level:" "Agg:" "Pressure:" "Drops:" "Export:" "Version:")
 for token in "${required_truth_tokens[@]}"; do
-  if ! rg -q "$token" docs/assets/readme/truth-hud-showcase.txt; then
+  if ! grep -qE "$token" docs/assets/readme/truth-hud-showcase.txt; then
     echo "[visual-cut] FAIL: truth HUD token missing: $token" >&2
     exit 1
   fi
 done
 
-if ! rg -q "Action Now \\(Anomalies\\)" docs/assets/readme/incident-lens-narrow-72.txt; then
+if ! grep -qE "Action Now \\(Anomalies\\)" docs/assets/readme/incident-lens-narrow-72.txt; then
   echo "[visual-cut] FAIL: narrow incident proof missing anomaly action section" >&2
   exit 1
 fi
 
-if ! rg -q "Forensic controls:" docs/assets/readme/incident-lens-narrow-72.txt; then
+if ! grep -qE "Forensic controls:" docs/assets/readme/incident-lens-narrow-72.txt; then
   echo "[visual-cut] FAIL: narrow incident proof missing forensic control hints" >&2
   exit 1
 fi

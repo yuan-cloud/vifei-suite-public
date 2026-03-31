@@ -18,17 +18,17 @@ for required in "$MATRIX" "$FASTLANE_DOC" "$DEFER_REGISTER"; do
   [[ -f "$required" ]] || fail "CC0-files" "required contract file missing: $required" "test -f $required"
 done
 
-rg -q '^## v0\.1 Completeness Contract \("full enough"\)$' "$MATRIX" || \
-  fail "CC1-headings" "coverage matrix missing completeness contract heading" "rg -n '^## v0\\.1 Completeness Contract \\(\"full enough\"\\)$' $MATRIX"
-rg -q '^## Invariant And Decision Coverage Ownership$' "$MATRIX" || \
-  fail "CC1-headings" "coverage matrix missing invariant ownership heading" "rg -n '^## Invariant And Decision Coverage Ownership$' $MATRIX"
-rg -q '^## What Fastlane Covers$' "$FASTLANE_DOC" || \
-  fail "CC1-headings" "FASTLANE doc missing coverage section heading" "rg -n '^## What Fastlane Covers$' $FASTLANE_DOC"
+grep -qE '^## v0\.1 Completeness Contract \("full enough"\)$' "$MATRIX" || \
+  fail "CC1-headings" "coverage matrix missing completeness contract heading" "grep -nE '^## v0\\.1 Completeness Contract \\(\"full enough\"\\)$' $MATRIX"
+grep -qE '^## Invariant And Decision Coverage Ownership$' "$MATRIX" || \
+  fail "CC1-headings" "coverage matrix missing invariant ownership heading" "grep -nE '^## Invariant And Decision Coverage Ownership$' $MATRIX"
+grep -qE '^## What Fastlane Covers$' "$FASTLANE_DOC" || \
+  fail "CC1-headings" "FASTLANE doc missing coverage section heading" "grep -nE '^## What Fastlane Covers$' $FASTLANE_DOC"
 
 mapfile -t referenced_paths < <(
-  rg -o '`[^`]+`' "$MATRIX" \
+  grep -oE '`[^`]+`' "$MATRIX" \
     | tr -d '`' \
-    | rg '^(docs/|scripts/|crates/|\.github/)' \
+    | grep -E '^(docs/|scripts/|crates/|\.github/)' \
     | sort -u
 )
 

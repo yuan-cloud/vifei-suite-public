@@ -46,7 +46,7 @@ cargo run -p vifei-tui --bin vifei -- \
 
 ANSI_CAPTURE="$OUT_DIR/tour/ansi.capture"
 for token in "Level:" "Agg:" "Pressure:" "Drops:" "Export:" "Version:"; do
-  if ! rg -q "$token" "$ANSI_CAPTURE"; then
+  if ! grep -qE "$token" "$ANSI_CAPTURE"; then
     echo "[bakeoff] FAIL: explainability token missing: $token" >&2
     exit 1
   fi

@@ -45,7 +45,7 @@ print(f"tier_a_drops={metrics['tier_a_drops']}")
 print(f"degradation_level_final={metrics['degradation_level_final']}")
 PY
 
-if ! rg -q '^tier_a_drops=0$' "$OUT_DIR/metrics-summary.txt"; then
+if ! grep -qE '^tier_a_drops=0$' "$OUT_DIR/metrics-summary.txt"; then
   echo "[trust-demo] FAIL: tier_a_drops is non-zero" >&2
   cat "$OUT_DIR/metrics-summary.txt" >&2
   exit 1
